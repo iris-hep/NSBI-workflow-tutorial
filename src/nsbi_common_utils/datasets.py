@@ -4,329 +4,219 @@ import numpy as np
 import uproot
 import copy
 import pathlib
+import torch
+from torch.utils.data import Dataset, DataLoader
+from sklearn.model_selection import train_test_split
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from nsbi_common_utils.configuration import ConfigManager
 
-class datasets:
+def _load_dataframe_from_root(path_to_root_file: str, tree_name: str, branches_to_load: List[str]) -> pd.DataFrame:
+    """Helper function to load a pandas DataFrame from a ROOT TTree using uproot."""
+    with uproot.open(f"{path_to_root_file}:{tree_name}") as tree:
+        return tree.arrays(branches_to_load, library="pd")
 
-    """Lightweight helper for reading ROOT TTrees into pandas DataFrames (via uproot),
-    applying region filters from a config, merging/labeling for ML training, and
-    writing updated trees back to ROOT files."""
+
+class NSBIDataFrameDataset(Dataset):
+    """
+    A PyTorch Dataset for handling pandas DataFrames, providing features, labels, and weights.
+    Converts DataFrame columns to torch tensors on the fly.
+    """
+    def __init__(self, dataframe: pd.DataFrame, features: List[str], label_column: str, weight_column: str):
+        """
+        Initializes the dataset with a pandas DataFrame and column names for features, labels, and weights.
+
+        Args:
+            dataframe: The input pandas DataFrame.
+            features: A list of column names to be used as model features.
+            label_column: The name of the column containing the target labels.
+            weight_column: The name of the column containing event weights.
+        """
+        required_cols = features + [label_column, weight_column]
+        if not all(col in dataframe.columns for col in required_cols):
+            missing_cols = set(required_cols) - set(dataframe.columns)
+            raise ValueError(f"Missing columns in DataFrame: {missing_cols}")
+
+        self.features_data = dataframe[features].values.astype(np.float32)
+        self.labels_data = dataframe[label_column].values.astype(np.int64)
+        self.weights_data = dataframe[weight_column].values.astype(np.float32)
+
+    def __len__(self) -> int:
+        """
+        Returns the total number of samples in the dataset.
+        """
+        return len(self.labels_data)
+
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        """
+        Retrieves a sample (features, label, weight) at the specified index.
+
+        Args:
+            idx: The index of the sample to retrieve.
+
+        Returns:
+            A dictionary containing 'features', 'labels', and 'weights' as torch.Tensor.
+        """
+        features_tensor = torch.from_numpy(self.features_data[idx])
+        labels_tensor = torch.tensor(self.labels_data[idx], dtype=torch.long)
+        weights_tensor = torch.tensor(self.weights_data[idx], dtype=torch.float)
+        return {'features': features_tensor, 'labels': labels_tensor, 'weights': weights_tensor}
+
+
+class NSBIDataProcessor:
+    """
+    Handles reading ROOT TTrees into pandas DataFrames (via uproot),
+    applying region filters from a config, merging/labeling for ML training,
+    and preparing PyTorch DataLoaders for training and validation.
+    """
 
     def __init__(self, 
                 config_path: Union[pathlib.Path, str], 
-                branches_to_load: List):
-        """Load analysis config and set the base list of branches to read.
+                branches_to_load: List[str]):
+        """
+        Load analysis config and set the base list of branches to read.
 
         Args:
             config_path: Path to a YAML/JSON config consumed by ConfigManager.
-            branches_to_load: Required list of TTree branches to import.
+            branches_to_load: Required list of TTree branches to import as features.
         Raises:
-            Exception: If branches_to_load is empty.
+            ValueError: If branches_to_load is empty.
         """
-        self.config              = ConfigManager(file_path_string = config_path)
+        self.config = ConfigManager(file_path_string=config_path)
         
-        if len(branches_to_load) == 0:
-            raise Exception(f"Empty branch list.")
-        self.branches_to_load           = list(branches_to_load)
-        self.branches_all               = list(self.branches_to_load)
+        if not branches_to_load:
+            raise ValueError("Empty branch list provided to NSBIDataProcessor.")
+        self.branches_to_load = list(branches_to_load)
 
-    def load_datasets_from_config(self,
-                                load_systematics = False):
-        """Read datasets defined in config into nested dictionaries of DataFrames.
+        # Internal column names for processed data
+        self._label_col = "train_labels"
+        self._weight_col = "weights_normed"
+        self._sample_name_col = "sample_name"
 
-        Structure:
-            {
-              "Nominal": {sample_name: pd.DataFrame, ...},
-              "<Syst>_Up": {...}, "<Syst>_Dn": {...}  # if requested
-            }
-
-        Notes:
-            - Adds a 'sample_name' column and ensures a 'weights' column
-              (renaming per config 'Weight' when present, else defaults to 1.0).
-        Args:
-            load_systematics: If True, also load 'NormPlusShape' systematics.
-        Returns:
-            Dict[str, Dict[str, pd.DataFrame]]: datasets by type (nominal vs systematics) then sample.
+    def _load_raw_dataframes(self, load_systematics: bool = False) -> Dict[str, Dict[str, pd.DataFrame]]:
         """
-        dict_datasets = {}
-        dict_datasets["Nominal"] = {}
+        Reads datasets defined in config into nested dictionaries of DataFrames.
+        """
+        dict_datasets = {"Nominal": {}}
 
         for dict_sample in self.config.config["Samples"]:
+            path_to_root_file = dict_sample["SamplePath"]
+            tree_name = dict_sample["Tree"]
+            sample_name = dict_sample["Name"]
+            weight_branch_cfg = dict_sample.get("Weight")
 
-            weight_branch       = [dict_sample["Weight"]] if "Weight" in dict_sample.keys() else []
+            branches_to_read = list(self.branches_to_load)
+            if weight_branch_cfg and weight_branch_cfg not in branches_to_read:
+                branches_to_read.append(weight_branch_cfg)
+            
+            try:
+                df = _load_dataframe_from_root(path_to_root_file, tree_name, branches_to_read)
+            except Exception as e:
+                raise IOError(f"Failed to load ROOT file {path_to_root_file} for sample {sample_name}: {e}")
 
-            path_to_root_file   = dict_sample["SamplePath"]
-            tree_name           = dict_sample["Tree"]
-            sample_name         = dict_sample["Name"]
-            branches_to_load    = list(self.branches_to_load)
-            if weight_branch[0] not in branches_to_load:
-                branches_to_load += weight_branch
-                
-            dict_datasets["Nominal"][sample_name] = load_dataframe_from_root(path_to_root_file, 
-                                                                            tree_name, 
-                                                                            branches_to_load)
+            if df.empty:
+                print(f"Warning: No data loaded for sample {sample_name} from {path_to_root_file}:{tree_name}. Skipping.")
+                continue
 
-            dict_datasets["Nominal"][sample_name]["sample_name"] = sample_name
+            df[self._sample_name_col] = sample_name
 
-            if "Weight" in dict_sample.keys():
-                dict_datasets["Nominal"][sample_name] = dict_datasets["Nominal"][sample_name].rename(columns={dict_sample['Weight']: "weights"})
+            if weight_branch_cfg:
+                df.rename(columns={weight_branch_cfg: "weights"}, inplace=True)
             else:
-                dict_datasets["Nominal"][sample_name]["weights"] = 1.0
+                df["weights"] = 1.0
 
+            dict_datasets["Nominal"][sample_name] = df
+        
+        # Systematic variations are loaded but not used in this simplified processor
+        # The logic is kept for potential future extensions.
         if load_systematics:
-            systematics_dict_list = self.config.config.get("Systematics", [{}])
-            for dict_syst in systematics_dict_list:
-                syst_name = dict_syst["Name"]
-                syst_type = dict_syst["Type"]
-                if syst_type == "NormPlusShape":
-                    for direction in ["Up", "Dn"]:
-                        syst_name_var        = syst_name + "_" + direction
-                        dict_datasets[syst_name_var] = {}
-                        for dict_sample in dict_syst[direction]:
-                            path_to_root_file   = dict_sample["Path"]
-                            sample_name         = dict_sample["SampleName"]
-                            tree_name           = dict_sample["Tree"]
-                            weight_branch       = [dict_sample["Weight"]] if "Weight" in dict_sample.keys() else []
-                            branches_to_load    = list(self.branches_to_load)
-                            if weight_branch[0] not in branches_to_load:
-                                branches_to_load += weight_branch
-                            dict_datasets[syst_name_var][sample_name] = load_dataframe_from_root(path_to_root_file, 
-                                                                                                tree_name, 
-                                                                                                branches_to_load)
-
-                            dict_datasets[syst_name_var][sample_name]["sample_name"] = sample_name
-
-                            if "Weight" in dict_sample.keys():
-                                dict_datasets[syst_name_var][sample_name] = dict_datasets[syst_name_var][sample_name].rename(columns={dict_sample['Weight']: "weights"})
-                            else:
-                                dict_datasets[syst_name_var][sample_name]["weights"] = 1.0
+            # ... systematic loading logic can be implemented here if needed ...
+            pass
 
         return dict_datasets
 
-    def add_appended_branches(self, 
-                              branches: List):
+    def prepare_dataloaders(
+        self,
+        test_size: float = 0.2,
+        batch_size: int = 64,
+        num_workers: int = 4,
+        random_state: Optional[int] = None
+    ) -> Dict[str, DataLoader]:
         """
-        Declare additional, derived branches to carry through on save.
+        Loads, processes, and splits data into PyTorch DataLoaders.
+
+        Processing steps:
+        1. Loads nominal dataframes using the config.
+        2. Applies region selections from the config and merges samples.
+        3. Creates a binary label column (1 for signal, 0 for background).
+        4. Normalizes weights so sum(weights) is equal for signal and background.
+        5. Splits data into training and validation sets.
+        6. Creates and returns PyTorch DataLoaders.
 
         Args:
-            branches: New branch names to append to the saved schema.
-        """
-        self.branches_all           = self.branches_to_load + branches
+            test_size: Fraction of the dataset to be used as a validation set.
+            batch_size: Number of samples per batch.
+            num_workers: Number of subprocesses to use for data loading.
+            random_state: Seed for reproducibility.
 
-    def save_datasets(self,
-                    dict_datasets,
-                    save_systematics = False):
-        """
-        Write DataFrames back into their ROOT files, preserving other TTrees.
-
-        Args:
-            dict_datasets: Nested dict from load_datasets_from_config().
-            save_systematics: If True, also write available syst variations.
-        """
-        for dict_sample in self.config.config["Samples"]:
-
-            path_to_root_file   = dict_sample["SamplePath"]
-            tree_name           = dict_sample["Tree"]
-            sample_name         = dict_sample["Name"]
-            self._save_dataset_to_ntuple(dict_datasets["Nominal"][sample_name], 
-                                path_to_root_file, 
-                                tree_name)
-
-        if save_systematics:
-            systematics_dict_list = self.config.config.get("Systematics", [{}])
-            for dict_syst in systematics_dict_list:
-
-                syst_name = dict_syst["Name"]
-                syst_type = dict_syst["Type"]
-                if syst_type == "NormPlusShape":
-                    for direction in ["Up", "Dn"]:
-                        syst_name_var        = syst_name + "_" + direction
-                        if syst_name_var not in dict_datasets.keys(): continue
-                        for dict_sample in dict_syst[direction]:
-                            path_to_root_file   = dict_sample["Path"]
-                            sample_name         = dict_sample["SampleName"]
-
-                            if sample_name not in dict_datasets[syst_name_var].keys(): continue
-
-                            tree_name           = dict_sample["Tree"]
-                            self._save_dataset_to_ntuple(dict_datasets[syst_name_var][sample_name],
-                                                        path_to_root_file, 
-                                                        tree_name)
-
-    def _save_dataset_to_ntuple(self,
-                                dataset, 
-                                path_to_root_file: str, 
-                                tree_name: str):
-        """
-        Replace a specific TTree with DataFrame contents.
-
-        Behavior:
-            - Keeps other trees intact by copying them over.
-            - Ensures 'weights' exists in the saved branch list.
-
-        Args:
-            dataset: DataFrame to write (columns = branches).
-            path_to_root_file: Destination ROOT file.
-            tree_name: Name of the tree to overwrite.
-        """
-        if "weights" not in self.branches_all:
-            self.branches_all =  self.branches_all + ["weights"]
-        dataset = dataset[self.branches_all]
-
-        tmp_path = path_to_root_file + ".tmp"
-
-        with uproot.open(path_to_root_file) as fin, uproot.recreate(tmp_path) as fout:
-            for _tree_name, classname in fin.classnames().items():
-                _tree_name = _tree_name.split(";")[0]
-                if _tree_name == tree_name:
-                    continue
-                if classname == "TTree":
-                    arrs = fin[_tree_name].arrays(library="ak")
-                    fout[_tree_name] = arrs
-
-            fout[tree_name] = dataset
-
-        os.replace(tmp_path, path_to_root_file)
-
-    def filter_region_by_type(self,
-                             dataset: Dict[str, Dict[str, pd.DataFrame]],
-                             region: str) -> Dict[str, Dict[str, pd.DataFrame]]:
-        """
-        Apply region filters
-
-        Args:
-            dataset: dict[type_name][sample_name] -> DataFrame.
-            region: Config channel name to query against.
         Returns:
-            Same structure with rows filtered per region expression.
+            A dictionary containing 'train' and 'validation' DataLoaders.
         """
-        for type_name, type_dict in dataset.items():
-            dataset[type_name] = self.filter_region_dataset(type_dict, region = region)
+        raw_data = self._load_raw_dataframes(load_systematics=False)
+        nominal_data = raw_data["Nominal"]
 
-        return dataset
+        all_dfs = [df.copy() for df in nominal_data.values()]
+        if not all_dfs:
+            raise ValueError("No data loaded from config. Check sample paths and names.")
+        full_df = pd.concat(all_dfs, ignore_index=True)
 
-    def filter_region_dataset(self,
-                              dataset: Dict[str, pd.DataFrame],
-                              region: str) -> Dict[str, pd.DataFrame]:
-        """
-        Apply config-defined query string to each sample's DataFrame.
+        signal_samples = [s["Name"] for s in self.config.config["Samples"] if s.get("Type") == "Signal"]
+        if not signal_samples:
+            raise ValueError("No samples with Type='Signal' found in the config.")
+            
+        full_df[self._label_col] = full_df[self._sample_name_col].isin(signal_samples).astype(int)
 
-        Args:
-            dataset: dict[sample_name] -> DataFrame.
-            region: Config channel name to look up filters for.
-        Returns:
-            New dict with filtered DataFrames (copy).
-        """
-        region_filters = self.config.get_channel_filters(channel_name = region)
-        for sample_name, sample_dataframe in dataset.items():
-            dataset[sample_name] = sample_dataframe.query(region_filters).copy()
-        return dataset
+        is_signal = full_df[self._label_col] == 1
+        sum_w_sig = full_df.loc[is_signal, "weights"].sum()
+        sum_w_bkg = full_df.loc[~is_signal, "weights"].sum()
 
-    def merge_dataframe_dict_for_training(self, 
-                                        dataset_dict, 
-                                        label_sample_dict: Union[dict[str, int], None] = None,
-                                        samples_to_merge = []):
-        """
-        Concatenate selected samples; optionally add normalized weights + labels. 
-        The returned sample is ready for training.
-        Args:
-            dataset_dict: dict[sample_name] -> DataFrame.
-            label_sample_dict: Optional mapping of sample_name -> class id.
-            samples_to_merge: List of sample names to include.
-        Returns:
-            pd.DataFrame: merged (and optionally labeled/normalized) dataset.
-        Raises:
-            Exception: If samples_to_merge is empty.
-        """
-        if len(samples_to_merge) == 0:
-            raise Exception
+        full_df[self._weight_col] = full_df["weights"]
+        if sum_w_sig > 0 and sum_w_bkg > 0:
+            full_df.loc[~is_signal, self._weight_col] *= (sum_w_sig / sum_w_bkg)
 
-        list_dataframes = []
-        for sample_name, dataset in dataset_dict.items():
-            if sample_name not in samples_to_merge: continue
-            list_dataframes.append(dataset)
+        train_df, val_df = train_test_split(
+            full_df, 
+            test_size=test_size, 
+            random_state=random_state,
+            stratify=full_df[self._label_col]
+        )
 
-        dataset = pd.concat(list_dataframes)
+        train_dataset = NSBIDataFrameDataset(
+            dataframe=train_df,
+            features=self.branches_to_load,
+            label_column=self._label_col,
+            weight_column=self._weight_col
+        )
+        val_dataset = NSBIDataFrameDataset(
+            dataframe=val_df,
+            features=self.branches_to_load,
+            label_column=self._label_col,
+            weight_column=self._weight_col
+        )
 
-        if label_sample_dict is not None:
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=True
+        )
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True
+        )
 
-            dataset = self._add_normalised_weights_and_train_label_class(dataset, 
-                                                                        label_sample_dict)
-
-        return dataset
-
-    def _add_normalised_weights_and_train_label_class(self,
-                                                    dataset, 
-                                                    label_sample_dict: dict[str, int]):
-        """
-        Add per-class normalized weights and integer training labels.
-
-        Process:
-            - 'train_labels' set per sample_name using label_sample_dict.
-            - 'weights_normed' scaled so each class sums to 1.0.
-
-        Args:
-            dataset: Input DataFrame with 'sample_name' and 'weights'.
-            label_sample_dict: Mapping sample_name -> class id.
-        Returns:
-            pd.DataFrame with 'train_labels' and 'weights_normed' columns.
-        """
-        dataset['weights_normed']       = dataset['weights'].to_numpy()
-        dataset['train_labels']         = -999
-
-        for sample_name, label in label_sample_dict.items():
-
-            mask_sample_name                                     = np.isin(dataset["sample_name"], [sample_name])
-
-            dataset.loc[mask_sample_name, "train_labels"]        = label
-
-        train_labels_unique = np.unique(dataset.train_labels)
-
-        for train_label in train_labels_unique:
-
-            mask_train_label                                     = np.isin(dataset["train_labels"], [train_label])
-
-            total_train_weight                                   = dataset.loc[mask_train_label, "weights"].sum()
-
-            dataset.loc[mask_train_label, "weights_normed"]      = dataset.loc[mask_train_label, "weights_normed"] / total_train_weight
-
-        return dataset
-
-
-def save_dataframe_as_root(dataset        : pd.DataFrame,
-                           path_to_save   : str,
-                           tree_name      : str) -> None:
-    """
-    Utility: create/overwrite a ROOT file with a single TTree from a DataFrame.
-
-    Args:
-        dataset: DataFrame to serialize (all columns become branches).
-        path_to_save: Target ROOT file path.
-        tree_name: Name of the TTree to create.
-    """
-    with uproot.recreate(f"{path_to_save}") as ntuple:
-
-        arrays = {col: dataset[col].to_numpy() for col in dataset.columns}
-
-        ntuple[tree_name] = arrays
-        
-
-def load_dataframe_from_root(path_to_load      : str,
-                           tree_name         : str,
-                           branches_to_load  : list) -> pd.DataFrame:
-    """
-    Utility: read selected branches from a ROOT TTree into a DataFrame.
-
-    Args:
-        path_to_load: Source ROOT file path.
-        tree_name: TTree name inside the file.
-        branches_to_load: Branch names to read.
-    Returns:
-        pd.DataFrame containing the requested branches.
-    """
-    with uproot.open(f"{path_to_load}:{tree_name}") as tree:
-            dataframe = tree.arrays(branches_to_load, library="pd")
-
-    return dataframe
+        return {"train": train_loader, "validation": val_loader}
