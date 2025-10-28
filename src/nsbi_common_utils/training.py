@@ -22,7 +22,7 @@ import onnx
 import onnxruntime as rt
 
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from sklearn.compose import ColumnTransformer
 from joblib import dump, load
@@ -151,78 +151,95 @@ class TrainEvaluatePreselNN:
         self.weights_normed_column              = weights_normed_column
 
     # Defining a simple NN training for preselection - no need for "flexibility" here
-    def train(self, test_size=0.15, 
-                    random_state=42, 
-                    path_to_save='', 
-                    epochs=20, 
-                    batch_size=1024, 
-                    verbose=2, 
-                    learning_rate=0.1):
+    def train(self, 
+              k_folds=5, 
+              random_state=42, 
+              path_to_save='', 
+              epochs=20, 
+              batch_size=1024, 
+              verbose=2, 
+              learning_rate=0.001):
 
-        '''
-        The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
+        X = self.data_features_training.values
+        y = self.dataset[self.train_labels_column].values
+        w = self.dataset[self.weights_normed_column].values
 
-        test_size: the fraction of dataset to set aside for diagnostics, not used in training and validation of the loss vs epoch curves
-        random_state: random state to use for splitting the train/test dataset before training NN
-        epochs: the number of epochs to train the NNs
-        batch_size: the size of each batch used during gradient optimization
-        learning_rate: the initial learning rate to pass to the optimizer
-        '''
+        # Standardize input features
+        self.scaler = ColumnTransformer(
+            [("scaler", StandardScaler(), self.features_scaling)],
+            remainder='passthrough'
+        )
+        X_scaled = self.scaler.fit_transform(X)
 
-        # Split data into training and validation sets (including weights)
-        X_train, X_val, y_train, y_val, weight_train, weight_val = train_test_split(self.data_features_training, 
-                                                                                    self.dataset[self.train_labels_column], 
-                                                                                    self.dataset[self.weights_normed_column], 
-                                                                                    test_size=test_size, 
-                                                                                    random_state=random_state, 
-                                                                                    stratify=self.dataset[self.train_labels_column])
+        skf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=random_state)
+        fold = 1
+        val_accuracies = []
 
-        # Standardize the input features
-        self.scaler = ColumnTransformer([("scaler", StandardScaler(), self.features_scaling)],remainder='passthrough')
-        X_train = self.scaler.fit_transform(X_train)  # Fit & transform training data
-        X_val = self.scaler.transform(X_val)
-        
-        # Define the neural network model
+        for train_idx, val_idx in skf.split(X_scaled, y):
+            print(f"\n--- Fold {fold}/{k_folds} ---")
+
+            X_train, X_val = X_scaled[train_idx], X_scaled[val_idx]
+            y_train, y_val = y[train_idx], y[val_idx]
+            w_train, w_val = w[train_idx], w[val_idx]
+
+            # Define model
+            model = tf.keras.Sequential([
+                layers.Input(shape=(self.data_features_training.shape[1],)),
+                layers.Dense(1000, activation='swish'),
+                layers.Dense(1000, activation='swish'),
+                layers.Dense(self.num_classes, activation='softmax')
+            ])
+
+            optimizer = tf.keras.optimizers.Nadam(learning_rate=learning_rate)
+            model.compile(optimizer=optimizer,
+                          loss='sparse_categorical_crossentropy',
+                          weighted_metrics=["accuracy"])
+
+            # Callbacks
+            reduce_lr = keras.callbacks.ReduceLROnPlateau(
+                monitor='val_loss', factor=0.01,
+                patience=30, min_lr=1e-9
+            )
+
+            # Train model
+            history = model.fit(
+                X_train, y_train,
+                sample_weight=w_train,
+                validation_data=(X_val, y_val, w_val),
+                epochs=epochs,
+                batch_size=batch_size,
+                verbose=verbose,
+                callbacks=[reduce_lr]
+            )
+
+            val_acc = np.max(history.history['val_accuracy'])
+            val_accuracies.append(val_acc)
+            print(f"Fold {fold} best val_accuracy: {val_acc:.4f}")
+
+            fold += 1
+
+        print(f"\nAverage validation accuracy across {k_folds} folds: {np.mean(val_accuracies):.4f}")
+
+        # Train final model on full data
+        print("\nTraining final model on full dataset...")
         self.model = tf.keras.Sequential([
-            layers.Input(shape=(self.data_features_training.shape[1],)),  # Input layer
+            layers.Input(shape=(self.data_features_training.shape[1],)),
             layers.Dense(1000, activation='swish'),
             layers.Dense(1000, activation='swish'),
-            layers.Dense(self.num_classes, activation='softmax')  # Output layer for num_class classes
+            layers.Dense(self.num_classes, activation='softmax')
         ])
-
-        # Using the Nadam optimizer by default
         optimizer = tf.keras.optimizers.Nadam(learning_rate=learning_rate)
-
-        # Compile the model
         self.model.compile(optimizer=optimizer,
-                      loss='sparse_categorical_crossentropy',
-                      weighted_metrics=["accuracy"])
-        
-        # setup the callbacks
-        callback_factor = 0.01
-        callback_patience = 30
-        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=callback_factor,
-                                        patience=callback_patience, min_lr=0.000000001)
-        
-        # Train the model with sample weights
-        self.model.fit(X_train, y_train, sample_weight=weight_train, 
-                  validation_data=(X_val, y_val, weight_val), callbacks=[reduce_lr], epochs=epochs, batch_size=batch_size, verbose=verbose)
+                           loss='sparse_categorical_crossentropy',
+                           weighted_metrics=["accuracy"])
+        self.model.fit(X_scaled, y, sample_weight=w, epochs=epochs, batch_size=batch_size, verbose=verbose)
 
-        K.clear_session()
-
-        # Convert Keras model to ONNX
-        self.model                  = convert_tf_to_onnx(self.model)
-
-        # Save the trained model if user provides with a path
-        if path_to_save!='':
-
-            path_to_save      = Path(path_to_save)
+        # Convert and save
+        onnx_model = convert_tf_to_onnx(self.model)
+        if path_to_save:
+            path_to_save = Path(path_to_save)
             path_to_save.mkdir(parents=True, exist_ok=True)
-
-            path_to_model           = path_to_save / 'model_preselection.onnx'
-            path_to_scaler          = path_to_save / 'model_scaler_presel.bin'
-
-            save_model(self.model, path_to_model, self.scaler, path_to_scaler)
+            save_model(onnx_model, path_to_save / 'model_preselection.onnx', self.scaler, path_to_save / 'model_scaler_presel.bin')
 
 
     def assign_trained_model(self, 
