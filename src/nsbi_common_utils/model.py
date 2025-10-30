@@ -104,9 +104,11 @@ class Model:
         Maps the index of parameter in the parameter vector to norm factor
         """
         dict_index_normfactor = {}
+        #print(self.list_normfactors)
         for normfactor in self.list_normfactors:
-            index = self.list_parameters.index( normfactor )
-            dict_index_normfactor[normfactor] = index
+            if normfactor in self.list_parameters:
+                index = self.list_parameters.index( normfactor )
+                dict_index_normfactor[normfactor] = index
         return dict_index_normfactor
 
     def _get_param_vec_initial(self):
@@ -367,8 +369,9 @@ class Model:
         for sample in self.all_samples:
             params_sample: list[str] = self.norm_sample_map[sample]
             for param in params_sample:
-                index_param             = self.index_normparam_map[param]
-                norm_var[sample]        *= param_vec[index_param]
+                if param in self.index_normparam_map.keys():
+                    index_param             = self.index_normparam_map[param]
+                    norm_var[sample]        *= param_vec[index_param]
         return norm_var
     
     def _get_systematic_data(self, type_of_fit: str) -> Dict[str, jnp.ndarray]:

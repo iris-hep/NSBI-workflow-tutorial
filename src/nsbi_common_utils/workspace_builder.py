@@ -166,11 +166,16 @@ class WorkspaceBuilder:
                 current_sample.update({"name": sample_name})
                 
                 sample_path     = sample_dict["SamplePath"]
-                branches_to_load_sample  = branches_to_load.copy()
+                branches_to_load_sample  = branches_to_load.copy(
+                    
+                )
 
                 datasets            = nsbi_common_utils.datasets.datasets(self.config_path,
                                                                     branches_to_load =  branches_to_load_sample)
+                # if self.config_dict["use_syst"]:
                 datasets_incl       = datasets.load_datasets_from_config(load_systematics = True)
+                # else :
+                #     datasets_incl       = datasets.load_datasets_from_config(load_systematics = False)
                 dataset_region_dict = datasets.filter_region_by_type(datasets_incl, 
                                                                      region = channel_name)
 
@@ -224,15 +229,16 @@ class WorkspaceBuilder:
 
             
         return channels
+
     def measurements(self):
         
         measurements = []
         
         for measurement_ in self.config_dict["General"]["Measurement"]:
-            print(measurement_["name"])
+            print(measurement_["Name"])
             measurement = {}
             
-            measurement.update({"name": measurement_["name"]})
+            measurement.update({"name": measurement_["Name"]})
             config_dict = {}
     
             # get the norm factor initial values / bounds / constant setting
@@ -247,8 +253,10 @@ class WorkspaceBuilder:
                     parameter.update({"inits": [init]})
                 if bounds is not None:
                     parameter.update({"bounds": [bounds]})
-    
-                parameters_list.append(parameter)
+                if nf_name in measurement_["ParametersToFit"] and measurement_["ParametersToFit"]:
+                    parameters_list.append(parameter)
+                else :
+                    parameters_list.append(parameter)
             
             for sys in self.config_dict.get("Systematics", []):
                 sys_name = sys["Name"]
@@ -260,16 +268,19 @@ class WorkspaceBuilder:
                     parameter.update({"inits": [init]})
                 if bounds is not None:
                     parameter.update({"bounds": [bounds]})
-                if sys_name in measurement_["systs"]:
+                if sys_name in measurement_["ParametersToFit"] and measurement_["ParametersToFit"]:
+                    parameters_list.append(parameter)
+                else :
                     parameters_list.append(parameter)
     
             parameters = {"parameters": parameters_list}
             config_dict.update(parameters)
-            config_dict.update({"poi": self.config_dict["General"].get("POI", "")})
+            config_dict.update({"poi": measurement_.get("POI", "")})
             measurement.update({"config": config_dict})
             measurements.append(measurement)
         #print(measurements)
         return measurements
+
 
     def build(self) -> Dict[str, Any]:
         """
