@@ -224,48 +224,52 @@ class WorkspaceBuilder:
 
             
         return channels
-
     def measurements(self):
         
         measurements = []
-        measurement = {}
-        measurement.update({"name": self.config_dict["General"]["Measurement"]})
-        config_dict = {}
-
-        # get the norm factor initial values / bounds / constant setting
-        parameters_list = []
-        for nf in self.config_dict.get("NormFactors", []):
-            nf_name = nf["Name"]  # every NormFactor has a name
-            init = nf.get("Nominal", None)
-            bounds = nf.get("Bounds", None)
-
-            parameter = {"name": nf_name}
-            if init is not None:
-                parameter.update({"inits": [init]})
-            if bounds is not None:
-                parameter.update({"bounds": [bounds]})
-
-            parameters_list.append(parameter)
-
-        for sys in self.config_dict.get("Systematics", []):
-            sys_name = sys["Name"]
-            init = sys.get("Nominal", None)
-            bounds = sys.get("Bounds", None)
-
-            parameter = {"name": sys_name}
-            if init is not None:
-                parameter.update({"inits": [init]})
-            if bounds is not None:
-                parameter.update({"bounds": [bounds]})
-            parameters_list.append(parameter)
-
-        parameters = {"parameters": parameters_list}
-        config_dict.update(parameters)
-        config_dict.update({"poi": self.config_dict["General"].get("POI", "")})
-        measurement.update({"config": config_dict})
-        measurements.append(measurement)
+        
+        for measurement_ in self.config_dict["General"]["Measurement"]:
+            print(measurement_["name"])
+            measurement = {}
+            
+            measurement.update({"name": measurement_["name"]})
+            config_dict = {}
+    
+            # get the norm factor initial values / bounds / constant setting
+            parameters_list = []
+            for nf in self.config_dict.get("NormFactors", []):
+                nf_name = nf["Name"]  # every NormFactor has a name
+                init = nf.get("Nominal", None)
+                bounds = nf.get("Bounds", None)
+    
+                parameter = {"name": nf_name}
+                if init is not None:
+                    parameter.update({"inits": [init]})
+                if bounds is not None:
+                    parameter.update({"bounds": [bounds]})
+    
+                parameters_list.append(parameter)
+            
+            for sys in self.config_dict.get("Systematics", []):
+                sys_name = sys["Name"]
+                init = sys.get("Nominal", None)
+                bounds = sys.get("Bounds", None)
+    
+                parameter = {"name": sys_name}
+                if init is not None:
+                    parameter.update({"inits": [init]})
+                if bounds is not None:
+                    parameter.update({"bounds": [bounds]})
+                if sys_name in measurement_["systs"]:
+                    parameters_list.append(parameter)
+    
+            parameters = {"parameters": parameters_list}
+            config_dict.update(parameters)
+            config_dict.update({"poi": self.config_dict["General"].get("POI", "")})
+            measurement.update({"config": config_dict})
+            measurements.append(measurement)
+        #print(measurements)
         return measurements
-
 
     def build(self) -> Dict[str, Any]:
         """
