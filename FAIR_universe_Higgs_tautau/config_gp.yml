@@ -49,71 +49,70 @@ Systematics:
     -   Name                : AllCorrelatedShapePlusNorm
         Type                : NormPlusShape
         Nominal             : 0
-        Variations                 : 
-            -   VariationValues    : 
-                  - Name:             [JES]
-                    Perturbation:     [1.0]
-                    Samples:
-                      - SampleName        : htautau
-                        Path              : saved_datasets/dataset_JES_up.root
-                        Tree              : tree_htautau
-                        Weight            : weights
-                      - SampleName        : ztautau
-                        Path              : saved_datasets/dataset_JES_up.root
-                        Tree              : tree_ztautau
-                        Weight            : weights
-                      - SampleName        : ttbar
-                        Path              : saved_datasets/dataset_JES_up.root
-                        Tree              : tree_ttbar
-                        Weight            : weights
+        VariationValues    : 
+          - SystNames:         [JES]
+            Perturbation:     [1.0]
+            Samples:
+              - SampleName        : htautau
+                Path              : saved_datasets/dataset_JES_up.root
+                Tree              : tree_htautau
+                Weight            : weights
+              - SampleName        : ztautau
+                Path              : saved_datasets/dataset_JES_up.root
+                Tree              : tree_ztautau
+                Weight            : weights
+              - SampleName        : ttbar
+                Path              : saved_datasets/dataset_JES_up.root
+                Tree              : tree_ttbar
+                Weight            : weights
 
-                  - Name:             [JES]
-                    Perturbation:     [-1.0]
-                    Samples:
-                      - SampleName        : htautau
-                        Path              : saved_datasets/dataset_JES_dn.root
-                        Tree              : tree_htautau
-                        Weight            : weights
-                      - SampleName        : ztautau
-                        Path              : saved_datasets/dataset_JES_dn.root
-                        Tree              : tree_ztautau
-                        Weight            : weights
-                      - SampleName        : ttbar
-                        Path              : saved_datasets/dataset_JES_dn.root
-                        Tree              : tree_ttbar
-                        Weight            : weights
+          - SystNames:        [JES]
+            Perturbation:     [-1.0]
+            Samples:
+              - SampleName        : htautau
+                Path              : saved_datasets/dataset_JES_dn.root
+                Tree              : tree_htautau
+                Weight            : weights
+              - SampleName        : ztautau
+                Path              : saved_datasets/dataset_JES_dn.root
+                Tree              : tree_ztautau
+                Weight            : weights
+              - SampleName        : ttbar
+                Path              : saved_datasets/dataset_JES_dn.root
+                Tree              : tree_ttbar
+                Weight            : weights
 
-                  - Name:             [TES]
-                    Perturbation:     [1.0]
-                    Samples:
-                      - SampleName        : htautau
-                        Path              : saved_datasets/dataset_TES_up.root
-                        Tree              : tree_htautau
-                        Weight            : weights
-                      - SampleName        : ztautau
-                        Path              : saved_datasets/dataset_TES_up.root
-                        Tree              : tree_ztautau
-                        Weight            : weights
-                      - SampleName        : ttbar
-                        Path              : saved_datasets/dataset_TES_up.root
-                        Tree              : tree_ttbar
-                        Weight            : weights
+          - SystNames:        [TES]
+            Perturbation:     [1.0]
+            Samples:
+              - SampleName        : htautau
+                Path              : saved_datasets/dataset_TES_up.root
+                Tree              : tree_htautau
+                Weight            : weights
+              - SampleName        : ztautau
+                Path              : saved_datasets/dataset_TES_up.root
+                Tree              : tree_ztautau
+                Weight            : weights
+              - SampleName        : ttbar
+                Path              : saved_datasets/dataset_TES_up.root
+                Tree              : tree_ttbar
+                Weight            : weights
 
-                  - Name:             [TES]
-                    Perturbation:     [-1.0]
-                    Samples:
-                      - SampleName        : htautau
-                        Path              : saved_datasets/dataset_TES_dn.root
-                        Tree              : tree_htautau
-                        Weight            : weights
-                      - SampleName        : ztautau
-                        Path              : saved_datasets/dataset_TES_dn.root
-                        Tree              : tree_ztautau
-                        Weight            : weights
-                      - SampleName        : ttbar
-                        Path              : saved_datasets/dataset_TES_dn.root
-                        Tree              : tree_ttbar
-                        Weight            : weights
+          - SystNames:        [TES]
+            Perturbation:     [-1.0]
+            Samples:
+              - SampleName        : htautau
+                Path              : saved_datasets/dataset_TES_dn.root
+                Tree              : tree_htautau
+                Weight            : weights
+              - SampleName        : ztautau
+                Path              : saved_datasets/dataset_TES_dn.root
+                Tree              : tree_ztautau
+                Weight            : weights
+              - SampleName        : ttbar
+                Path              : saved_datasets/dataset_TES_dn.root
+                Tree              : tree_ttbar
+                Weight            : weights
 
 TrainingFeatures:
     - DER_mass_transverse_met_lep
@@ -165,19 +164,19 @@ Regions:
                Ratios  : saved_datasets/output_training_nominal/output_ratios_htautau/ratio_htautau.npy
           Systematics    :
             -   VariationValues    : 
-                  - Name:             [JES]
+                  - SystNames:        [JES]
                     Perturbation:     [1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_htautau_JES_Up/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_htautau_JES_Up/ratio_JES_Up.npy
-                  - Name:             [JES]
+                  - SystNames:        [JES]
                     Perturbation:     [-1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_htautau_JES_Dn/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_htautau_JES_Dn/ratio_JES_Dn.npy
-                  - Name:             [TES]
+                  - SystNames:        [TES]
                     Perturbation:     [1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_htautau_TES_Up/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_htautau_TES_Up/ratio_TES_Up.npy
-                  - Name:             [TES]
+                  - SystNames:        [TES]
                     Perturbation:     [-1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_htautau_TES_Dn/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_htautau_TES_Dn/ratio_TES_Dn.npy
