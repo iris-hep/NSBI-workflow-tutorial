@@ -5,7 +5,7 @@ import warnings
 import logging
 import numpy as np
 import tensorflow as tf
-
+import yaml
 sys.path.append('../')
 
 # Load the package and modules for training and plotting
@@ -13,8 +13,6 @@ import nsbi_common_utils
 from nsbi_common_utils import datasets, configuration
 from nsbi_common_utils.training import density_ratio_trainer
 
-# Import extracted training parameters
-import training_NN_paras as nn_params
 
 import mplhep as hep
 hep.style.use(hep.style.ATLAS)
@@ -26,6 +24,19 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
+
+def load_training_settings(config_path):
+    """
+    Helper function to load training settings from the config_training_NN_parms.yml file.
+    """
+    with open(config_path, 'r') as file:
+        full_config = yaml.safe_load(file)
+    
+    if 'training_settings' not in full_config:
+        raise KeyError(f"The configuration file {config_path} must contain a 'training_settings' section.")
+        
+    return full_config['training_settings']
 
 def main():
     
@@ -40,6 +51,8 @@ def main():
                         help='Use log loss instead of default loss')
     parser.add_argument('--delete-existing-models', action='store_true',
                         help='Delete existing models before training')
+    parser.add_argument('--training-config', type=str, default='./config_training_NN_parms.yml', 
+                        help='Path to the training parameter YAML file')
     args = parser.parse_args()
  
 
@@ -124,10 +137,17 @@ def main():
     
     force_train = args.train
     
+    # Load the raw training parameters dictionary
+    training_params_dict = load_training_settings(args.training_config)
+
     for count, process_type in enumerate(basis_processes):
         logger.info(f"Processing {process_type}...")
         
-        settings = nn_params.training_settings[process_type].copy()
+        if process_type not in training_params_dict:
+            logger.error(f"Settings for process '{process_type}' not found in 'training_settings' section of YAML.")
+            raise KeyError(f"Missing config for {process_type}")
+
+        settings = training_params_dict[process_type].copy()
         
         # Override load_trained_models if --train argument is present
         if force_train:
