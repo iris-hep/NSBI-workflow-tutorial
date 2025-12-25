@@ -32,22 +32,21 @@ training_settings:
   ztautau:
     <<: *training_defaults
 
-
-  systematic_uncertainty_training:
-    calibration: True
-    num_bins_cal: 50
-    load_trained_models: True     
-    recalibrate_output: True       
-    num_ensemble_members: 1
-    plot_scaled_features: False
-    verbose: 1                     
-    scalerType: 'MinMax'
-    hidden_layers: 4
-    neurons: 1000
-    number_of_epochs: 100
-    batch_size: 10000
-    learning_rate: 0.1             
-    type_of_calibration: 'histogram'
-    callback: True
-    callback_patience: 30
-    callback_factor: 0.01
+systematic_uncertainty_training:
+  calibration: True
+  num_bins_cal: 50
+  load_trained_models: True     
+  recalibrate_output: True       
+  num_ensemble_members: 1
+  plot_scaled_features: False
+  verbose: 1                     
+  scalerType: 'MinMax'
+  hidden_layers: 4
+  neurons: 1000
+  number_of_epochs: 100
+  batch_size: 10000
+  learning_rate: 0.1             
+  type_of_calibration: 'histogram'
+  callback: True
+  callback_patience: 30
+  callback_factor: 0.01
