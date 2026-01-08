@@ -127,10 +127,10 @@ class WorkspaceBuilder:
         modifiers = []
         for systematic_dict in self.config_dict.get("Systematics", []):
 
-            regions_affected = systematic_dict.get("Regions", None)
-            if regions_affected is not None:
-                if region_name not in regions_affected:
-                    continue
+            # regions_affected = systematic_dict.get("Regions", None)
+            # if regions_affected is not None:
+            #     if region_name not in regions_affected:
+            #         continue
             samples_affected = systematic_dict.get("Samples", None)
             if samples_affected is not None:
                 if sample_name not in samples_affected:
