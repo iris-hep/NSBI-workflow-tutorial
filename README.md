@@ -37,7 +37,7 @@ The notebooks presented here aim to serve as a guide to use the `nsbi-common-uti
 <br/>
 <br/>
 
-![NLL_PE_ExpOnly_PEHist_Comp](https://github.com/user-attachments/assets/5aba909b-efc5-4a66-b171-9aa2c8c4d6f4) ![NLL_PE_ObsExp_StatSyst_Comp](https://github.com/user-attachments/assets/3c518b0b-90cb-4bcc-8830-a2783777010f)
+![NLL_PE_ObsExp_StatSyst_Comp](https://github.com/user-attachments/assets/3c518b0b-90cb-4bcc-8830-a2783777010f)
 
 <br/>
 <br/>
