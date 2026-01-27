@@ -218,11 +218,11 @@ Regions:
                     Perturbation:     [-1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Dn/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Dn/ratio_JES_Dn.npy
-                  - Name:             [TEX]
+                  - Name:             [TES]
                     Perturbation:     [1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Up/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Up/ratio_TES_Up.npy
-                  - Name:             [TEX]
+                  - Name:             [TES]
                     Perturbation:     [-1.0]
                     Models:           saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Dn/
                     Ratios:           saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Dn/ratio_TES_Dn.npy
