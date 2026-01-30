@@ -1,0 +1,92 @@
+# config.pipeline.yaml
+
+# input data settings
+data:
+  raw_path: "/path/to/input/higgs_tau_tau.csv"
+  sample_name: "FAIR_universe_Higgs_tautau"
+  features:
+    - pt
+    - eta
+    - phi
+    - mass
+  target: "label"
+
+# preprocessing
+preprocess:
+  shuffle: true
+  test_size: 0.2
+  random_seed: 42
+
+training_settings:
+  defaults: &training_defaults
+  hidden_layers: 4
+  neurons: 1000
+  number_of_epochs: 100
+  batch_size: 512
+  learning_rate: 0.1
+  scalerType: 'MinMax'
+  calibration: False
+  num_bins_cal: 500
+  callback: True
+  callback_patience: 30
+  callback_factor: 0.01
+  validation_split: 0.1
+  holdout_split: 0.25
+  verbose: 1
+  plot_scaled_features: False
+  load_trained_models: True
+  recalibrate_output: False
+  type_of_calibration: 'histogram'
+  num_ensemble_members: 10
+  summarize_model: True
+
+htautau:
+  <<: *training_defaults
+
+ttbar:
+  <<: *training_defaults
+
+ztautau:
+  <<: *training_defaults
+
+systematic_uncertainty_training:
+  calibration: True
+  num_bins_cal: 50
+  load_trained_models: True     
+  recalibrate_output: True       
+  num_ensemble_members: 1
+  plot_scaled_features: False
+  verbose: 1                     
+  scalerType: 'MinMax'
+  hidden_layers: 4
+  neurons: 1000
+  number_of_epochs: 100
+  batch_size: 10000
+  learning_rate: 0.1             
+  type_of_calibration: 'histogram'
+  callback: True
+  callback_patience: 30
+  callback_factor: 0.01
+
+# model / training
+model:
+  type: "nsbi_model_v1"
+  hidden_layers:
+    - 128
+    - 64
+  activation: "relu"
+  epochs: 50
+  batch_size: 256
+  learning_rate: 0.001
+
+# output / persistence
+output:
+  base_dir: "results"
+  preprocess_dir: "results/preprocessed"
+  model_dir: "results/models"
+  plots_dir: "results/plots"
+
+# logging / diagnostics
+logging:
+  level: "INFO"
+  save_logs: true
