@@ -3,7 +3,8 @@ set -e
 
 STEP=$1
 
-python -m pip install --no-deps -e .
+export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+python -m pip install --user --no-deps -e .
 
 cd FAIR_universe_Higgs_tautau
 

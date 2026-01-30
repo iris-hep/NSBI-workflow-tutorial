@@ -195,3 +195,9 @@ src/nsbi_common_utils/_version.py
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+workflow.dag.*
+
+apptainer-build.sub
+
+logs/*
