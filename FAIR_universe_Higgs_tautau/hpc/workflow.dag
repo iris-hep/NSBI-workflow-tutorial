@@ -1,2 +1,2 @@
 JOB LOAD FAIR_universe_Higgs_tautau/hpc/step.sub
-VARS LOAD STEP="Data_Loader"
+VARS LOAD STEP="Data_Loader" CPUS="12" MEM="128GB" GPUS="0" DISK="64GB"
