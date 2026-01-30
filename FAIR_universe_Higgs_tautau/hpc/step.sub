@@ -16,6 +16,6 @@ request_disk   = $(DISK:64GB)
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau
+transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau, README.md
 
 queue
