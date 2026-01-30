@@ -42,7 +42,9 @@ Stage: final
     /app/pixi.toml /app/pixi.toml
     /app/pixi.lock /app/pixi.lock
     /app/.pixi/.condapackageignore /app/.pixi/.condapackageignore
-    /app/entrypoint.sh /app/entrypoint.sh
+
+%environment
+    export PATH=/app/.pixi/envs/{{ ENVIRONMENT }}/bin:$PATH
 
 %runscript
     #!/bin/bash
