@@ -3,6 +3,8 @@ set -e
 
 STEP=$1
 
-cd "$(dirname "$0")/.."
+python -m pip install --no-deps -e .
+
+cd FAIR_universe_Higgs_tautau
 
 python ${STEP}.py

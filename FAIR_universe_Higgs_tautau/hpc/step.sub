@@ -8,10 +8,6 @@ log    = logs/$(STEP).$(Cluster).log
 output = logs/$(STEP).$(Cluster).out
 error  = logs/$(STEP).$(Cluster).err
 
-NUM_GPUS = 0
-NUM_WORKERS = 4
-
-
 request_cpus   = $(CPUS:1)
 request_memory = $(MEM:64GB)
 request_gpus   = $(GPUS:0)
