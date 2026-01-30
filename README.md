@@ -37,14 +37,14 @@ The notebooks presented here aim to serve as a guide to use the `nsbi-common-uti
 <br/>
 <br/>
 
-![NLL_PE_ExpOnly_PEHist_Comp](https://github.com/user-attachments/assets/5aba909b-efc5-4a66-b171-9aa2c8c4d6f4) ![NLL_PE_ObsExp_StatSyst_Comp](https://github.com/user-attachments/assets/3c518b0b-90cb-4bcc-8830-a2783777010f)
+![NLL_PE_ObsExp_StatSyst_Comp](https://github.com/user-attachments/assets/3c518b0b-90cb-4bcc-8830-a2783777010f)
 
 <br/>
 <br/>
 
 We demonstrate the usage of `nsbi-common-utils` applied to a full-scale LHC analysis. The physics results presented in the notebooks only serve as examples of the workflow. The code in this tutorial is partially derived from the original ATLAS analysis code written by Jay Sandesara [[git](https://github.com/JaySandesara)], R.D. Schaffer [[git](https://gitlab.cern.ch/schaffer)] and Arnaud Maury [[git](https://github.com/Maury98)].
 
-The workflow currently uses the ttbar open data released by CMS, and the Higgs to tau tau dataset from FAIR universe challenge. More open datasets will be added in the future. 
+The workflow currently uses the Higgs to tau tau dataset from FAIR universe challenge. More open datasets will be added in the future. 
 
 ## Library
 

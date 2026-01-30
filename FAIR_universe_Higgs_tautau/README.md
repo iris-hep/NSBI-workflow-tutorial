@@ -3,6 +3,8 @@ FAIR Universe Dataset
 
 The tabular dataset used in this demonstration is hosted on Zenodo (https://zenodo.org/records/15131565), and is created using the particle physics simulation tools Pythia 8.2 and Delphes 3.5.0. The dataset provides events for the $H\to \tau\tau$ analysis, where the signal process is sub-dominant compared to the very large $Z\to \tau\tau$ and other backgrounds - good challenge to test the sensitivty of NSBI techniques.
 
+**NB** If you need access to pre-trained ensemble NNs, feel free to download the directory [here](https://cernbox.cern.ch/files/spaces/eos/user/j/jsandesa/NSBI_tutorial_data/saved_datasets) and move it inside `NSBI-workflow-tutorial/FAIR_Universe_Higgs_tautau/` in your cloned copy.
+
 Workflow
 --
 
@@ -28,12 +30,4 @@ This notebook is used to train the density ratios associated with the systematic
 
 6. [`Parameter_Fitting_with_Systematics.ipynb`](./Parameter_Fitting_with_Systematics.ipynb)
 
-This notebook is used to create a workspace object and perform parameter fitting with the NSBI model
-
-
-Measurements at the LHC
---
-
-Example published ATLAS distribution of the $H\to \tau\tau$ process among other backgrounds. The FAIR Universe dataset uses a $\tau_{had} \tau_{lep}$ final state, like in the distribution below:
-
-![Screenshot 2025-06-06 at 11 22 19 AM](https://github.com/user-attachments/assets/3107e69c-7071-4dcd-bb3d-01777ba93746)
+This notebook is used to create a workspace object and perform parameter fitting with the NSBI model.

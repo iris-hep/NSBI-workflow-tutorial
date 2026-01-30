@@ -222,7 +222,7 @@ class WorkspaceBuilder:
                         nominal_model         = region["TrainedModels"][idx]["Nominal"].get("Models", None)
 
                     current_sample.update({"ratios": nominal_ratios})
-                    current_sample.update({"weights": weights})
+                    # current_sample.update({"weights": weights})
 
                 modifiers = []
 
