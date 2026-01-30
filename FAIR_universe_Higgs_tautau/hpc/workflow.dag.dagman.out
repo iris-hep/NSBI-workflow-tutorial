@@ -1,0 +1,149 @@
+01/30/26 04:36:22 ******************************************************
+01/30/26 04:36:22 ** condor_scheduniv_exec.4666746.0 (CONDOR_DAGMAN) STARTING UP
+01/30/26 04:36:22 ** /usr/bin/condor_dagman
+01/30/26 04:36:22 ** SubsystemInfo: name=DAGMAN type=DAGMAN(9) class=CLIENT(2)
+01/30/26 04:36:22 ** Configuration: subsystem:DAGMAN local:<NONE> class:CLIENT
+01/30/26 04:36:22 ** $CondorVersion: 25.6.0 2026-01-16 BuildID: 867113 PackageID: 25.6.0-0.867113 GitSHA: efc7876e RC $
+01/30/26 04:36:22 ** $CondorPlatform: x86_64_AlmaLinux9 $
+01/30/26 04:36:22 ** PID = 3014931 RealUID = 27171
+01/30/26 04:36:22 ** Log last touched time unavailable (No such file or directory)
+01/30/26 04:36:22 ******************************************************
+01/30/26 04:36:22 Using config source: /etc/condor/condor_config
+01/30/26 04:36:22 Using local config sources: 
+01/30/26 04:36:22    /var/run/condor/pids.conf
+01/30/26 04:36:22    /var/run/condor/master_pid_8274.conf
+01/30/26 04:36:22    /usr/share/condor/config.d/50-gratia-gwms.conf
+01/30/26 04:36:22    /etc/condor/condor_config.principals
+01/30/26 04:36:22    /etc/condor/include/ip_addr_lists.conf
+01/30/26 04:36:22    /etc/condor/condor_config.global
+01/30/26 04:36:22    /etc/condor/condor_config.x86_64_CentOS9
+01/30/26 04:36:22    /etc/condor/condor_config.security
+01/30/26 04:36:22    /etc/condor/condor_config.puppet
+01/30/26 04:36:22    /etc/condor/hosts/ap2002.chtc.wisc.edu.local
+01/30/26 04:36:22    /etc/condor/include/schedd.conf
+01/30/26 04:36:22    /etc/condor/include/facility_wid.conf
+01/30/26 04:36:22    /etc/condor/include/oauth_credmon.conf
+01/30/26 04:36:22    /etc/condor/include/owned_by_chtc.conf
+01/30/26 04:36:22    /etc/condor/include/ospool_container_universe_transforms.conf
+01/30/26 04:36:22    /var/run/condor/condor_config.startd_offline_gpus
+01/30/26 04:36:22    /etc/condor/condor_config.flightworthy_testing
+01/30/26 04:36:22    /etc/condor/condor_config.htcss_testing
+01/30/26 04:36:22 config Macros = 331, Sorted = 331, StringBytes = 112728, TablesBytes = 12092
+01/30/26 04:36:22 CLASSAD_CACHING is ENABLED
+01/30/26 04:36:22 Daemon Log is logging: D_ALWAYS D_ERROR D_STATUS
+01/30/26 04:36:22 Daemoncore: Listening at <0.0.0.0:10364> on TCP (ReliSock) and UDP (SafeSock).
+01/30/26 04:36:22 Daemoncore: Listening at <[::]:10364> on TCP (ReliSock) and UDP (SafeSock).
+01/30/26 04:36:22 DaemonCore: command socket at <128.105.68.113:10364?addrs=128.105.68.113-10364+[2607-f388-2200-100-eaeb-d3ff-fea7-d05e]-10364&alias=ap2002.chtc.wisc.edu>
+01/30/26 04:36:22 DaemonCore: private command socket at <128.105.68.113:10364?addrs=128.105.68.113-10364+[2607-f388-2200-100-eaeb-d3ff-fea7-d05e]-10364&alias=ap2002.chtc.wisc.edu>
+01/30/26 04:36:22 DAGMAN_USE_OLD_FILE_PARSER setting: False
+01/30/26 04:36:22 DAGMAN_USE_STRICT setting: 1
+01/30/26 04:36:22 DAGMAN_VERBOSITY setting: 3
+01/30/26 04:36:22 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+01/30/26 04:36:22 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+01/30/26 04:36:22 DAGMAN_SUBMIT_DELAY setting: 0
+01/30/26 04:36:22 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+01/30/26 04:36:22 DAGMAN_STARTUP_CYCLE_DETECT setting: False
+01/30/26 04:36:22 DAGMAN_USE_JOIN_NODES setting: True
+01/30/26 04:36:22 DAGMAN_REPORT_GRAPH_METRICS setting: False
+01/30/26 04:36:22 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 100
+01/30/26 04:36:22 DAGMAN_AGGRESSIVE_SUBMIT setting: False
+01/30/26 04:36:22 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+01/30/26 04:36:22 DAGMAN_QUEUE_UPDATE_INTERVAL setting: 300.000000
+01/30/26 04:36:22 DAGMAN_DEFAULT_PRIORITY setting: 0
+01/30/26 04:36:22 DAGMAN_SUPPRESS_NOTIFICATION setting: False
+01/30/26 04:36:22 allow_events (DAGMAN_ALLOW_EVENTS) setting: 114
+01/30/26 04:36:22 DAGMAN_RETRY_SUBMIT_FIRST setting: True
+01/30/26 04:36:22 DAGMAN_RETRY_NODE_FIRST setting: False
+01/30/26 04:36:22 DAGMAN_MAX_JOBS_IDLE setting: 1000
+01/30/26 04:36:22 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+01/30/26 04:36:22 DAGMAN_MAX_PRE_SCRIPTS setting: 20
+01/30/26 04:36:22 DAGMAN_MAX_POST_SCRIPTS setting: 20
+01/30/26 04:36:22 DAGMAN_MAX_HOLD_SCRIPTS setting: 20
+01/30/26 04:36:22 DAGMAN_MUNGE_NODE_NAMES setting: True
+01/30/26 04:36:22 DAGMAN_ALLOW_ANY_NODE_NAME_CHARACTERS setting: False
+01/30/26 04:36:22 DAGMAN_PROHIBIT_MULTI_JOBS setting: False
+01/30/26 04:36:22 DAGMAN_SUBMIT_DEPTH_FIRST setting: False
+01/30/26 04:36:22 DAGMAN_ALWAYS_RUN_POST setting: False
+01/30/26 04:36:22 DAGMAN_CONDOR_SUBMIT_EXE setting: /usr/bin/condor_submit
+01/30/26 04:36:22 DAGMAN_CONDOR_RM_EXE setting: /usr/bin/condor_rm
+01/30/26 04:36:22 DAGMAN_USE_DIRECT_SUBMIT setting: True
+01/30/26 04:36:22 DAGMAN_PRODUCE_JOB_CREDENTIALS setting: True
+01/30/26 04:36:22 DAGMAN_DEFAULT_APPEND_VARS setting: False
+01/30/26 04:36:22 DAGMAN_INHERIT_ATTRS_PREFIX setting: 
+01/30/26 04:36:22 DAGMAN_INHERIT_ATTRS setting: 
+01/30/26 04:36:22 DAGMAN_ABORT_DUPLICATES setting: True
+01/30/26 04:36:22 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: True
+01/30/26 04:36:22 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+01/30/26 04:36:22 DAGMAN_CHECK_QUEUE_INTERVAL setting: 28800
+01/30/26 04:36:22 DAGMAN_PRINT_JOB_TABLE_INTERVAL setting: 900
+01/30/26 04:36:22 DAGMAN_AUTO_RESCUE setting: True
+01/30/26 04:36:22 DAGMAN_MAX_RESCUE_NUM setting: 100
+01/30/26 04:36:22 DAGMAN_WRITE_PARTIAL_RESCUE setting: True
+01/30/26 04:36:22 DAGMAN_RESET_RETRIES_UPON_RESCUE setting: True
+01/30/26 04:36:22 DAGMAN_METRICS_FILE_VERSION setting: 2
+01/30/26 04:36:22 DAGMAN_DEFAULT_NODE_LOG setting: @(DAG_DIR)/@(DAG_FILE).nodes.log
+01/30/26 04:36:22 DAGMAN_LOG_ON_NFS_IS_ERROR setting: False
+01/30/26 04:36:22 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
+01/30/26 04:36:22 DAGMAN_MAX_JOB_HOLDS setting: 100
+01/30/26 04:36:22 DAGMAN_NODE_JOB_FAILURE_TOLERANCE setting: 0
+01/30/26 04:36:22 DAGMAN_HOLD_CLAIM_TIME setting: 20
+01/30/26 04:36:22 ALL_DEBUG setting: D_CAT D_SUB_SECOND
+01/30/26 04:36:22 DAGMAN_SUPPRESS_JOB_LOGS setting: False
+01/30/26 04:36:22 DAGMAN_REMOVE_NODE_JOBS setting: True
+01/30/26 04:36:22 DAGMAN_PUT_FAILED_JOBS_ON_HOLD setting: False
+01/30/26 04:36:22 DAGMAN_REMOVE_JOBS_AFTER_LIMIT_CHANGE setting: False
+01/30/26 04:36:22 DAGMAN will adjust edges after parsing
+01/30/26 04:36:22 argv[0] == "condor_scheduniv_exec.4666746.0"
+01/30/26 04:36:22 argv[1] == "-Lockfile"
+01/30/26 04:36:22 argv[2] == "FAIR_universe_Higgs_tautau/hpc/workflow.dag.lock"
+01/30/26 04:36:22 argv[3] == "-Dag"
+01/30/26 04:36:22 argv[4] == "FAIR_universe_Higgs_tautau/hpc/workflow.dag"
+01/30/26 04:36:22 argv[5] == "-CsdVersion"
+01/30/26 04:36:22 argv[6] == "$CondorVersion: 25.6.0 2026-01-16 BuildID: 867113 PackageID: 25.6.0-0.867113 GitSHA: efc7876e RC $"
+01/30/26 04:36:22 argv[7] == "-dagman"
+01/30/26 04:36:22 argv[8] == "/usr/bin/condor_dagman"
+01/30/26 04:36:22 argv[9] == "-AutoRescue"
+01/30/26 04:36:22 argv[10] == "1"
+01/30/26 04:36:22 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+01/30/26 04:36:22 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+01/30/26 04:36:22 Workflow batch-id: <4666746.0>
+01/30/26 04:36:22 Workflow batch-name: <workflow.dag+4666746>
+01/30/26 04:36:22 Workflow accounting_group: <>
+01/30/26 04:36:22 Workflow accounting_group_user: <>
+01/30/26 04:36:22 Warning: failed to get attribute DAGNodeName
+01/30/26 04:36:22 Default node log file is: </home/jsandesara/NSBI-workflow-tutorial/FAIR_universe_Higgs_tautau/hpc/workflow.dag.nodes.log>
+01/30/26 04:36:22 DAG Lockfile will be written to FAIR_universe_Higgs_tautau/hpc/workflow.dag.lock
+01/30/26 04:36:22 DAG Input file is FAIR_universe_Higgs_tautau/hpc/workflow.dag
+01/30/26 04:36:22 Parsing 1 dagfiles
+01/30/26 04:36:22 Parsing FAIR_universe_Higgs_tautau/hpc/workflow.dag ...
+01/30/26 04:36:22 Adjusting edges
+01/30/26 04:36:22 Dag contains 1 total nodes
+01/30/26 04:36:22 Bootstrapping...
+01/30/26 04:36:22 Number of pre-completed nodes: 0
+01/30/26 04:36:22 MultiLogFiles: truncating log file /home/jsandesara/NSBI-workflow-tutorial/FAIR_universe_Higgs_tautau/hpc/workflow.dag.nodes.log
+01/30/26 04:36:22 DAG status: 0 (DAG_STATUS_OK)
+01/30/26 04:36:22 Of 1 nodes total:
+01/30/26 04:36:22  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+01/30/26 04:36:22   ===     ===      ===     ===     ===        ===      ===      ===
+01/30/26 04:36:22     0       0        0       0       1          0        0        0
+01/30/26 04:36:22 0 job proc(s) currently held
+01/30/26 04:36:22 DAGMan Runtime Statistics: [EventCycleTimeSum=0.000; SleepCycleTimeSum=0.000; SubmitCycleTimeSum=0.000; EventCycleTimeCount=0.000; SleepCycleTimeCount=0.000; SubmitCycleTimeCount=0.000; LogProcessCycleTimeSum=0.000; LogProcessCycleTimeCount=0.000; ]
+01/30/26 04:36:22 Registering condor_event_timer...
+01/30/26 04:36:23 Submitting HTCondor Node LOAD job(s)...
+01/30/26 04:36:23 Submitting node LOAD from file FAIR_universe_Higgs_tautau/hpc/step.sub using direct job submission
+01/30/26 04:36:23 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+01/30/26 04:36:23 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
+01/30/26 04:36:23 CRED: CredD says we have everything: rdrive,scitokens
+01/30/26 04:36:23 	assigned HTCondor ID (4666747.0.0)
+01/30/26 04:36:23 Just submitted 1 job this cycle...
+01/30/26 04:36:23 DAG status: 0 (DAG_STATUS_OK)
+01/30/26 04:36:23 Of 1 nodes total:
+01/30/26 04:36:23  Done     Pre   Queued    Post   Ready   Un-Ready   Failed   Futile
+01/30/26 04:36:23   ===     ===      ===     ===     ===        ===      ===      ===
+01/30/26 04:36:23     0       0        1       0       0          0        0        0
+01/30/26 04:36:23 0 job proc(s) currently held
+01/30/26 04:36:23 DAGMan Runtime Statistics: [EventCycleTimeSum=0.000; SleepCycleTimeSum=0.000; SubmitCycleTimeAvg=0.012; SubmitCycleTimeMax=0.012; SubmitCycleTimeMin=0.012; SubmitCycleTimeStd=0.012; SubmitCycleTimeSum=0.012; EventCycleTimeCount=0.000; SleepCycleTimeCount=0.000; SubmitCycleTimeCount=1.000; LogProcessCycleTimeSum=0.000; LogProcessCycleTimeCount=0.000; ]
+01/30/26 04:36:28 Currently monitoring 1 HTCondor log file(s)
+01/30/26 04:36:28 Reassigning the id of job LOAD from (4666747.0.0) to (4666747.0.0)
+01/30/26 04:36:28 Event: ULOG_SUBMIT for HTCondor Node LOAD (4666747.0.0) {01/30/26 04:36:23}
+01/30/26 04:36:28 Number of idle job procs: 1

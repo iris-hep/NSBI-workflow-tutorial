@@ -1,21 +1,16 @@
 
 container_image = file:///staging/jsandesara/weak_lensing_challenge.sif
 
-executable = run_step.sh
-
-arguments = $(STEP) $(CONFIG)
+executable = hpc/run_step.sh
+arguments  = $(STEP)
 
 log    = logs/$(STEP).$(Cluster).log
 output = logs/$(STEP).$(Cluster).out
 error  = logs/$(STEP).$(Cluster).err
 
-request_cpus   = 1
-request_memory = 4GB
-request_disk   = 2GB
-
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-transfer_input_files = run_step.sh, config.yaml
+transfer_input_files = FAIR_universe_Higgs_tautau
 
 queue
