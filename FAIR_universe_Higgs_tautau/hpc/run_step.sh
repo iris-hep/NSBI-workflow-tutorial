@@ -3,9 +3,8 @@ set -e
 
 STEP=$1
 
-
 export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
-# python -m pip install --no-deps -e .
+python -m pip install --no-deps -e .
 
 echo "PATH=$PATH"
 which python

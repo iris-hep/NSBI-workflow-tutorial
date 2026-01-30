@@ -1,5 +1,4 @@
-
-+SingularityImage = file:///staging/jsandesara/nsbi-env-gpu.sif 
+universe = vanilla
 
 executable = FAIR_universe_Higgs_tautau/hpc/run_step.sh
 arguments  = $(STEP)
@@ -13,9 +12,14 @@ request_memory = $(MEM:64GB)
 request_gpus   = $(GPUS:0)
 request_disk   = $(DISK:64GB)
 
+stream_output = True
+stream_error  = True
+
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau, README.md
+
++SingularityImage = "/staging/jsandesara/nsbi-env-gpu.sif"
 
 queue
