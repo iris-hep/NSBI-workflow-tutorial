@@ -4,10 +4,12 @@ import logging
 import warnings
 import numpy as np
 import pandas as pd
-import mplhep as hep
 import uproot
 from HiggsML.datasets import download_dataset
 from HiggsML.systematics import systematics
+
+import yaml
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,37 +18,22 @@ logger = logging.getLogger(__name__)
 # # Suppress warnings
 # warnings.simplefilter(action='ignore', category=FutureWarning)
 
-hep.style.use(hep.style.ATLAS)
+def load_config(path):
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Download and process HiggsML data for analysis.")
-    
+
     parser.add_argument(
-        "--url", 
-        type=str, 
-        default="https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip",
-        help="URL to the dataset zip file."
+        "--config",
+        type=str,
+        default="config.pipeline.yaml",
+        help="Configuration file path."
     )
-    parser.add_argument(
-        "--output-dir", 
-        type=str, 
-        default="./saved_datasets/",
-        help="Directory to save the processed ROOT files."
-    )
-    parser.add_argument(
-        "--train-size", 
-        type=float, 
-        default=0.35,
-        help="Fraction of dataset to use for training."
-    )
-    parser.add_argument(
-        "--seed", 
-        type=int, 
-        default=42,
-        help="Random seed for sampling."
-    )
-    
+
     return parser.parse_args()
+
 
 def download_and_load(url, train_size):
     """Downloads the dataset and loads the training set."""
@@ -131,12 +118,9 @@ def save_root_files(dataset_dict, output_dir, processes, selections):
                 
                 df_process = df[df["detailed_labels"] == process].copy()
                 
-                
                 df_process = df_process.query(selections).copy()
-
                 
                 columns_to_keep = list(set(df_process.columns.tolist()) - {"detailed_labels"})
-                
                 
                 arrays = {col: df_process[col].to_numpy() for col in columns_to_keep}
 
@@ -146,42 +130,46 @@ def save_root_files(dataset_dict, output_dir, processes, selections):
                     logger.warning(f"No events found for {process} in {sample} after selection.")
 
 def main():
+
     args = parse_args()
-    
-    list_of_processes_to_model = ["htautau", "ztautau", "ttbar"]
-    
-    syst_settings = {
-        'TES_up': {'tes': 1.02, 'seed': args.seed},
-        'TES_dn': {'tes': 0.98, 'seed': args.seed},
-        'JES_up': {'jes': 1.02, 'seed': args.seed},
-        'JES_dn': {'jes': 0.98, 'seed': args.seed}
-    }
+    cfg = load_config(args.config)["data_loader"]
+
+    list_of_processes_to_model = cfg["data"]["processes"]
+
+    syst_settings = cfg["systematics"]
+    for syst in syst_settings.values():
+        syst["seed"] = cfg["preprocess"]["seed"]
 
     # Some common analysis selections to remove low-stats regions
-    selections = (
-        "DER_mass_transverse_met_lep <= 250.0 and "
-        "DER_mass_vis <= 500.0 and "
-        "DER_sum_pt <= 1000 and "
-        "DER_pt_tot <= 250 and "
-        "DER_deltar_had_lep <= 4.5 and "
-        "DER_pt_h <= 400 and "
-        "DER_pt_ratio_lep_had <= 9.0"
-    )
+    selections = cfg["preprocess"]["selections"]
 
     # Execution Flow
     try:
         
-        df_training_full = download_and_load(args.url, args.train_size)
+        df_training_full = download_and_load(
+                            cfg["data"]["url"],
+                            cfg["data"]["train_size"]
+                        )
 
-        df_training = process_data(df_training_full, list_of_processes_to_model, args.seed)
+
+        df_training = process_data(
+                                    df_training_full,
+                                    list_of_processes_to_model,
+                                    cfg["preprocess"]["seed"]
+                                )
+
         del df_training_full
 
         
         dataset_dict = apply_systematics(df_training, syst_settings)
 
-        
-        save_root_files(dataset_dict, args.output_dir, list_of_processes_to_model, selections)
-        
+        save_root_files(
+                        dataset_dict,
+                        cfg["output"]["dir"],
+                        list_of_processes_to_model,
+                        selections
+                    )
+
         logger.info("Data loading workflow completed successfully.")
 
     except Exception as e:
