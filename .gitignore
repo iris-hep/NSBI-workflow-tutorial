@@ -189,6 +189,7 @@ cython_debug/
 
 # Ignore cached_data directory
 cached_data/
+saved_datasets/
 
 # Ignore library version files
 src/nsbi_common_utils/_version.py
