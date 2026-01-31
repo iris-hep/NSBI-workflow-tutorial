@@ -13,4 +13,4 @@ python -c "import sys; print(sys.executable)"
 
 cd FAIR_universe_Higgs_tautau
 
-python steps/${STEP}.py --config ${CONFIG}
+python scripts/${STEP}.py --config ${CONFIG}

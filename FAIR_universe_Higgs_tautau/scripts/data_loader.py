@@ -15,9 +15,6 @@ import yaml
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# # Suppress warnings
-# warnings.simplefilter(action='ignore', category=FutureWarning)
-
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -33,7 +30,6 @@ def parse_args():
     )
 
     return parser.parse_args()
-
 
 def download_and_load(url, train_size):
     """Downloads the dataset and loads the training set."""
