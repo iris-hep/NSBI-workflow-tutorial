@@ -1,0 +1,26 @@
+universe = vanilla
+
+executable = FAIR_universe_Higgs_tautau/htcondor/run_step.sh
+arguments  = $(STEP) $(CONFIG)
+
+log    = logs/$(STEP).$(Cluster).log
+output = logs/$(STEP).$(Cluster).out
+error  = logs/$(STEP).$(Cluster).err
+
+request_cpus   = $(CPUS:1)
+request_memory = $(MEM:64GB)
+request_gpus   = $(GPUS:0)
+request_disk   = $(DISK:64GB)
+
+stream_output = True
+stream_error  = True
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau, README.md
+transfer_output_files = saved_datasets
+
++SingularityImage = "/staging/jsandesara/nsbi-env-gpu.sif"
+
+queue
