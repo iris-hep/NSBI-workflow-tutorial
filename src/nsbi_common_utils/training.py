@@ -131,25 +131,86 @@ def predict_with_onnx(dataset, scaler, model, batch_size = 10_000):
 
     return final_pred
 
-def convert_tf_to_onnx(model, opset=17):
+def convert_torch_to_onnx(lightning_model, input_dim, opset=17):
 
-    model.output_names      = [t.name.split(":")[0] for t in model.outputs]
+    lightning_model.eval()
 
-    # Build a TensorSpec for every model input
-    sig = []
-    for i, inp in enumerate(model.inputs):
-        shape = [d if d is not None else None for d in inp.shape]  # keep None for dynamic batch
-        dtype = inp.dtype
-        name = inp.name.split(":")[0] or f"input_{i}"
-        sig.append(tf.TensorSpec(shape=shape, dtype=dtype, name=name))
+    dummy = torch.randn(1, input_dim)
 
-    # Convert using that signature
-    model_onnx, _ = tf2onnx.convert.from_keras(
-        model,
-        input_signature=tuple(sig),
-        opset=opset
+    onnx_path = "__tmp_model.onnx"
+
+    torch.onnx.export(
+        lightning_model,
+        dummy,
+        onnx_path,
+        input_names=["input"],
+        output_names=["output"],
+        dynamic_axes={
+            "input": {0: "batch"},
+            "output": {0: "batch"}
+        },
+        opset_version=opset
     )
-    return model_onnx
+
+    return onnx.load(onnx_path)
+
+class MultiClassLightning(pl.LightningModule):
+    def __init__(self,
+                n_hidden        = 4,
+                n_neurons       = 1000,
+                input_dim       = 11,
+                learning_rate   = 0.1,
+                use_log_loss    = False,
+                activation      = "swish",
+                num_classes     = 3):
+        
+        super().__init__()
+
+        self.lr = learning_rate
+        self.use_log_loss = use_log_loss
+
+        # Get activation function
+        activations = {
+            "swish": nn.SiLU(),
+            "relu": nn.ReLU(),
+            "tanh": nn.Tanh(),
+        }
+        activation = activations.get(activation, nn.SiLU())
+
+        # Build architecture - feed forward MLP
+        layers = []
+        input_dim_ = input_dim
+        for _ in range(n_hidden):
+            layers.append(nn.Linear(input_dim_, n_neurons))
+            layers.append(activation)
+            input_dim_ = n_neurons
+        
+        self.net = nn.Sequential(*layers)
+        self.out = nn.Linear(input_dim_, num_classes)
+
+    def forward(self,x):
+        x = self.net(x)
+        return self.out(x)
+
+    def training_step(self, batch, batch_idx):
+        x, y, w = batch
+        y_hat = self(x)
+        loss = F.cross_entropy(y_hat, y, reduction='none')
+        loss = (loss * w).mean()
+
+        self.log("train_loss", loss, prog_bar=True)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        x, y, w = batch
+        y_hat = self(x)
+        loss = F.cross_entropy(y_hat, y, reduction='none')
+        loss = (loss * w).mean()
+
+        self.log("train_loss", loss, prog_bar=True)
+
+    def configure_optimizers(self):
+        return torch.optim.NAdam(self.parameters(), lr=self.lr)
 
 class DensityRatioLightning(pl.LightningModule):
     '''
@@ -242,8 +303,6 @@ class WeightedTensorDataset(Dataset):
 
     def __getitem__(self, i):
         return self.x[i], self.y[i], self.w[i]
-    
-import pytorch_lightning as pl
 
 class LossHistory(pl.Callback):
 
@@ -290,8 +349,11 @@ class preselection_network_trainer:
                     path_to_save='', 
                     epochs=20, 
                     batch_size=1024, 
+                    hidden_layers=4,
+                    neurons=1000,
                     verbose=2, 
-                    learning_rate=0.1):
+                    learning_rate=0.1,
+                    validation_split=0.1):
 
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
@@ -304,7 +366,7 @@ class preselection_network_trainer:
         '''
 
         # Split data into training and validation sets (including weights)
-        X_train, X_val, y_train, y_val, weight_train, weight_val = train_test_split(self.data_features_training, 
+        data_train, X_val, y_train, y_val, weight_train, weight_val = train_test_split(self.data_features_training, 
                                                                                     self.dataset[self.train_labels_column], 
                                                                                     self.dataset[self.weights_normed_column], 
                                                                                     test_size=test_size, 
@@ -313,41 +375,49 @@ class preselection_network_trainer:
 
         # Standardize the input features
         self.scaler = ColumnTransformer([("scaler", StandardScaler(), self.features_scaling)],remainder='passthrough')
-        X_train = self.scaler.fit_transform(X_train)  # Fit & transform training data
+        data_train_scaled = self.scaler.fit_transform(data_train)  # Fit & transform training data
         X_val = self.scaler.transform(X_val)
-        
-        # Define the neural network model
-        self.model = tf.keras.Sequential([
-            layers.Input(shape=(self.data_features_training.shape[1],)),  # Input layer
-            layers.Dense(1000, activation='swish'),
-            layers.Dense(1000, activation='swish'),
-            layers.Dense(1000, activation='swish'),
-            layers.Dense(1000, activation='swish'),
-            layers.Dense(self.num_classes, activation='softmax')  # Output layer for num_class classes
-        ])
 
-        # Using the Nadam optimizer by default
-        optimizer = tf.keras.optimizers.Nadam(learning_rate=learning_rate)
+        train_ds = WeightedTensorDataset(
+                data_train_scaled.values,
+                y_train,
+                weight_train
+            )
 
-        # Compile the model
-        self.model.compile(optimizer=optimizer,
-                      loss='sparse_categorical_crossentropy',
-                      weighted_metrics=["accuracy"])
+        val_size = int(len(train_ds) * validation_split)
+        train_size = len(train_ds) - val_size
         
-        # setup the callbacks
-        callback_factor = 0.01
-        callback_patience = 30
-        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=callback_factor,
-                                        patience=callback_patience, min_lr=0.000000001)
-        
-        # Train the model with sample weights
-        self.model.fit(X_train, y_train, sample_weight=weight_train, 
-                  validation_data=(X_val, y_val, weight_val), callbacks=[reduce_lr], epochs=epochs, batch_size=batch_size, verbose=verbose)
+        train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
-        K.clear_session()
+        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+        val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+        
+        self.model = MultiClassLightning(
+                n_hidden=hidden_layers,
+                n_neurons=neurons,
+                input_dim=len(self.features),
+                learning_rate=learning_rate,
+                activation=activation,
+                num_classes=self.num_classes
+            )
+
+        loss_history = LossHistory()
+
+        trainer = Trainer(
+            max_epochs=epochs,
+            callbacks=[
+                EarlyStopping(monitor="val_loss", patience=30),
+                LearningRateMonitor(),
+                loss_history
+            ],
+            logger=False,
+            enable_checkpointing=False
+        )
+
+        trainer.fit(self.model, train_loader, val_loader)
 
         # Convert Keras model to ONNX
-        self.model                  = convert_tf_to_onnx(self.model)
+        self.model                  = convert_torch_to_onnx(self.model)
 
         # Save the trained model if user provides with a path
         if path_to_save!='':
@@ -668,6 +738,7 @@ class density_ratio_trainer:
 
             val_size = int(len(train_ds) * validation_split)
             train_size = len(train_ds) - val_size
+
             train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
             train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
@@ -711,6 +782,11 @@ class density_ratio_trainer:
                 
             # Convert Keras model to ONNX
             self.model_NN[ensemble_index]                   = convert_tf_to_onnx(self.model_NN[ensemble_index])
+
+            self.model_NN[ensemble_index] = convert_torch_to_onnx(
+                self.model_NN[ensemble_index],
+                input_dim=len(self.features)
+            )
 
             path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index}.bin"
             path_to_saved_model         = f"{self.path_to_models}model{ensemble_index}.onnx"
