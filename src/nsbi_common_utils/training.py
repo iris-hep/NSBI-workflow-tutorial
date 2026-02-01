@@ -23,13 +23,6 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from pathlib import Path
 
 from typing import Union, Dict
-import tensorflow as tf
-from tensorflow import keras
-import tensorflow.keras.backend as K
-from tensorflow.keras import layers
-from tensorflow.keras.layers import Dense
-
-import tf2onnx
 import onnx
 import onnxruntime as rt
 
@@ -135,7 +128,7 @@ def convert_torch_to_onnx(lightning_model, input_dim, opset=17):
 
     lightning_model.eval()
 
-    dummy = torch.randn(1, input_dim)
+    dummy = torch.randn(1, input_dim, device=next(lightning_model.parameters()).device)
 
     onnx_path = "__tmp_model.onnx"
 
@@ -212,7 +205,7 @@ class MultiClassLightning(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y, reduction='none')
         loss = (loss * w).mean()
 
-        self.log("train_loss", loss, prog_bar=True)
+        self.log("val_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
 
@@ -411,20 +404,20 @@ class preselection_network_trainer:
         '''
 
         # Split data into training and validation sets (including weights)
-        data_train, X_val, y_train, y_val, weight_train, weight_val = train_test_split(self.data_features_training, 
-                                                                                    self.dataset[self.train_labels_column], 
-                                                                                    self.dataset[self.weights_normed_column], 
-                                                                                    test_size=test_size, 
-                                                                                    random_state=random_state, 
-                                                                                    stratify=self.dataset[self.train_labels_column])
+        data_train, data_holdout, y_train, y_holdout, weight_train, weight_holdout = train_test_split(self.data_features_training, 
+                                                                                                    self.dataset[self.train_labels_column], 
+                                                                                                    self.dataset[self.weights_normed_column], 
+                                                                                                    test_size=test_size, 
+                                                                                                    random_state=random_state, 
+                                                                                                    stratify=self.dataset[self.train_labels_column])
 
         # Standardize the input features
         self.scaler = ColumnTransformer([("scaler", StandardScaler(), self.features_scaling)],remainder='passthrough')
         data_train_scaled = self.scaler.fit_transform(data_train)  # Fit & transform training data
-        X_val = self.scaler.transform(X_val)
+        data_holdout = self.scaler.transform(data_holdout)
 
         train_ds = WeightedTensorDataset(
-                data_train_scaled.values,
+                data_train_scaled,
                 y_train,
                 weight_train
             )
@@ -462,7 +455,7 @@ class preselection_network_trainer:
         trainer.fit(self.model, train_loader, val_loader)
 
         # Convert Keras model to ONNX
-        self.model                  = convert_torch_to_onnx(self.model)
+        self.model                  = convert_torch_to_onnx(self.model, input_dim=len(self.features))
 
         # Save the trained model if user provides with a path
         if path_to_save!='':
@@ -730,11 +723,6 @@ class density_ratio_trainer:
         # dataset to be used for training
         data_train, data_holdout = data_train_full[self.features], data_holdout_full[self.features]
 
-        # Setup callbacks
-        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=callback_factor,
-                                        patience=callback_patience, min_lr=0.000000001)
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=300)
-
         # Load pre-trained models and scaling
         if load_trained_models:
 
@@ -828,8 +816,6 @@ class density_ratio_trainer:
             logger.info("Finished Training")
                 
             # Convert Keras model to ONNX
-            self.model_NN[ensemble_index]                   = convert_tf_to_onnx(self.model_NN[ensemble_index])
-
             self.model_NN[ensemble_index] = convert_torch_to_onnx(
                 self.model_NN[ensemble_index],
                 input_dim=len(self.features)
