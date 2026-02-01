@@ -162,10 +162,15 @@ class MultiClassLightning(pl.LightningModule):
                 learning_rate   = 0.1,
                 use_log_loss    = False,
                 activation      = "swish",
-                num_classes     = 3):
+                num_classes     = 3,
+                callback_factor = 0.1,
+                callback_patience = 30
+                ):
         
         super().__init__()
 
+        self.save_hyperparameters()
+        
         self.lr = learning_rate
         self.use_log_loss = use_log_loss
 
@@ -210,7 +215,25 @@ class MultiClassLightning(pl.LightningModule):
         self.log("train_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
-        return torch.optim.NAdam(self.parameters(), lr=self.lr)
+
+        optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=self.hparams.callback_factor,
+            patience=self.hparams.callback_patience,
+            min_lr=1e-9
+        )
+
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": "val_loss",   # must match self.log("val_loss", ...)
+                "interval": "epoch",
+                "frequency": 1
+            }
+        }
 
 class DensityRatioLightning(pl.LightningModule):
     '''
@@ -222,9 +245,13 @@ class DensityRatioLightning(pl.LightningModule):
                 input_dim       = 11,
                 learning_rate   = 0.1,
                 use_log_loss    = False,
-                activation      = "swish"):
+                activation      = "swish", 
+                callback_factor=0.01, 
+                callback_patience=30):
         
         super().__init__()
+
+        self.save_hyperparameters()
 
         self.lr = learning_rate
         self.use_log_loss = use_log_loss
@@ -288,7 +315,24 @@ class DensityRatioLightning(pl.LightningModule):
         self.log("val_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
-        return torch.optim.NAdam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=self.hparams.callback_factor,
+            patience=self.hparams.callback_patience,
+            min_lr=1e-9
+        )
+
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": "val_loss",   # must match self.log("val_loss", ...)
+                "interval": "epoch",
+                "frequency": 1
+            }
+        }
 
 
 class WeightedTensorDataset(Dataset):
@@ -353,7 +397,8 @@ class preselection_network_trainer:
                     neurons=1000,
                     verbose=2, 
                     learning_rate=0.1,
-                    validation_split=0.1):
+                    validation_split=0.1,
+                    activation='swish'):
 
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
@@ -750,7 +795,9 @@ class density_ratio_trainer:
                 input_dim=len(self.features),
                 learning_rate=learning_rate,
                 use_log_loss=self.use_log_loss,
-                activation=activation
+                activation=activation,
+                callback_factor=callback_factor,
+                callback_patience=callback_patience
             )
 
             loss_history = LossHistory()
@@ -811,9 +858,6 @@ class density_ratio_trainer:
         
         # If calibrating, use the train_data_prediction for building histogram
         if self.calibration:
-
-            importlib.reload(sys.modules['nsbi_common_utils.calibration'])
-            from nsbi_common_utils.calibration import HistogramCalibrator, IsotonicCalibrator
 
             self.calibration_switch = True
             path_to_calibrated_object = f"{self.path_to_models}model_calibrated_hist{ensemble_index}.obj"
