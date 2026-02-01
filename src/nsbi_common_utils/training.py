@@ -15,13 +15,16 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 
 from pathlib import Path
 
 from typing import Union, Dict
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping
 import tensorflow.keras.backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.layers import Dense
@@ -225,6 +228,21 @@ class DensityRatioLightning(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.NAdam(self.parameters(), lr=self.lr)
+
+
+class WeightedTensorDataset(Dataset):
+
+    def __init__(self, x, y, w):
+        self.x = torch.as_tensor(x, dtype=torch.float32)
+        self.y = torch.as_tensor(y, dtype=torch.long)
+        self.w = torch.as_tensor(w, dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, i):
+        return self.x[i], self.y[i], self.w[i]
+
 
 class preselection_network_trainer:
     '''
@@ -623,36 +641,52 @@ class density_ratio_trainer:
             logger.info(f"Sum of weights of class 1: {np.sum(weight_train[label_train==1])}")
     
             logger.info(f"Using {activation} activation function")
-    
-            self.model_NN[ensemble_index] = build_model(n_hidden=hidden_layers, n_neurons=neurons, 
-                                        learning_rate=learning_rate, 
-                                        input_shape=[len(self.features)], 
-                                        use_log_loss=self.use_log_loss,
-                                        activation=activation)
-    
+
+            train_ds = WeightedTensorDataset(
+                scaled_data_train.values,
+                label_train,
+                weight_train
+            )
+
+            val_size = int(len(train_ds) * validation_split)
+            train_size = len(train_ds) - val_size
+            train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
+
+            train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+            val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+
+            model = DensityRatioLightning(
+                n_hidden=hidden_layers,
+                n_neurons=neurons,
+                input_dim=len(self.features),
+                learning_rate=learning_rate,
+                use_log_loss=self.use_log_loss,
+                activation=activation
+            )
+
             if callback:
-    
-                logger.info("Using Callbacks")
-    
-                self.history = self.model_NN[ensemble_index].fit(scaled_data_train, label_train, callbacks=[reduce_lr, es], 
-                                                                epochs=number_of_epochs, batch_size=batch_size, 
-                                                                validation_split=validation_split, sample_weight=weight_train, 
-                                                                verbose=self.verbose)
-    
+                trainer = Trainer(
+                    max_epochs=number_of_epochs,
+                    callbacks=[
+                        EarlyStopping(monitor="val_loss", patience=callback_patience),
+                        LearningRateMonitor()
+                    ],
+                    logger=False,
+                    enable_checkpointing=False
+                )
             else:
-                logger.info("Not Using Callbacks")
-    
-                self.history = self.model_NN[ensemble_index].fit(scaled_data_train, label_train, 
-                                                                epochs=number_of_epochs, batch_size=batch_size, 
-                                                                validation_split=validation_split, sample_weight=weight_train, 
-                                                                verbose=self.verbose)
-            
-            K.clear_session()
+                trainer = Trainer(
+                    max_epochs=number_of_epochs,
+                    callbacks=[],
+                    logger=False,
+                    enable_checkpointing=False
+                )
+
+            trainer.fit(model, train_loader, val_loader)
+
+            self.model_NN[ensemble_index] = model
         
             logger.info("Finished Training")
-
-            if summarize_model:
-                logging.info(self.model_NN[ensemble_index].summary())
                 
             # Convert Keras model to ONNX
             self.model_NN[ensemble_index]                   = convert_tf_to_onnx(self.model_NN[ensemble_index])
@@ -1024,65 +1058,6 @@ class density_ratio_trainer:
             raise Exception("aggregation_type not recognized, please choose between median_ratio, mean_ratio, median_score or mean_score")
 
         return ratio_ensemble
-        
-
-def build_model(n_hidden=4, 
-                n_neurons=1000, 
-                learning_rate=0.1, 
-                input_shape=[11], 
-                use_log_loss=False, 
-                optimizer_choice='Nadam', 
-                activation='swish'):
-    '''
-    Method that builds the NN model used in density ratio training
-
-    activation: string with any activation function supported by keras. Option to use 'mish' too
-    optimizer_choice: Two options to choose from - 'Nadam' or 'Adam'
-    use_log_loss: option to use modified BCE loss function that regresses to log p_A/p_B
-    '''
-    model = tf.keras.models.Sequential()
-    options = {"input_shape":input_shape}
-    for layer in range(n_hidden):
-
-        if activation=='mish':
-            def mish(inputs):
-                x = tf.nn.softplus(inputs)
-                x = tf.nn.tanh(x)
-                x = tf.multiply(x, inputs)
-                return x
-
-            model.add(Dense(n_neurons, 
-                            activation=mish, 
-                            **options))
-        else:
-            model.add(Dense(n_neurons, 
-                            activation=activation, 
-                            **options))
-        options={}
-
-    if not use_log_loss:
-        model.add(Dense(1,activation='sigmoid',**options))
-    else:
-        model.add(Dense(1,activation='linear',**options))
-
-    if optimizer_choice=='Nadam':
-        optimizer = tf.keras.optimizers.Nadam(learning_rate=learning_rate) 
-    elif optimizer_choice=='Adam':
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate) 
-    else:
-        raise Exception("Optimizer choice not recognized - please choose between 'Nadam' or 'Adam'")
-
-    if use_log_loss:
-        # Use the modified BCE loss that regresses to the log p_A/p_B instead of p_A/p_A+p_B
-        model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), 
-                      optimizer=optimizer, 
-                      weighted_metrics=['binary_accuracy'])
-    else:
-        model.compile(loss=tf.keras.losses.BinaryCrossentropy(), 
-                      optimizer=optimizer, 
-                      weighted_metrics=['binary_accuracy'])
-    return model
-
 
 def convert_to_score(logLR):
     '''
