@@ -242,6 +242,24 @@ class WeightedTensorDataset(Dataset):
 
     def __getitem__(self, i):
         return self.x[i], self.y[i], self.w[i]
+    
+import pytorch_lightning as pl
+
+class LossHistory(pl.Callback):
+
+    def __init__(self):
+        self.train_loss = []
+        self.val_loss = []
+
+    def on_train_epoch_end(self, trainer, pl_module):
+        v = trainer.callback_metrics.get("train_loss")
+        if v is not None:
+            self.train_loss.append(v.cpu().item())
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        v = trainer.callback_metrics.get("val_loss")
+        if v is not None:
+            self.val_loss.append(v.cpu().item())
 
 
 class preselection_network_trainer:
@@ -664,12 +682,15 @@ class density_ratio_trainer:
                 activation=activation
             )
 
+            loss_history = LossHistory()
+
             if callback:
                 trainer = Trainer(
                     max_epochs=number_of_epochs,
                     callbacks=[
                         EarlyStopping(monitor="val_loss", patience=callback_patience),
-                        LearningRateMonitor()
+                        LearningRateMonitor(),
+                        loss_history
                     ],
                     logger=False,
                     enable_checkpointing=False
@@ -677,7 +698,7 @@ class density_ratio_trainer:
             else:
                 trainer = Trainer(
                     max_epochs=number_of_epochs,
-                    callbacks=[],
+                    callbacks=[loss_history],
                     logger=False,
                     enable_checkpointing=False
                 )
@@ -701,7 +722,7 @@ class density_ratio_trainer:
             np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index}.npy", 
                     np.array([holdout_num, rnd_seed]))
     
-            plot_loss(self.history, path_to_figures=self.path_to_figures)
+            plot_loss(loss_history, path_to_figures=self.path_to_figures)
 
         
         # Do a first prediction without calibration layers

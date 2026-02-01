@@ -36,24 +36,17 @@ def fill_histograms_wError(data, weights, edges, histrange, normalize=True):
     return h, h_err
 
 # Diagnostics for training loss and accuracy 
-def plot_loss(history, path_to_figures=""):
+def plot_loss(loss_history, path_to_figures=""):
 
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    
-    plt.title('model loss', size=12)
-    plt.ylabel('loss', size=12)
-    plt.xlabel('epoch', size=12)
-    plt.legend(['train', 'validation'], loc='upper left')
-    plt.show()
-    plt.savefig(f'{path_to_figures}/loss_plot.png', bbox_inches='tight')
+    plt.plot(loss_history.train_loss)
+    plt.plot(loss_history.val_loss)
+    plt.title("model loss", size=12)
+    plt.ylabel("loss", size=12)
+    plt.xlabel("epoch", size=12)
+    plt.legend(["train", "validation"], loc="upper left")
+    plt.savefig(f"{path_to_figures}/loss_plot.png", bbox_inches="tight")
     plt.clf()
-    
-    plt.plot(history.history['binary_accuracy'])
-    plt.plot(history.history['val_binary_accuracy'])
-    plt.show()
-    plt.savefig(f'{path_to_figures}/accuracy_plot.png', bbox_inches='tight')
-    plt.clf()
+
 
 def plot_calibration_curve(data_den, weight_den, data_num, weight_num, 
                            data_den_holdout, weight_den_holdout, data_num_holdout, weight_num_holdout, 
