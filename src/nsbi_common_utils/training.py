@@ -11,7 +11,10 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 
 import pickle 
 
-import nsbi_common_utils
+import torch
+import torch.nn as nn
+import pytorch_lightning as pl
+import torch.nn.functional as F
 
 from pathlib import Path
 
@@ -145,15 +148,83 @@ def convert_tf_to_onnx(model, opset=17):
     )
     return model_onnx
 
-    # model.output_names      = [t.name.split(":")[0] for t in model.outputs]
+class DensityRatioLightning(pl.LightningModule):
+    '''
+    Pytorch-lighning module for estimation of density ratios
+    '''
+    def __init__(self,
+                n_hidden        = 4,
+                n_neurons       = 1000,
+                input_dim       = 11,
+                learning_rate   = 0.1,
+                use_log_loss    = False,
+                activation      = "swish"):
+        
+        super().__init__()
 
-    # input_dim               = model.input_shape[1]
+        self.lr = learning_rate
+        self.use_log_loss = use_log_loss
 
-    # spec                    = (tf.TensorSpec([None, input_dim], tf.float32, name="input"),)
+        # Get activation function
+        activations = {
+            "swish": nn.SiLU(),
+            "relu": nn.ReLU(),
+            "tanh": nn.Tanh(),
+        }
+        activation = activations.get(activation, nn.SiLU())
 
-    # model_onnx, _ = tf2onnx.convert.from_keras(model, input_signature=spec, opset=17)
+        # Build architecture - feed forward MLP
+        layers = []
+        input_dim_ = input_dim
+        for _ in range(n_hidden):
+            layers.append(nn.Linear(input_dim_, n_neurons))
+            layers.append(activation)
+            input_dim_ = n_neurons
+        
+        self.net = nn.Sequential(*layers)
 
-    # return model_onnx
+        if use_log_loss:
+            self.out = nn.Linear(input_dim_, 1)
+            self.from_logits = True
+        else:
+            self.out = nn.Linear(input_dim_, 1)
+            self.from_logits = False
+
+    def forward(self, x):
+
+        x = self.net(x)
+        x = self.out(x)
+        if not self.use_log_loss:
+            x = torch.sigmoid(x)
+        return x
+    
+    def training_step(self, batch, batch_idx):
+        x, y, w = batch
+        y = y.float().view(-1, 1)
+        s_hat = self(x)
+        if self.use_log_loss:
+            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
+        else:
+            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
+    
+        self.log("train_loss", loss, prog_bar=True)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        x, y, w = batch
+        y = y.float().view(-1, 1)
+
+        s_hat = self(x)
+
+        if self.use_log_loss:
+            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
+        else:
+            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
+
+        self.log("val_loss", loss, prog_bar=True)
+
+    def configure_optimizers(self):
+        return torch.optim.NAdam(self.parameters(), lr=self.lr)
 
 class preselection_network_trainer:
     '''
