@@ -33,6 +33,8 @@ data_loader:
 
 # Section for Data Preprocessing
 data_preprocessing:
+
+  config_path: "./config.yaml"
   features:
     
     no_jets:
@@ -72,3 +74,16 @@ data_preprocessing:
     n_jets:
       - PRI_n_jets
 
+parameter_fitting:
+  configs:
+    hist: "./config_hist.yml"   #Configuration file path for histogram settings
+    nsbi: "./config.yml" 
+  measurement: "higgs_tautau_signal_strength" #Measurement to fit in the analysis.
+
+  output:
+    plots_dir: "./output/plots/parameter_fitting"
+    logs_dir: "./output/logs/parameter_fitting"
+  scan:
+    parameter: "mu_htautau"
+    range: [0.0, 3.0]
+    steps: 50
