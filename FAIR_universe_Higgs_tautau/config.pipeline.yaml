@@ -87,3 +87,34 @@ parameter_fitting:
     parameter: "mu_htautau"
     range: [0.0, 3.0]
     steps: 50
+
+
+preselection_network:
+  # Path to the original config required by nsbi_common_utils
+  nsbi_config: "./config.yml"
+  
+  model_path: "./saved_datasets/preselection_model/"
+  force_train: false
+  
+  training:
+    test_size: 0.2
+    random_state: 42
+    batch_size: 1024
+    epochs: 50
+    learning_rate: 0.1
+    
+    labels:
+      htautau: 0
+      ttbar: 1
+      ztautau: 2
+      
+  preselection_observable:
+    signal_processes: ["htautau"]
+    background_processes: ["ttbar", "ztautau"]
+    pre_factor_dict:
+      htautau: 1.0
+      ttbar: 1.0
+      ztautau: 1.0
+    
+  output:
+    plots_dir: "./output/plots/preselection_network"
