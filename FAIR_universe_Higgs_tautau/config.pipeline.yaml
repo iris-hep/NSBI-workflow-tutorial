@@ -174,3 +174,38 @@ neural_likelihood_ratio_estimation:
       
     ztautau:
       <<: *common_params
+
+
+
+# Section for Systematic Uncertainty Estimation
+systematic_uncertainty:
+  nsbi_config: "./config.yml"
+  saved_data_path: "./saved_datasets/"
+  filter_region: "SR"
+  force_train: false
+  
+  training_settings:
+    hidden_layers: 3
+    neurons: 100
+    number_of_epochs: 50
+    batch_size: 10000
+    learning_rate: 0.001
+    scalerType: "MinMax"
+    
+    calibration: false
+    recalibrate_output: false
+    type_of_calibration: "histogram"
+    num_bins_cal: null
+    
+    callback: true
+    callback_patience: 10
+    callback_factor: 0.5
+    
+    validation_split: 0.2
+    holdout_split: 0.2
+    
+    verbose: 0
+    plot_scaled_features: false
+    load_trained_models: true
+    num_ensemble_members: 1
+    summarize_model: false
