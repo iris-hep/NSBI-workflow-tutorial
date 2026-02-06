@@ -118,3 +118,52 @@ preselection_network:
     
   output:
     plots_dir: "./output/plots/preselection_network"
+
+# Section for Density Ratio Estimation
+neural_likelihood_ratio_estimation:
+  nsbi_config: "./config.yml"
+  saved_data_path: "./saved_datasets/"
+  output_training_dir: "output_training_nominal"
+  
+  # Global settings
+  use_log_loss: false
+  delete_existing_models: false
+  force_train: false
+  
+  # Per-process training hyperparameters
+  training_settings:
+    htautau:
+      num_models: 5
+      epochs: 50
+      patience: 10
+      batch_size: 1000
+      learning_rate: 0.001
+      hidden_layers: [64, 64, 64]
+      activation: "relu"
+      l2_regularization: 1.0e-5
+      dropout_rate: 0.1
+      load_trained_models: true
+
+    ztautau:
+      num_models: 5
+      epochs: 50
+      patience: 10
+      batch_size: 1000
+      learning_rate: 0.001
+      hidden_layers: [64, 64, 64]
+      activation: "relu"
+      l2_regularization: 1.0e-5
+      dropout_rate: 0.1
+      load_trained_models: true
+
+    ttbar:
+      num_models: 5
+      epochs: 50
+      patience: 10
+      batch_size: 1000
+      learning_rate: 0.001
+      hidden_layers: [64, 64, 64]
+      activation: "relu"
+      l2_regularization: 1.0e-5
+      dropout_rate: 0.1
+      load_trained_models: true
