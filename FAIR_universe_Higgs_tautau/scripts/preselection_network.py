@@ -5,14 +5,11 @@ import logging
 import numpy as np
 import pandas as pd
 import warnings
-import tensorflow as tf
 import yaml
 import matplotlib.pyplot as plt
 import mplhep as hep
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, auc, confusion_matrix
-
-tf.config.optimizer.set_jit(False)
 from utils import calculate_preselection_observable
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
