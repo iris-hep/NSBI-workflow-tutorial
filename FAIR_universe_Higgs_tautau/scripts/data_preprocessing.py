@@ -54,16 +54,9 @@ def process_data(df, input_features_by_jet, branches):
     median_feature = {}
 
     # 1. Calculate Medians from Nominal samples
-    # Assuming df structure is Dict[Region, Dict[Sample, DataFrame]]
-    # or Dict[Systematic, Dict[Sample, DataFrame]] based on nsbi loader
-    
-    # We look for "Nominal" key usually used in nsbi utils
     if "Nominal" in df:
         nominal_data = df["Nominal"]
     else:
-        # Fallback if the top level keys are not systematics but regions/samples directly
-        # This depends on how load_systematics=True structures the output in nsbi_common_utils
-        # Assuming standard structure:
         nominal_data = df.get("Nominal", df)
 
     for sample, sample_dataset in nominal_data.items(): 

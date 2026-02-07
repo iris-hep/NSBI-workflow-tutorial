@@ -1,7 +1,7 @@
 universe = vanilla
 
 executable = FAIR_universe_Higgs_tautau/htcondor/run_step.sh
-arguments  = data_loader $(CONFIG)
+arguments  = data_loader $(CONFIG) $(SKIP)
 
 log    = logs/data_loader.$(Cluster).log
 output = logs/data_loader.$(Cluster).out
