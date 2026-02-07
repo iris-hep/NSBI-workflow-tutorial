@@ -1,37 +1,26 @@
-# Global Config Variable
-CONFIG = config.pipeline.yaml
+JOB data_loader FAIR_universe_Higgs_tautau/htcondor/job_data_loader.sub
+VARS data_loader CONFIG="config.pipeline.yaml" CPUS="12" MEM="64GB" GPUS="0" DISK="64GB"
 
-# --- Step 1: Data Loading ---
-
-JOB data_loader FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS data_loader STEP="data_loader" CONFIG="$(CONFIG)" CPUS="1" MEM="8GB" GPUS="0" DISK="32GB"
-
-# --- Step 2: Preprocessing ---
-
-JOB data_preprocessing FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS data_preprocessing STEP="data_preprocessing" CONFIG="$(CONFIG)" CPUS="4" MEM="32GB" GPUS="0" DISK="32GB"
-PARENT data_loader CHILD data_preprocessing
-
-# --- Step 3: Preselection Network ---
+JOB data_preprocessing FAIR_universe_Higgs_tautau/htcondor/job_data_preprocessing.sub
+VARS data_preprocessing CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="0" DISK="32GB"
 
 JOB preselection_network FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS preselection_network STEP="preselection_network" CONFIG="$(CONFIG)" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
-PARENT data_preprocessing CHILD preselection_network
-
-# --- Step 4: Density Ratio Estimation ---
+VARS preselection_network STEP="preselection_network" CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
 
 JOB likelihood_ratio_estimation FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS likelihood_ratio_estimation STEP="neural_likelihood_ratio_estimation" CONFIG="$(CONFIG)" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
-PARENT preselection_network CHILD likelihood_ratio_estimation
-
-# --- Step 5: Systematic Uncertainty ---
+VARS likelihood_ratio_estimation STEP="neural_likelihood_ratio_estimation" CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
 
 JOB systematic_uncertainty FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS systematic_uncertainty STEP="systematic_uncertainty_training" CONFIG="$(CONFIG)" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
-PARENT likelihood_ratio_estimation CHILD systematic_uncertainty
-
-# --- Step 6: Inference ---
+VARS systematic_uncertainty STEP="systematic_uncertainty_training" CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
 
 JOB parameter_fitting FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS parameter_fitting STEP="parameter_fitting" CONFIG="$(CONFIG)" CPUS="8" MEM="16GB" GPUS="0" DISK="16GB"
-PARENT systematic_uncertainty CHILD parameter_fitting
+VARS parameter_fitting STEP="parameter_fitting" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="0" DISK="16GB"
+
+
+PARENT data_loader CHILD data_preprocessing
+PARENT data_preprocessing CHILD preselection_network
+
+PARENT preselection_network CHILD likelihood_ratio_estimation
+PARENT preselection_network CHILD systematic_uncertainty
+
+PARENT likelihood_ratio_estimation systematic_uncertainty CHILD parameter_fitting

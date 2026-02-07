@@ -34,7 +34,7 @@ data_loader:
 # Section for Data Preprocessing
 data_preprocessing:
 
-  config_path: "./config.yaml"
+  config_path: "./config.yml"
   features:
     
     no_jets:
