@@ -222,7 +222,7 @@ class MultiClassLightning(pl.LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "monitor": "val_loss",   # must match self.log("val_loss", ...)
+                "monitor": "val_loss",   
                 "interval": "epoch",
                 "frequency": 1
             }
@@ -239,8 +239,8 @@ class DensityRatioLightning(pl.LightningModule):
                 learning_rate   = 0.1,
                 use_log_loss    = False,
                 activation      = "swish", 
-                callback_factor=0.01, 
-                callback_patience=30):
+                callback_factor = 0.01, 
+                callback_patience = 30):
         
         super().__init__()
 
@@ -321,7 +321,7 @@ class DensityRatioLightning(pl.LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "monitor": "val_loss",   # must match self.log("val_loss", ...)
+                "monitor": "val_loss",  
                 "interval": "epoch",
                 "frequency": 1
             }
@@ -495,7 +495,6 @@ class preselection_network_trainer:
         return pred
 
         
-
 class density_ratio_trainer:
     '''
     A class for training the density ratio neural networks for SBI analysis
