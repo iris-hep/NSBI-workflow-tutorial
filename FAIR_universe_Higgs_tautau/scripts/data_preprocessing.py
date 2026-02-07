@@ -125,9 +125,9 @@ def process_data(df, input_features_by_jet, branches):
 def main():
     args = parse_args()
     
-    cfg_full = load_config(args.config)["data_preprocessing"]
+    config_workflow = load_config(args.config)["data_preprocessing"]
         
-    feats = cfg_full["features"]
+    feats = config_workflow["features"]
 
     input_features_noJets = feats["no_jets"]
     input_features_1Jets  = feats["one_jet"]
@@ -147,7 +147,7 @@ def main():
     try:
         logger.info(f"Loading and converting the dataset to Pandas DataFrame for processing...")
         
-        datasets_helper = ds_helper(cfg_full['config_path'], branches_to_load)
+        datasets_helper = ds_helper(config_workflow['config_path'], branches_to_load)
         
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics=True)
 

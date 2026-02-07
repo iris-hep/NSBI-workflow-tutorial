@@ -128,30 +128,30 @@ def save_root_files(dataset_dict, output_dir, processes, selections):
 def main():
 
     args = parse_args()
-    cfg = load_config(args.config)["data_loader"]
+    config_workflow = load_config(args.config)["data_loader"]
 
-    list_of_processes_to_model = cfg["data"]["processes"]
+    list_of_processes_to_model = config_workflow["data"]["processes"]
 
-    syst_settings = cfg["systematics"]
+    syst_settings = config_workflow["systematics"]
     for syst in syst_settings.values():
-        syst["seed"] = cfg["preprocess"]["seed"]
+        syst["seed"] = config_workflow["preprocess"]["seed"]
 
     # Some common analysis selections to remove low-stats regions
-    selections = cfg["preprocess"]["selections"]
+    selections = config_workflow["preprocess"]["selections"]
 
     # Execution Flow
     try:
         
         df_training_full = download_and_load(
-                            cfg["data"]["url"],
-                            cfg["data"]["train_size"]
+                            config_workflow["data"]["url"],
+                            config_workflow["data"]["train_size"]
                         )
 
 
         df_training = process_data(
                                     df_training_full,
                                     list_of_processes_to_model,
-                                    cfg["preprocess"]["seed"]
+                                    config_workflow["preprocess"]["seed"]
                                 )
 
         del df_training_full
@@ -161,7 +161,7 @@ def main():
 
         save_root_files(
                         dataset_dict,
-                        cfg["output"]["dir"],
+                        config_workflow["output"]["dir"],
                         list_of_processes_to_model,
                         selections
                     )

@@ -111,28 +111,28 @@ def save_nll_plot(scan_data, output_dir, parameter_label):
 
 def main():
     args = parse_args()
-    cfg_main = load_config(args.config)["parameter_fitting"]
+    config_workflow = load_config(args.config)["parameter_fitting"]
     
     
-    plots_dir = cfg_main["output"]["plots_dir"]
-    logs_dir = cfg_main["output"]["logs_dir"]
+    plots_dir = config_workflow["output"]["plots_dir"]
+    logs_dir = config_workflow["output"]["logs_dir"]
     
 
     logger, log_file = setup_logging(logs_dir)
     
     logger.info("Starting Inference Pipeline...")
-    logger.info(f"Configurations: Hist={cfg_main['configs']['hist']}, NSBI={cfg_main['configs']['nsbi']}")
+    logger.info(f"Configurations: Hist={config_workflow['configs']['hist']}, NSBI={config_workflow['configs']['nsbi']}")
 
-    measurement = cfg_main["measurement"]
-    scan_param = cfg_main["scan"]["parameter"]
-    scan_range = tuple(cfg_main["scan"]["range"])
-    scan_steps = cfg_main["scan"]["steps"]
+    measurement = config_workflow["measurement"]
+    scan_param = config_workflow["scan"]["parameter"]
+    scan_range = tuple(config_workflow["scan"]["range"])
+    scan_steps = config_workflow["scan"]["steps"]
 
     try:
         
         logger.info("\n=== Building Workspaces ===")
-        ws_hist = build_workspace(cfg_main["configs"]["hist"])
-        ws_nsbi = build_workspace(cfg_main["configs"]["nsbi"])
+        ws_hist = build_workspace(config_workflow["configs"]["hist"])
+        ws_nsbi = build_workspace(config_workflow["configs"]["nsbi"])
         
         
         logger.info("\n=== Initializing Models ===")

@@ -38,14 +38,9 @@ def main():
     logger.info("Starting Neural Likelihood Ratio Estimation workflow.")
 
     logger.info(f"Loading configuration from {args.config}")
-    cfg_full = load_config(args.config)
+    config_workflow = load_config(args.config)["neural_likelihood_ratio_estimation"]
     
-    if "neural_likelihood_ratio_estimation" not in cfg_full:
-        raise KeyError("Config file missing 'neural_likelihood_ratio_estimation' section.")
-        
-    cfg_dre = cfg_full["neural_likelihood_ratio_estimation"]
-    
-    nsbi_config_path = cfg_dre["nsbi_config"]
+    nsbi_config_path = config_workflow["nsbi_config"]
     logger.info(f"Initializing NSBI ConfigManager from: {nsbi_config_path}")
     config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
 
@@ -65,11 +60,11 @@ def main():
     dataset_incl_nominal = dataset_incl_dict["Nominal"].copy()
     dataset_SR_nominal = Datasets.filter_region_dataset(dataset_incl_nominal, region="SR")
 
-    path_to_saved_data = cfg_dre["saved_data_path"]
+    path_to_saved_data = config_workflow["saved_data_path"]
     if not path_to_saved_data.endswith('/'):
         path_to_saved_data += '/'
         
-    training_output_dir_name = cfg_dre["output_training_dir"]
+    training_output_dir_name = config_workflow["output_training_dir"]
     training_output_path = os.path.join(path_to_saved_data, training_output_dir_name)
     if not training_output_path.endswith('/'):
         training_output_path += '/'
@@ -82,8 +77,8 @@ def main():
     logger.info(f"Reference processes: {ref_processes}")
 
     NN_training_mix_model = {}
-    use_log_loss = cfg_dre["use_log_loss"]
-    delete_existing = cfg_dre["delete_existing_models"]
+    use_log_loss = config_workflow["use_log_loss"]
+    delete_existing = config_workflow["delete_existing_models"]
 
     if delete_existing:
         logger.warning("DELETE_EXISTING_MODELS is True. Old models will be removed.")
@@ -127,9 +122,9 @@ def main():
     if num_gpus == 0:
         logger.warning("No GPUs found. Training might be slow.")
 
-    force_train = args.train or cfg_dre["force_train"]
+    force_train = args.train or config_workflow["force_train"]
     
-    training_settings = cfg_dre["training_settings"]
+    training_settings = config_workflow["training_settings"]
 
     for process_type in basis_processes:
         logger.info(f"Processing {process_type}...")
