@@ -149,9 +149,8 @@ def main():
         
     feats = config_workflow["features"]
     
-    input_features_nJets  = feats["n_jets"]
 
-    branches_to_load = (feats + input_features_nJets)
+    branches_to_load = (feats )
     
     input_features_by_jet = {
         1 : ONE_JET_FEATURES, 

@@ -64,8 +64,7 @@ data_preprocessing:
       - DER_prodeta_jet_jet
       - DER_lep_eta_centrality
 
-
-  n_jets:
+      # n_jets:
       - PRI_n_jets
 
 parameter_fitting:
