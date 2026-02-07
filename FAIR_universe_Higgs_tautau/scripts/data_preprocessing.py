@@ -132,12 +132,9 @@ def process_data(df, input_features_by_jet, branches):
 def main():
     args = parse_args()
     
-    cfg_full = load_config(args.config)
-    
-    if "data_preprocessing" not in cfg_full:
-        raise KeyError("Config file missing 'data_preprocessing' section.")
+    cfg_full = load_config(args.config)["data_preprocessing"]
         
-    feats = cfg_full["data_preprocessing"]["features"]
+    feats = cfg_full["features"]
 
     input_features_noJets = feats["no_jets"]
     input_features_1Jets  = feats["one_jet"]
