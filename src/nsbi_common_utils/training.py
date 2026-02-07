@@ -327,13 +327,22 @@ class DensityRatioLightning(pl.LightningModule):
             }
         }
 
+class PrintEpochMetrics(pl.Callback):
+    def on_validation_epoch_end(self, trainer, pl_module):
+        m = trainer.callback_metrics
+        if "train_loss" in m and "val_loss" in m:
+            print(
+                f"Epoch {trainer.current_epoch:4d} | "
+                f"train_loss = {m['train_loss'].item():.6f} | "
+                f"val_loss = {m['val_loss'].item():.6f}"
+            )
 
 class WeightedTensorDataset(Dataset):
 
     def __init__(self, x, y, w):
-        self.x = torch.as_tensor(x, dtype=torch.float32)
-        self.y = torch.as_tensor(y, dtype=torch.long)
-        self.w = torch.as_tensor(w, dtype=torch.float32)
+        self.x = torch.as_tensor(np.asarray(x), dtype=torch.float32)
+        self.y = torch.as_tensor(np.asarray(y), dtype=torch.long)
+        self.w = torch.as_tensor(np.asarray(w), dtype=torch.float32)
 
     def __len__(self):
         return len(self.x)
@@ -446,10 +455,12 @@ class preselection_network_trainer:
             callbacks=[
                 EarlyStopping(monitor="val_loss", patience=30),
                 LearningRateMonitor(),
-                loss_history
+                loss_history,
+                PrintEpochMetrics()
             ],
-            logger=False,
-            enable_checkpointing=False
+            logger=True,
+            enable_checkpointing=False,
+            enable_progress_bar=False,
         )
 
         trainer.fit(self.model, train_loader, val_loader)

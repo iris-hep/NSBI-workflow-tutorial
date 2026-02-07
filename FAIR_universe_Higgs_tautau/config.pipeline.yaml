@@ -95,6 +95,7 @@ preselection_network:
   
   model_path: "./saved_datasets/preselection_model/"
   force_train: false
+  load_trained_models: true
   
   training:
     test_size: 0.2
