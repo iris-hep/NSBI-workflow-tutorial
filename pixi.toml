@@ -9,6 +9,7 @@ version = "0.1.0"
 [dependencies]
 cabinetry = ">=0.6.0,<0.7"
 ipykernel = ">=6.30.1,<7"
+pytest = "*"
 
 [feature.gpu.system-requirements]
 cuda = "12.5"

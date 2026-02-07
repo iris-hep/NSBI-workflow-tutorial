@@ -66,6 +66,13 @@ exclude_lines = [
   "if TYPE_CHECKING:",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
 [tool.pixi.project]
 channels = ["conda-forge"]
 platforms = ["linux-64"]
