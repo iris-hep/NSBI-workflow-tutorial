@@ -22,6 +22,26 @@ logger = logging.getLogger(__name__)
 
 hep.style.use(hep.style.ATLAS)
 
+# --- Feature Classification Definitions (Hardcoded) ---
+# These define which features correspond to 1-jet or 2-jet events.
+ONE_JET_FEATURES = [
+    'PRI_jet_leading_pt', 
+    'PRI_jet_leading_eta', 
+    'PRI_jet_leading_phi', 
+    'PRI_jet_all_pt'
+]
+
+TWO_JET_FEATURES = [
+    'PRI_jet_subleading_pt', 
+    'PRI_jet_subleading_eta', 
+    'PRI_jet_subleading_phi', 
+    'DER_deltaeta_jet_jet', 
+    'DER_mass_jet_jet', 
+    'DER_prodeta_jet_jet', 
+    'DER_lep_eta_centrality'
+]
+
+
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -128,20 +148,14 @@ def main():
     config_workflow = load_config(args.config)["data_preprocessing"]
         
     feats = config_workflow["features"]
-
-    input_features_noJets = feats["no_jets"]
-    input_features_1Jets  = feats["one_jet"]
-    input_features_2Jets  = feats["two_jets"]
+    
     input_features_nJets  = feats["n_jets"]
 
-    branches_to_load = (input_features_noJets + 
-                        input_features_1Jets + 
-                        input_features_2Jets + 
-                        input_features_nJets)
+    branches_to_load = (feats + input_features_nJets)
     
     input_features_by_jet = {
-        1 : input_features_1Jets, 
-        2 : input_features_2Jets
+        1 : ONE_JET_FEATURES, 
+        2 : TWO_JET_FEATURES
     }
 
     try:
