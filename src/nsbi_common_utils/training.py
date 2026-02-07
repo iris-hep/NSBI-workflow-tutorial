@@ -194,7 +194,7 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).mean()
+        loss = (loss * w).sum()  / w.sum()
 
         self.log("train_loss", loss, prog_bar=True)
         return loss
@@ -203,7 +203,7 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).mean()
+        loss = (loss * w).sum()  / w.sum()
 
         self.log("val_loss", loss, prog_bar=True)
 
@@ -436,8 +436,15 @@ class preselection_network_trainer:
         
         train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
-        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-        val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+        train_loader = DataLoader(train_ds, 
+                                  batch_size=batch_size, 
+                                  shuffle=True,
+                                  num_workers = min(4, os.cpu_count() or 1))
+        
+        val_loader   = DataLoader(val_ds, 
+                                  batch_size=batch_size, 
+                                  shuffle=False, 
+                                  num_workers = min(4, os.cpu_count() or 1))
         
         self.model = MultiClassLightning(
                 n_hidden=hidden_layers,
@@ -451,6 +458,8 @@ class preselection_network_trainer:
         loss_history = LossHistory()
 
         trainer = Trainer(
+            accelerator="auto",
+            devices="auto",
             max_epochs=epochs,
             callbacks=[
                 EarlyStopping(monitor="val_loss", patience=30),
@@ -460,7 +469,7 @@ class preselection_network_trainer:
             ],
             logger=True,
             enable_checkpointing=False,
-            enable_progress_bar=False,
+            enable_progress_bar=False
         )
 
         trainer.fit(self.model, train_loader, val_loader)
