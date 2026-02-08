@@ -94,7 +94,7 @@ preselection_network:
     test_size: 0.2
     random_state: 42
     batch_size: 1024
-    epochs: 2
+    epochs: 50
     learning_rate: 0.001
     
     labels:
