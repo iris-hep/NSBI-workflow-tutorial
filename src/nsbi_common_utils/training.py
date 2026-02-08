@@ -12,6 +12,8 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 import pickle 
 
 import torch
+torch.set_float32_matmul_precision("high")
+
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -469,7 +471,7 @@ class preselection_network_trainer:
             ],
             logger=True,
             enable_checkpointing=False,
-            enable_progress_bar=False
+            enable_progress_bar=True
         )
 
         trainer.fit(self.model, train_loader, val_loader)
