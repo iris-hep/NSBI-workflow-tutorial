@@ -39,14 +39,9 @@ def main():
     logger.info("Starting Systematic Uncertainty Estimation workflow.")
 
     logger.info(f"Loading configuration from {args.config}")
-    cfg_full = load_config(args.config)
+    config_workflow = load_config(args.config)["systematic_uncertainty"]
     
-    if "systematic_uncertainty" not in cfg_full:
-        raise KeyError("Config file missing 'systematic_uncertainty' section.")
-        
-    cfg_sys = cfg_full["systematic_uncertainty"]
-    
-    nsbi_config_path = cfg_sys["nsbi_config"]
+    nsbi_config_path = config_workflow["nsbi_config"]
     logger.info(f"Initializing NSBI ConfigManager from: {nsbi_config_path}")
     config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
     
@@ -64,11 +59,11 @@ def main():
     logger.info("Loading full datasets (Nominal + Systematics)...")
     dataset_incl_dict = Datasets.load_datasets_from_config(load_systematics=True)
     
-    region = cfg_sys["filter_region"]
+    region = config_workflow["filter_region"]
     logger.info(f"Filtering datasets for region: {region}")
     dataset_SR_dict = Datasets.filter_region_dataset(dataset_incl_dict, region=region)
     
-    path_to_saved_data = cfg_sys["saved_data_path"]
+    path_to_saved_data = config_workflow["saved_data_path"]
     if not path_to_saved_data.endswith('/'):
         path_to_saved_data += '/'
     
@@ -104,13 +99,13 @@ def main():
     # PART 2: SYSTEMATIC TRAINING 
     # =================================================================================
     
-    should_train = args.train or cfg_sys["force_train"]
+    should_train = args.train or config_workflow["force_train"]
     
     if should_train:
         logger.info("--- Starting Part 2: Neural Network Training for Systematics ---")
         
         # Load training settings directly from pipeline config
-        sys_training_params = cfg_sys["training_settings"].copy()
+        sys_training_params = config_workflow["training_settings"].copy()
         
         # Force training override
         if should_train:

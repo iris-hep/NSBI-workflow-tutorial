@@ -96,17 +96,13 @@ def plot_score_distribution(dataset_dict, output_dir):
 def main():
     args = parse_args()
     logger.info(f"Loading configuration from {args.config}")
-    cfg_full = load_config(args.config)
-    
-    if "preselection_network" not in cfg_full:
-        raise KeyError("Config file missing 'preselection' section.")
+    config_workflow = load_config(args.config)["preselection_network"]
 
-    cfg_presel = cfg_full["preselection_network"]
-    cfg_train = cfg_presel["training"]
-    cfg_inf = cfg_presel["preselection_observable"]
+    cfg_train = config_workflow["training"]
+    cfg_inf = config_workflow["preselection_observable"]
 
     
-    nsbi_config_path = cfg_presel["nsbi_config"]
+    nsbi_config_path = config_workflow["nsbi_config"]
     logger.info(f"Initializing ConfigManager from: {nsbi_config_path}")
     
     config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
@@ -138,9 +134,9 @@ def main():
         features_scaling
     )
 
-    model_path = cfg_presel["model_path"]
-    force_train = cfg_presel["force_train"]
-    load_trained_models = cfg_presel["load_trained_models"]
+    model_path = config_workflow["model_path"]
+    force_train = config_workflow["force_train"]
+    load_trained_models = config_workflow["load_trained_models"]
     
     if force_train or load_trained_models:
         logger.info(f"Starting Training")
@@ -182,7 +178,7 @@ def main():
     logger.info("Saving the 'Preselection Score' plots...")
     plot_score_distribution(
         dataset_dict=dataset_incl_dict,
-        output_dir=cfg_presel["output"]["plots_dir"]
+        output_dir=config_workflow["output"]["plots_dir"]
     )
 
     logger.info("Preselection workflow completed successfully.")
