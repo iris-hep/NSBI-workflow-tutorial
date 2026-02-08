@@ -33,8 +33,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Preselection Neural Network Training & Inference")
     parser.add_argument('--config', type=str, default='config.pipeline.yaml', 
                         help='Path to the YAML configuration file')
-    parser.add_argument('--train', action='store_true', 
-                        help='Force training of a new preselection model')
     return parser.parse_args()
 
 
@@ -137,10 +135,11 @@ def main():
     )
 
     model_path = config_workflow["model_path"]
-    force_train = args.train or config_workflow["force_train"]
+    force_train = config_workflow["force_train"]
+    load_trained_models = config_workflow["load_trained_models"]
     
-    if force_train:
-        logger.info(f"Starting Training (Force={force_train})...")
+    if force_train or load_trained_models:
+        logger.info(f"Starting Training")
         preselectionTraining.train(
             test_size=cfg_train["test_size"], 
             random_state=cfg_train["random_state"], 
@@ -151,9 +150,8 @@ def main():
         )
         logger.info(f"Training complete. Model saved to {model_path}")
     else:
-        logger.info(f"Loading existing model from {model_path}...")
+        logger.info(f"Using load_trained_models={settings['load_trained_models']} from config for {process_type}.")
         preselectionTraining.assign_trained_model(model_path)
-
 
     logger.info("Running inference on all regions...")
 

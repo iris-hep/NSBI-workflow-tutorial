@@ -194,7 +194,7 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).mean()
+        loss = (loss * w).sum()  / w.sum()
 
         self.log("train_loss", loss, prog_bar=True)
         return loss
@@ -203,7 +203,7 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).mean()
+        loss = (loss * w).sum()  / w.sum()
 
         self.log("val_loss", loss, prog_bar=True)
 
@@ -327,13 +327,22 @@ class DensityRatioLightning(pl.LightningModule):
             }
         }
 
+class PrintEpochMetrics(pl.Callback):
+    def on_validation_epoch_end(self, trainer, pl_module):
+        m = trainer.callback_metrics
+        if "train_loss" in m and "val_loss" in m:
+            print(
+                f"Epoch {trainer.current_epoch:4d} | "
+                f"train_loss = {m['train_loss'].item():.6f} | "
+                f"val_loss = {m['val_loss'].item():.6f}"
+            )
 
 class WeightedTensorDataset(Dataset):
 
     def __init__(self, x, y, w):
-        self.x = torch.as_tensor(x, dtype=torch.float32)
-        self.y = torch.as_tensor(y, dtype=torch.long)
-        self.w = torch.as_tensor(w, dtype=torch.float32)
+        self.x = torch.as_tensor(np.asarray(x), dtype=torch.float32)
+        self.y = torch.as_tensor(np.asarray(y), dtype=torch.long)
+        self.w = torch.as_tensor(np.asarray(w), dtype=torch.float32)
 
     def __len__(self):
         return len(self.x)
@@ -427,8 +436,15 @@ class preselection_network_trainer:
         
         train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
-        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-        val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+        train_loader = DataLoader(train_ds, 
+                                  batch_size=batch_size, 
+                                  shuffle=True,
+                                  num_workers = min(4, os.cpu_count() or 1))
+        
+        val_loader   = DataLoader(val_ds, 
+                                  batch_size=batch_size, 
+                                  shuffle=False, 
+                                  num_workers = min(4, os.cpu_count() or 1))
         
         self.model = MultiClassLightning(
                 n_hidden=hidden_layers,
@@ -442,14 +458,18 @@ class preselection_network_trainer:
         loss_history = LossHistory()
 
         trainer = Trainer(
+            accelerator="auto",
+            devices="auto",
             max_epochs=epochs,
             callbacks=[
                 EarlyStopping(monitor="val_loss", patience=30),
                 LearningRateMonitor(),
-                loss_history
+                loss_history,
+                PrintEpochMetrics()
             ],
-            logger=False,
-            enable_checkpointing=False
+            logger=True,
+            enable_checkpointing=False,
+            enable_progress_bar=False
         )
 
         trainer.fit(self.model, train_loader, val_loader)

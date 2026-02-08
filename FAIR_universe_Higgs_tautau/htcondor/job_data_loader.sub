@@ -19,8 +19,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau, README.md
-transfer_output_files = FAIR_universe_Higgs_tautau/saved_datasets
-transfer_output_remaps = "saved_datasets = ./FAIR_universe_Higgs_tautau/saved_datasets"
+transfer_output_files = FAIR_universe_Higgs_tautau
 
 +SingularityImage = "/staging/jsandesara/nsbi-env-gpu.sif"
 
