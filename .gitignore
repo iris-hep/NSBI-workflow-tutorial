@@ -202,3 +202,7 @@ workflow.dag.*
 apptainer-build.sub
 
 logs/*
+
+lightning_logs/
+
+data/
