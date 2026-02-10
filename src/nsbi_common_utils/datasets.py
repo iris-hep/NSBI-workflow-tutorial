@@ -4,6 +4,9 @@ import numpy as np
 import uproot
 import copy
 import pathlib
+import shutil
+import tempfile
+import awkward as ak
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from nsbi_common_utils.configuration import ConfigManager
@@ -154,6 +157,76 @@ class datasets:
                             self._save_dataset_to_ntuple(dict_datasets[syst_name_var][sample_name],
                                                         path_to_root_file, 
                                                         tree_name)
+
+
+    def _save_dataset_to_ntuple(self, dataset, path_to_root_file: str, tree_name: str):
+        """
+        Mofify a specific TTree with DataFrame contents.
+
+        Behavior:
+            - Keeps other trees intact by copying them over.
+            - Ensures 'weights' exists in the saved branch list.
+
+        Args:
+            dataset: DataFrame to write (columns = branches).
+            path_to_root_file: Destination ROOT file.
+            tree_name: Name of the tree to overwrite.
+        """
+        if "weights" not in dataset.columns:
+            dataset = dataset.assign(weights=1.0)
+
+        new_cols = {col: np.asarray(dataset[col]) for col in dataset.columns}
+
+        # Temp file to avoid curroption
+        directory = os.path.dirname(os.path.abspath(path_to_root_file))
+        fd, tmp_path = tempfile.mkstemp(dir=directory, suffix=".root")
+        os.close(fd)
+
+        try:
+            with uproot.open(path_to_root_file) as fin, uproot.recreate(tmp_path) as fout:
+                # Copy other TTrees (as you already do)
+                for key, classname in fin.classnames().items():
+                    k = key.split(";")[0]
+                    if k == tree_name:
+                        continue
+                    if classname == "TTree":
+                        fout[k] = fin[k].arrays(library="ak")
+
+                # --- Replace the target tree, but preserve its OTHER BRANCHES ---
+                old_tree = fin[tree_name]
+                old_arrays = old_tree.arrays(library="ak")  # all branches in that tree
+
+                # Validate event count didn't change (important when merging)
+                n_old = old_tree.num_entries
+                if len(dataset) != n_old:
+                    raise ValueError(
+                        f"Refusing to overwrite {path_to_root_file}:{tree_name} "
+                        f"because row count changed ({len(dataset)} vs {n_old}). "
+                        "Write to a new file/tree instead."
+                    )
+
+                merged = {name: old_arrays[name] for name in old_arrays.fields}
+                merged.update(new_cols)  # overwrite/add modified columns
+
+                # Write merged tree
+                fout[tree_name] = merged
+
+            # Validate tmp file before replacing
+            with uproot.open(tmp_path) as chk:
+                if tree_name not in chk:
+                    raise RuntimeError("Write failed: tree missing in tmp output.")
+                if chk[tree_name].num_entries != len(dataset):
+                    raise RuntimeError("Write failed: entry count mismatch in tmp output.")
+
+            # Atomic replace
+            os.replace(tmp_path, path_to_root_file)
+
+        except Exception:
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            finally:
+                raise
 
     def _save_dataset_to_ntuple(self,
                                 dataset, 
@@ -329,10 +402,7 @@ def save_dataframe_as_root(dataset        : pd.DataFrame,
         arrays = {col: dataset[col].to_numpy() for col in dataset.columns}
 
         ntuple[tree_name] = arrays
-        
-
-import uproot
-import pandas as pd
+    
 
 def load_dataframe_from_root(path_to_load: str,
                              tree_name: str,
@@ -354,5 +424,49 @@ def load_dataframe_from_root(path_to_load: str,
         dataframe = tree.arrays(branches_to_load, library="pd")
 
     return dataframe
+
+def load_dataframe_from_root(path_to_load: str,
+                             tree_name: str,
+                             branches_to_load: list = None) -> pd.DataFrame:
+    """
+    Utility: read selected branches from a ROOT TTree into a DataFrame.
+
+    Args:
+        path_to_load: Source ROOT file path.
+        tree_name: TTree name inside the file.
+        branches_to_load: Branch names to read. If empty or None, load all branches.
+    Returns:
+        pd.DataFrame containing the requested branches.
+    """
+    with uproot.open(f"{path_to_load}:{tree_name}") as tree:
+        if not branches_to_load:
+            branches_to_load = tree.keys()
+
+        out = tree.arrays(branches_to_load, library="pd")
+
+    # Case A: uproot returned multiple DataFrames (unrelated jagged collections)
+    if isinstance(out, tuple):
+        # Pick the *event-level* frame if present; otherwise raise a clear error.
+        event_level = [df for df in out if getattr(df.index, "nlevels", 1) == 1]
+        if len(event_level) == 1:
+            return event_level[0]
+
+        raise TypeError(
+            "uproot returned multiple DataFrames (tuple). "
+            "This usually means you requested jagged branches with different multiplicities. "
+            "Either: (1) drop/aggregate jagged branches to event-level, or (2) switch to Awkward workflow."
+        )
+
+    # Case B: already a DataFrame
+    if isinstance(out, pd.DataFrame):
+        return out
+
+    # Case C: awkward array/record returned -> convert or raise
+    if isinstance(out, (ak.Array, ak.Record)):
+        # This yields a DataFrame with a (possibly multi-)index.
+        return ak.to_dataframe(out)
+
+    raise TypeError(f"Unexpected type from uproot: {type(out)}")
+
 
 

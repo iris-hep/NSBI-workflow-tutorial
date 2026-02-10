@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 hep.style.use(hep.style.ATLAS)
 
-# --- Feature Classification Definitions (Hardcoded) ---
-# These define which features correspond to 1-jet or 2-jet events.
+# These define which features correspond to 1-jet or 2-jet events. 
+# Useful for preprocessing before using in an MLP
 ONE_JET_FEATURES = [
     'PRI_jet_leading_pt', 
     'PRI_jet_leading_eta', 
@@ -149,8 +149,7 @@ def main():
         
     feats = config_workflow["features"]
     
-
-    branches_to_load = (feats )
+    branches_to_load = ( feats )
     
     input_features_by_jet = {
         1 : ONE_JET_FEATURES, 
