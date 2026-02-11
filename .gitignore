@@ -197,8 +197,12 @@ src/nsbi_common_utils/_version.py
 .pixi/*
 !.pixi/config.toml
 
-workflow.dag.*
+*.dag.*
 
 apptainer-build.sub
 
 logs/*
+
+lightning_logs/
+
+data/

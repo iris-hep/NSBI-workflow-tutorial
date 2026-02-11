@@ -12,6 +12,8 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 import pickle 
 
 import torch
+torch.set_float32_matmul_precision("high")
+
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -400,7 +402,8 @@ class preselection_network_trainer:
                     verbose=2, 
                     learning_rate=0.1,
                     validation_split=0.1,
-                    activation='swish'):
+                    activation='swish',
+                    num_workers=0):
 
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
@@ -439,12 +442,12 @@ class preselection_network_trainer:
         train_loader = DataLoader(train_ds, 
                                   batch_size=batch_size, 
                                   shuffle=True,
-                                  num_workers = min(4, os.cpu_count() or 1))
+                                  num_workers = num_workers)
         
         val_loader   = DataLoader(val_ds, 
                                   batch_size=batch_size, 
                                   shuffle=False, 
-                                  num_workers = min(4, os.cpu_count() or 1))
+                                  num_workers = num_workers)
         
         self.model = MultiClassLightning(
                 n_hidden=hidden_layers,
@@ -469,7 +472,7 @@ class preselection_network_trainer:
             ],
             logger=True,
             enable_checkpointing=False,
-            enable_progress_bar=False
+            enable_progress_bar=True
         )
 
         trainer.fit(self.model, train_loader, val_loader)

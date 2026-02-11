@@ -4,6 +4,9 @@ import numpy as np
 import uproot
 import copy
 import pathlib
+import shutil
+import tempfile
+import awkward as ak
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from nsbi_common_utils.configuration import ConfigManager
@@ -329,10 +332,7 @@ def save_dataframe_as_root(dataset        : pd.DataFrame,
         arrays = {col: dataset[col].to_numpy() for col in dataset.columns}
 
         ntuple[tree_name] = arrays
-        
-
-import uproot
-import pandas as pd
+    
 
 def load_dataframe_from_root(path_to_load: str,
                              tree_name: str,
@@ -354,5 +354,49 @@ def load_dataframe_from_root(path_to_load: str,
         dataframe = tree.arrays(branches_to_load, library="pd")
 
     return dataframe
+
+def load_dataframe_from_root(path_to_load: str,
+                             tree_name: str,
+                             branches_to_load: list = None) -> pd.DataFrame:
+    """
+    Utility: read selected branches from a ROOT TTree into a DataFrame.
+
+    Args:
+        path_to_load: Source ROOT file path.
+        tree_name: TTree name inside the file.
+        branches_to_load: Branch names to read. If empty or None, load all branches.
+    Returns:
+        pd.DataFrame containing the requested branches.
+    """
+    with uproot.open(f"{path_to_load}:{tree_name}") as tree:
+        if not branches_to_load:
+            branches_to_load = tree.keys()
+
+        out = tree.arrays(branches_to_load, library="pd")
+
+    # Case A: uproot returned multiple DataFrames (unrelated jagged collections)
+    if isinstance(out, tuple):
+        # Pick the *event-level* frame if present; otherwise raise a clear error.
+        event_level = [df for df in out if getattr(df.index, "nlevels", 1) == 1]
+        if len(event_level) == 1:
+            return event_level[0]
+
+        raise TypeError(
+            "uproot returned multiple DataFrames (tuple). "
+            "This usually means you requested jagged branches with different multiplicities. "
+            "Either: (1) drop/aggregate jagged branches to event-level, or (2) switch to Awkward workflow."
+        )
+
+    # Case B: already a DataFrame
+    if isinstance(out, pd.DataFrame):
+        return out
+
+    # Case C: awkward array/record returned -> convert or raise
+    if isinstance(out, (ak.Array, ak.Record)):
+        # This yields a DataFrame with a (possibly multi-)index.
+        return ak.to_dataframe(out)
+
+    raise TypeError(f"Unexpected type from uproot: {type(out)}")
+
 
 

@@ -98,8 +98,8 @@ def main():
     logger.info(f"Loading configuration from {args.config}")
     config_workflow = load_config(args.config)["preselection_network"]
 
-    cfg_train = config_workflow["training"]
-    cfg_inf = config_workflow["preselection_observable"]
+    config_train        = config_workflow["training"]
+    config_preselection = config_workflow["preselection_observable"]
 
     
     nsbi_config_path = config_workflow["nsbi_config"]
@@ -110,7 +110,7 @@ def main():
     features, features_scaling = config_nsbi.get_training_features()
     logger.info(f"Training features loaded from NSBI config: {len(features)} features")
     
-    label_dict = cfg_train["labels"]
+    label_dict = config_train["labels"]
     
     logger.info(f"Initializing Datasets...")
     datasets_helper = nsbi_common_utils.datasets.datasets(
@@ -141,12 +141,12 @@ def main():
     if force_train or load_trained_models:
         logger.info(f"Starting Training")
         preselectionTraining.train(
-            test_size=cfg_train["test_size"], 
-            random_state=cfg_train["random_state"], 
+            test_size=config_train["test_size"], 
+            random_state=config_train["random_state"], 
             path_to_save=model_path,
-            batch_size=cfg_train["batch_size"],
-            epochs=cfg_train["epochs"], 
-            learning_rate=cfg_train["learning_rate"]
+            batch_size=config_train["batch_size"],
+            epochs=config_train["epochs"], 
+            learning_rate=config_train["learning_rate"]
         )
         logger.info(f"Training complete. Model saved to {model_path}")
     else:
@@ -162,10 +162,10 @@ def main():
             
             presel_score = calculate_preselection_observable(
                 pred_NN_incl, 
-                train_label_sample_dict=label_dict,
-                signal_processes=cfg_inf["signal_processes"], 
-                background_processes=cfg_inf["background_processes"],
-                pre_factor_dict=cfg_inf["pre_factor_dict"]
+                samples_list        =   label_dict,
+                signal_processes    =   config_preselection["signal_processes"], 
+                background_processes=   config_preselection["background_processes"],
+                pre_factor_dict     =   config_preselection["pre_factor_dict"]
             )
 
             dataset_incl_dict[region_name][sample_name]['presel_score'] = presel_score

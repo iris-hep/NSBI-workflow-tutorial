@@ -3,12 +3,6 @@ set -e
 
 STEP=$1
 CONFIG=$2
-SKIP=${3:-0}
-
-if [ "$SKIP" = "1" ]; then
-    echo "Skipping step: ${STEP}"
-    exit 0
-fi
 
 export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
 python -m pip install --no-deps -e .

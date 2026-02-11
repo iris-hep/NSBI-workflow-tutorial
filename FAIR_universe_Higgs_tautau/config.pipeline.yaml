@@ -1,3 +1,4 @@
+# Data loader settings - these are specific to the example
 data_loader:
   data:
     url: "https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip"
@@ -31,10 +32,10 @@ data_loader:
   output:
     dir: "./saved_datasets"
 
-# Section for Data Preprocessing
+# Data processing settings - these are specific to the example
 data_preprocessing:
 
-  config_path: "./config.yml"
+  config_path: "./config_fit_nsbi.yml"
   features:
       - PRI_lep_pt
       - PRI_lep_eta
@@ -63,28 +64,10 @@ data_preprocessing:
       - DER_mass_jet_jet
       - DER_prodeta_jet_jet
       - DER_lep_eta_centrality
-
-      # n_jets:
       - PRI_n_jets
 
-parameter_fitting:
-  configs:
-    hist: "./config_hist.yml"   #Configuration file path for histogram settings
-    nsbi: "./config.yml" 
-  measurement: "higgs_tautau_signal_strength" #Measurement to fit in the analysis.
-
-  output:
-    plots_dir: "./output/plots/parameter_fitting"
-    logs_dir: "./output/logs/parameter_fitting"
-  scan:
-    parameter: "mu_htautau"
-    range: [0.0, 3.0]
-    steps: 50
-
-
 preselection_network:
-  # Path to the original config required by nsbi_common_utils
-  nsbi_config: "./config.yml"
+  nsbi_config: "./config_fit_nsbi.yml"
   
   model_path: "./saved_datasets/preselection_model/"
   force_train: false
@@ -114,11 +97,9 @@ preselection_network:
     plots_dir: "./output/plots/preselection_network"
 
 
-
-
 # Section for Density Ratio Estimation
 neural_likelihood_ratio_estimation:
-  nsbi_config: "./config.yml"
+  nsbi_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
   output_training_dir: "output_training_nominal"
   
@@ -173,14 +154,14 @@ neural_likelihood_ratio_estimation:
 
 # Section for Systematic Uncertainty Estimation
 systematic_uncertainty:
-  nsbi_config: "./config.yml"
+  nsbi_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
   filter_region: "SR"
   force_train: false
   
   training_settings:
-    hidden_layers: 3
-    neurons: 100
+    hidden_layers: 4
+    neurons: 1000
     number_of_epochs: 50
     batch_size: 10000
     learning_rate: 0.001
@@ -203,3 +184,19 @@ systematic_uncertainty:
     load_trained_models: true
     num_ensemble_members: 1
     summarize_model: false
+
+
+# Parameter fit settings
+parameter_fitting:
+  configs:
+    histogram: "./config_fit_histogram.yml"   
+    nsbi: "./config_fit_nsbi.yml" 
+  measurement: "higgs_tautau_signal_strength" 
+  output:
+    plots_dir: "./output/plots/parameter_fitting"
+    logs_dir: "./output/logs/parameter_fitting"
+  scan:
+    parameter: "mu_htautau"
+    range: [0.0, 3.0]
+    steps: 50
+
