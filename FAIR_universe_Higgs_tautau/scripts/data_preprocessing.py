@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import argparse
 import numpy as np
 import pandas as pd
@@ -22,166 +23,186 @@ logger = logging.getLogger(__name__)
 
 hep.style.use(hep.style.ATLAS)
 
-# These define which features correspond to 1-jet or 2-jet events. 
-# Useful for preprocessing before using in an MLP
-ONE_JET_FEATURES = [
-    'PRI_jet_leading_pt', 
-    'PRI_jet_leading_eta', 
-    'PRI_jet_leading_phi', 
-    'PRI_jet_all_pt'
-]
 
-TWO_JET_FEATURES = [
-    'PRI_jet_subleading_pt', 
-    'PRI_jet_subleading_eta', 
-    'PRI_jet_subleading_phi', 
-    'DER_deltaeta_jet_jet', 
-    'DER_mass_jet_jet', 
-    'DER_prodeta_jet_jet', 
-    'DER_lep_eta_centrality'
-]
-
-
-def load_config(path):
+def load_config(path: str) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
-def parse_args():
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Process HiggsML data features.")
-    
     parser.add_argument(
         "--config", 
         type=str, 
         default="config.pipeline.yaml",
         help="Path to configuration file."
     )
-    
     return parser.parse_args()
 
-def ds_helper(cfg_path, branches):
-    '''
-    Uses nsbi_common_utils.datasets to load data.
-    '''
-    datasets_helper = nsbi_common_utils.datasets.datasets(
+
+def ds_helper(cfg_path: str, branches: list) -> datasets.datasets:
+    """Use nsbi_common_utils.datasets to load data."""
+    return nsbi_common_utils.datasets.datasets(
         config_path=cfg_path,
         branches_to_load=branches
     )
-    return datasets_helper
 
-def process_data(df, input_features_by_jet, branches):
-    """Filters specific processes and balances the dataset."""
+
+def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple:
+    """
+    Apply feature engineering to all samples in all regions.
     
+    Returns:
+        (modified_df_dict, list_of_new_branch_names)
+    """
     median_feature = {}
 
-    # 1. Calculate Medians from Nominal samples
+    # 1. Calculate medians from nominal samples
     if "Nominal" in df:
         nominal_data = df["Nominal"]
     else:
-        nominal_data = df.get("Nominal", df)
+        nominal_data = df  # fallback if structure is different
 
+    logger.info("Computing medians from Nominal samples for imputation...")
     for sample, sample_dataset in nominal_data.items(): 
         median_feature[sample] = {}
-
-        for nJets, feat_list in input_features_by_jet.items():
+        for n_jets, feat_list in input_features_by_jet.items():
             for feature in feat_list:
-                # Calculate median for valid jet counts
-                vals = sample_dataset.loc[sample_dataset['PRI_n_jets'] >= nJets, feature]
-                if len(vals) > 0:
-                    median_feature[sample][feature] = np.median(vals)
-                else:
-                    median_feature[sample][feature] = 0.0
+                # Calculate median for events with n_jets >= threshold
+                vals = sample_dataset.loc[sample_dataset['PRI_n_jets'] >= n_jets, feature]
+                median_feature[sample][feature] = np.median(vals) if len(vals) > 0 else 0.0
 
-    logger.info(f"Extracting additional branches from the engineered features") 
+    logger.info("Applying feature engineering to all regions and samples...")
     branches_to_add = []
 
-    # 2. Apply Engineering to all datasets (Systematics/Regions)
+    # 2. Apply engineering to all datasets (systematics/regions)
     for region, sample_datasets in df.items():
-
-        for sample, sample_dataset in sample_datasets.items():   
+        for sample, sample_dataset in sample_datasets.items():
             
-            # --- Categorical Jet Masks ---
-            sample_dataset['njet_0'] = (sample_dataset['PRI_n_jets'] == 0).astype(int)
-            sample_dataset['njet_1'] = (sample_dataset['PRI_n_jets'] == 1).astype(int)
-            sample_dataset['njet_2'] = (sample_dataset['PRI_n_jets'] >= 2).astype(int)
+            df_modified = sample_dataset.copy()
+            
+            # --- Categorical jet masks ---
+            df_modified['njet_0'] = (df_modified['PRI_n_jets'] == 0).astype(int)
+            df_modified['njet_1'] = (df_modified['PRI_n_jets'] == 1).astype(int)
+            df_modified['njet_2'] = (df_modified['PRI_n_jets'] >= 2).astype(int)
 
-            for m in ['njet_0', 'njet_1', 'njet_2']:
-                if m not in branches_to_add: branches_to_add.append(m)
+            for mask_name in ['njet_0', 'njet_1', 'njet_2']:
+                if mask_name not in branches_to_add:
+                    branches_to_add.append(mask_name)
 
-            # --- Per-Jet Masks and Imputation ---
-            for i, feat_list in input_features_by_jet.items():
-                # Create mask
-                mask_col = f'jet{i}_mask'
-                sample_dataset[mask_col] = (sample_dataset['PRI_n_jets'] >= i).astype(float)
+            # --- Per-jet masks and imputation ---
+            for n_jets, feat_list in input_features_by_jet.items():
+                mask_col = f'jet{n_jets}_mask'
+                df_modified[mask_col] = (df_modified['PRI_n_jets'] >= n_jets).astype(float)
+                
+                if mask_col not in branches_to_add:
+                    branches_to_add.append(mask_col)
 
-                if mask_col not in branches_to_add: branches_to_add.append(mask_col)
-
-                # Impute
+                # Impute missing features for events below the jet threshold
                 for feat in feat_list:
-                    # Use median from Nominal sample if available, else 0
-                    med_val = median_feature.get(sample, {}).get(feat, 0)
-                    sample_dataset[feat] = sample_dataset[feat].where(
-                        sample_dataset['PRI_n_jets'] >= i, med_val
+                    med_val = median_feature.get(sample, {}).get(feat, 0.0)
+                    # BUG FIX: .where() returns a new Series, so we must assign it back
+                    df_modified[feat] = df_modified[feat].where(
+                        df_modified['PRI_n_jets'] >= n_jets, 
+                        med_val
                     )
 
-            # --- Log Transformations ---
+            # --- Log transformations ---
             for feat in branches:
-                if feat not in sample_dataset.columns: continue
+                if feat not in df_modified.columns:
+                    continue
 
-                kin = sample_dataset[feat].to_numpy()
-                if len(kin) == 0: continue
+                kin = df_modified[feat].to_numpy()
+                if len(kin) == 0:
+                    continue
 
-                if (np.amin(kin) > 0.0) and (np.amax(kin) > 100):
-                    log_feat = 'log_' + feat
-                    sample_dataset[log_feat] = np.log(kin + 10.0)
-
+                # Only apply log if all values are positive and range is large
+                if (np.amin(kin) > 0.0) and (np.amax(kin) > 100.0):
+                    log_feat = f'log_{feat}'
+                    df_modified[log_feat] = np.log(kin + 10.0)
+                    
                     if log_feat not in branches_to_add:
                         branches_to_add.append(log_feat)
 
-            df[region][sample] = sample_dataset
-    
+            df[region][sample] = df_modified
+
     return df, branches_to_add
 
 
-def main():
+def main() -> None:
     args = parse_args()
+    config = load_config(args.config)["data_preprocessing"]
+
+    features = config["features"]
+
+     # Specify branches to load from the ROOT ntuples
+    input_features_noJets = ['PRI_lep_pt', 'PRI_lep_eta', 'PRI_lep_phi', 'PRI_had_pt', 'PRI_had_eta',
+        'PRI_had_phi', 'PRI_met', 'PRI_met_phi', 'DER_mass_transverse_met_lep',
+        'DER_mass_vis', 'DER_pt_h', 'DER_deltar_had_lep', 'DER_pt_tot', 'DER_sum_pt',
+        'DER_pt_ratio_lep_had', 'DER_met_phi_centrality']
     
-    config_workflow = load_config(args.config)["data_preprocessing"]
-        
-    feats = config_workflow["features"]
+    for feat in input_features_noJets:
+        if feat not in features:
+            input_features_noJets.remove(feat)
+
+    input_features_1Jets = ['PRI_jet_leading_pt', 'PRI_jet_leading_eta',
+        'PRI_jet_leading_phi',
+        'PRI_jet_all_pt']
     
-    branches_to_load = ( feats )
+    for feat in input_features_1Jets:
+        if feat not in features:
+            input_features_1Jets.remove(feat)
+
+    input_features_2Jets = ['PRI_jet_subleading_pt',
+        'PRI_jet_subleading_eta', 'PRI_jet_subleading_phi', 'DER_deltaeta_jet_jet', 'DER_mass_jet_jet',
+        'DER_prodeta_jet_jet',
+        'DER_lep_eta_centrality']
     
+    for feat in input_features_2Jets:
+        if feat not in features:
+            input_features_2Jets.remove(feat)
+
+    input_features_nJets = ['PRI_n_jets']
+
+    for feat in input_features_nJets:
+        if feat not in features:
+            input_features_nJets.remove(feat)
+
+    branches_to_load = input_features_noJets \
+                        + input_features_1Jets \
+                        + input_features_2Jets \
+                        + input_features_nJets
+    
+
     input_features_by_jet = {
-        1 : ONE_JET_FEATURES, 
-        2 : TWO_JET_FEATURES
+        1: input_features_1Jets, 
+        2: input_features_2Jets
     }
 
     try:
-        logger.info(f"Loading and converting the dataset to Pandas DataFrame for processing...")
-        
-        datasets_helper = ds_helper(config_workflow['config_path'], branches_to_load)
-        
+        logger.info("Loading dataset into Pandas DataFrames...")
+        datasets_helper = ds_helper(config['config_path'], features)
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics=True)
 
-        datasets_all, add_branches = process_data(
+        logger.info("Applying feature engineering...")
+        datasets_all, new_branches = process_data(
             datasets_all, 
             input_features_by_jet, 
             branches=branches_to_load
         )
-        
-        logger.info(f"Adding additional branches to the DataFrame: {len(add_branches)} new features")
-        datasets_helper.add_appended_branches(add_branches)
 
-        datasets_helper.save_datasets(
-            datasets_all, 
-            save_systematics=True
-        )
-        
-        logger.info("Data Preprocessing workflow completed successfully.")
+        logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
+        datasets_helper.add_appended_branches(new_branches)
+
+        logger.info("Saving processed datasets...")
+        datasets_helper.save_datasets(datasets_all, save_systematics=True)
+
+        logger.info("Data preprocessing workflow completed successfully.")
 
     except Exception as e:
-        logger.error(f"An error occurred: {e}", exc_info=True)
+        logger.error(f"Workflow failed: {e}", exc_info=True)
         raise
+
 
 if __name__ == "__main__":
     main()

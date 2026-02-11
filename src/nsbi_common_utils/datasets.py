@@ -106,6 +106,7 @@ class datasets:
                             else:
                                 dict_datasets[syst_name_var][sample_name]["weights"] = 1.0
 
+        print(f"DEBUG: {dict_datasets["Nominal"].keys()}")
         return dict_datasets
 
     def add_appended_branches(self, 
