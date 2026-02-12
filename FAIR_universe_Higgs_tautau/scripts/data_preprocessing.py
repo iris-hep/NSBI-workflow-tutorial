@@ -40,14 +40,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def ds_helper(cfg_path: str, branches: list) -> datasets.datasets:
-    """Use nsbi_common_utils.datasets to load data."""
-    return nsbi_common_utils.datasets.datasets(
-        config_path=cfg_path,
-        branches_to_load=branches
-    )
-
-
 def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple:
     """
     Apply feature engineering to all samples in all regions.
@@ -181,7 +173,10 @@ def main() -> None:
 
     try:
         logger.info("Loading dataset into Pandas DataFrames...")
-        datasets_helper = ds_helper(config['config_path'], features)
+        datasets_helper = nsbi_common_utils.datasets.datasets(
+                                                                config_path=cfg_path,
+                                                                branches_to_load=branches
+                                                            )
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics=True)
 
         logger.info("Applying feature engineering...")
