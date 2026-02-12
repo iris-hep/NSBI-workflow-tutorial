@@ -50,10 +50,7 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
     median_feature = {}
 
     # 1. Calculate medians from nominal samples
-    if "Nominal" in df:
-        nominal_data = df["Nominal"]
-    else:
-        nominal_data = df  # fallback if structure is different
+    nominal_data = df["Nominal"]
 
     logger.info("Computing medians from Nominal samples for imputation...")
     for sample, sample_dataset in nominal_data.items(): 
@@ -93,7 +90,6 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                 # Impute missing features for events below the jet threshold
                 for feat in feat_list:
                     med_val = median_feature.get(sample, {}).get(feat, 0.0)
-                    # BUG FIX: .where() returns a new Series, so we must assign it back
                     df_modified[feat] = df_modified[feat].where(
                         df_modified['PRI_n_jets'] >= n_jets, 
                         med_val
@@ -116,7 +112,7 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                     if log_feat not in branches_to_add:
                         branches_to_add.append(log_feat)
 
-            df[region][sample] = df_modified
+            df[region][sample] = df_modified.copy()
 
     return df, branches_to_add
 
@@ -173,11 +169,14 @@ def main() -> None:
 
     try:
         logger.info("Loading dataset into Pandas DataFrames...")
+        logger.info(f"DEBUG: Config path = {config['config_path']}")
         datasets_helper = nsbi_common_utils.datasets.datasets(
-                                                                config_path=cfg_path,
-                                                                branches_to_load=branches
+                                                                config_path=config['config_path'],
+                                                                branches_to_load=branches_to_load
                                                             )
-        datasets_all = datasets_helper.load_datasets_from_config(load_systematics=True)
+        datasets_all = datasets_helper.load_datasets_from_config(load_systematics = True)
+
+        logger.info(f"DEBUG: First dataset load keys = {datasets_all}")
 
         logger.info("Applying feature engineering...")
         datasets_all, new_branches = process_data(
@@ -185,6 +184,8 @@ def main() -> None:
             input_features_by_jet, 
             branches=branches_to_load
         )
+
+        logger.info(f"DEBUG: post-process dataset load keys = {datasets_all}")
 
         logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
         datasets_helper.add_appended_branches(new_branches)
