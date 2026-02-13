@@ -1,9 +1,16 @@
+"""
+Drop-in replacement for nsbi_common_utils.datasets.datasets class.
+
+Key fix: _save_dataset_to_ntuple replaced with batched file writing to prevent
+tree overwrites when multiple samples target the same ROOT file.
+"""
+
 import os
 from collections import defaultdict
 from typing import Dict, List, Optional
-import yaml
 import uproot
 import pandas as pd
+
 
 class datasets:
     """
@@ -30,6 +37,7 @@ class datasets:
 
     def _load_config(self, path: str) -> dict:
         """Load YAML configuration file."""
+        import yaml
         with open(path, "r") as f:
             return yaml.safe_load(f)
 
@@ -64,10 +72,22 @@ class datasets:
             sample_name = sample_dict["Name"]
             file_path = sample_dict["SamplePath"]
             tree_name = sample_dict["Tree"]
+            
+            # Determine which branches to load (include weight branch if specified)
+            weight_branch = sample_dict.get("Weight")
+            branches = self.branches_to_load.copy()
+            if weight_branch and weight_branch not in branches:
+                branches.append(weight_branch)
 
-            dict_datasets["Nominal"][sample_name] = self._load_dataframe_from_root(
-                file_path, tree_name, self.branches_to_load
-            )
+            df = self._load_dataframe_from_root(file_path, tree_name, branches)
+            
+            df["sample_name"] = sample_name
+            if weight_branch:
+                df = df.rename(columns={weight_branch: "weights"})
+            else:
+                df["weights"] = 1.0
+            
+            dict_datasets["Nominal"][sample_name] = df
 
         # 2. Load systematic variations (if requested)
         if load_systematics:
@@ -85,10 +105,23 @@ class datasets:
                             sample_name = sample_dict["SampleName"]
                             file_path = sample_dict["Path"]
                             tree_name = sample_dict["Tree"]
+                            
+                            # Include weight branch if specified
+                            weight_branch = sample_dict.get("Weight")
+                            branches = self.branches_to_load.copy()
+                            if weight_branch and weight_branch not in branches:
+                                branches.append(weight_branch)
 
-                            dict_datasets[region_key][sample_name] = self._load_dataframe_from_root(
-                                file_path, tree_name, self.branches_to_load
-                            )
+                            df = self._load_dataframe_from_root(file_path, tree_name, branches)
+                            
+                            # BUG FIX: Add/rename "weights" column
+                            df["sample_name"] = sample_name
+                            if weight_branch:
+                                df = df.rename(columns={weight_branch: "weights"})
+                            else:
+                                df["weights"] = 1.0
+                            
+                            dict_datasets[region_key][sample_name] = df
 
         return dict_datasets
 
@@ -168,9 +201,11 @@ class datasets:
             dict_datasets: Nested dict from load_datasets_from_config().
             save_systematics: If True, also save systematic variation samples.
         """
-        # Ensure 'weights' is in the branch list
-        if "weights" not in self.branches_all:
-            self.branches_all.append("weights")
+        # Ensure "weights" and "sample_name" are in branches_all
+        # These columns are added during load, so they must be saved
+        for col in ["weights", "sample_name"]:
+            if col not in self.branches_all:
+                self.branches_all.append(col)
 
         # 1. Save nominal samples
         self._save_region_datasets(
@@ -313,6 +348,94 @@ class datasets:
         # Write using the fixed logic
         self._write_file_with_trees(path_to_root_file, {tree_name: df_filtered})
 
+    def merge_dataframe_dict_for_training(self, 
+                                        dataset_dict, 
+                                        label_sample_dict: Union[dict[str, int], None] = None,
+                                        samples_to_merge = []):
+        """
+        Concatenate selected samples; optionally add normalized weights + labels. 
+        The returned sample is ready for training.
+        Args:
+            dataset_dict: dict[sample_name] -> DataFrame.
+            label_sample_dict: Optional mapping of sample_name -> class id.
+            samples_to_merge: List of sample names to include.
+        Returns:
+            pd.DataFrame: merged (and optionally labeled/normalized) dataset.
+        Raises:
+            Exception: If samples_to_merge is empty.
+        """
+        if len(samples_to_merge) == 0:
+            raise Exception
+
+        list_dataframes = []
+        for sample_name, dataset in dataset_dict.items():
+            if sample_name not in samples_to_merge: continue
+            list_dataframes.append(dataset)
+
+        dataset = pd.concat(list_dataframes)
+
+        if label_sample_dict is not None:
+
+            dataset = self._add_normalised_weights_and_train_label_class(dataset, 
+                                                                        label_sample_dict)
+
+        return dataset
+
+    def _add_normalised_weights_and_train_label_class(self,
+                                                    dataset, 
+                                                    label_sample_dict: dict[str, int]):
+        """
+        Add per-class normalized weights and integer training labels.
+
+        Process:
+            - 'train_labels' set per sample_name using label_sample_dict.
+            - 'weights_normed' scaled so each class sums to 1.0.
+
+        Args:
+            dataset: Input DataFrame with 'sample_name' and 'weights'.
+            label_sample_dict: Mapping sample_name -> class id.
+        Returns:
+            pd.DataFrame with 'train_labels' and 'weights_normed' columns.
+        """
+        dataset['weights_normed']       = dataset['weights'].to_numpy()
+        dataset['train_labels']         = -999
+
+        for sample_name, label in label_sample_dict.items():
+
+            mask_sample_name                                     = np.isin(dataset["sample_name"], [sample_name])
+
+            dataset.loc[mask_sample_name, "train_labels"]        = label
+
+        train_labels_unique = np.unique(dataset.train_labels)
+
+        for train_label in train_labels_unique:
+
+            mask_train_label                                     = np.isin(dataset["train_labels"], [train_label])
+
+            total_train_weight                                   = dataset.loc[mask_train_label, "weights"].sum()
+
+            dataset.loc[mask_train_label, "weights_normed"]      = dataset.loc[mask_train_label, "weights_normed"] / total_train_weight
+
+        return dataset
+    
+    def prepare_basis_training_dataset(self, dataset_numerator, processes_numerator, dataset_denominator, processes_denominator):
+
+        ref_train_label_sample_dict = {**{ref: 0 for ref in processes_denominator}}
+
+        dataset_ref     = self.merge_dataframe_dict_for_training(dataset_denominator, 
+                                                                  ref_train_label_sample_dict, 
+                                                                  samples_to_merge = processes_denominator)
+        
+        numerator_train_label_sample_dict = {**{numerator: 1 for numerator in processes_numerator}}
+        
+        dataset_num = self.merge_dataframe_dict_for_training(dataset_numerator, 
+                                                            numerator_train_label_sample_dict, 
+                                                            samples_to_merge = processes_numerator)
+        
+        dataset_mix_model = pd.concat([dataset_num, dataset_ref])
+
+        return dataset_mix_model
+
 
     def merge_dataframe_dict_for_training(self, 
                                         dataset_dict, 
@@ -420,24 +543,3 @@ def save_dataframe_as_root(dataset        : pd.DataFrame,
         arrays = {col: dataset[col].to_numpy() for col in dataset.columns}
 
         ntuple[tree_name] = arrays
-
-def load_dataframe_from_root(path_to_load: str,
-                             tree_name: str,
-                             branches_to_load: list = None) -> pd.DataFrame:
-    """
-    Utility: read selected branches from a ROOT TTree into a DataFrame.
-
-    Args:
-        path_to_load: Source ROOT file path.
-        tree_name: TTree name inside the file.
-        branches_to_load: Branch names to read. If empty or None, load all branches.
-    Returns:
-        pd.DataFrame containing the requested branches.
-    """
-    with uproot.open(f"{path_to_load}:{tree_name}") as tree:
-        # If no branches are specified, load all
-        if not branches_to_load:
-            branches_to_load = tree.keys()
-        dataframe = tree.arrays(branches_to_load, library="pd")
-
-    return dataframe
