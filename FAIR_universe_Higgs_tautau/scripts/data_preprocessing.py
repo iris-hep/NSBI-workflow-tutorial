@@ -9,25 +9,20 @@ import yaml
 import logging
 import warnings
 
-# Add source path for utils
 sys.path.append('../src')
 import nsbi_common_utils
 from nsbi_common_utils import datasets
 
-# Suppress warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 hep.style.use(hep.style.ATLAS)
 
-
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Process HiggsML data features.")
@@ -38,7 +33,6 @@ def parse_args() -> argparse.Namespace:
         help="Path to configuration file."
     )
     return parser.parse_args()
-
 
 def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple:
     """
@@ -79,7 +73,7 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                 if mask_name not in branches_to_add:
                     branches_to_add.append(mask_name)
 
-            # --- Per-jet masks and imputation ---
+            # --- Jet feature processing ---
             for n_jets, feat_list in input_features_by_jet.items():
                 mask_col = f'jet{n_jets}_mask'
                 df_modified[mask_col] = (df_modified['PRI_n_jets'] >= n_jets).astype(float)
@@ -87,7 +81,6 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                 if mask_col not in branches_to_add:
                     branches_to_add.append(mask_col)
 
-                # Impute missing features for events below the jet threshold
                 for feat in feat_list:
                     med_val = median_feature.get(sample, {}).get(feat, 0.0)
                     df_modified[feat] = df_modified[feat].where(
@@ -95,7 +88,7 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                         med_val
                     )
 
-            # --- Log transformations ---
+            # --- Log transformations when distributions spread out ---
             for feat in branches:
                 if feat not in df_modified.columns:
                     continue
@@ -176,8 +169,6 @@ def main() -> None:
                                                             )
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics = True)
 
-        logger.info(f"DEBUG: First dataset load keys = {datasets_all}")
-
         logger.info("Applying feature engineering...")
         datasets_all, new_branches = process_data(
             datasets_all, 
@@ -185,13 +176,11 @@ def main() -> None:
             branches=branches_to_load
         )
 
-        logger.info(f"DEBUG: post-process dataset load keys = {datasets_all}")
-
         logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
         datasets_helper.add_appended_branches(new_branches)
 
         logger.info("Saving processed datasets...")
-        datasets_helper.save_datasets(datasets_all, save_systematics=True)
+        datasets_helper.save_dataset_to_ntuple(datasets_all, save_systematics=True)
 
         logger.info("Data preprocessing workflow completed successfully.")
 

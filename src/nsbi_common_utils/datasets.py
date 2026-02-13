@@ -1,14 +1,8 @@
-"""
-Drop-in replacement for nsbi_common_utils.datasets.datasets class.
-
-Key fix: _save_dataset_to_ntuple replaced with batched file writing to prevent
-tree overwrites when multiple samples target the same ROOT file.
-"""
-
 import os
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import uproot
+import numpy as np
 import pandas as pd
 
 
@@ -114,7 +108,6 @@ class datasets:
 
                             df = self._load_dataframe_from_root(file_path, tree_name, branches)
                             
-                            # BUG FIX: Add/rename "weights" column
                             df["sample_name"] = sample_name
                             if weight_branch:
                                 df = df.rename(columns={weight_branch: "weights"})
@@ -181,21 +174,13 @@ class datasets:
                 f"Original error: {e}"
             ) from e
 
-    def save_datasets(
+    def save_dataset_to_ntuple(
         self, 
         dict_datasets: Dict, 
         save_systematics: bool = False
     ) -> None:
         """
         Write DataFrames back to ROOT files, preserving other existing trees.
-
-        BUG FIX: The original implementation called _save_dataset_to_ntuple()
-        once per sample, which caused each invocation to overwrite trees saved
-        by the previous call (because uproot.open() reads the original file state,
-        not the in-progress updated one).
-
-        The fix: batch all samples destined for the same file, then write them
-        all in one atomic operation.
 
         Args:
             dict_datasets: Nested dict from load_datasets_from_config().
@@ -315,38 +300,6 @@ class datasets:
         os.replace(tmp_path, file_path)
         print(f"✓ Saved {len(new_trees_dict)} tree(s) to {file_path}: {list(new_trees_dict.keys())}")
 
-    # -------------------------------------------------------------------------
-    # Legacy method for backwards compatibility (now deprecated in favor of
-    # the batched _save_region_datasets approach)
-    # -------------------------------------------------------------------------
-
-    def _save_dataset_to_ntuple(
-        self, 
-        dataset: pd.DataFrame, 
-        path_to_root_file: str, 
-        tree_name: str
-    ) -> None:
-        """
-        DEPRECATED: This method has been replaced by _write_file_with_trees.
-        
-        Left here for backwards compatibility, but calls to this should be
-        replaced with the batched save logic in save_datasets().
-
-        Args:
-            dataset: DataFrame to write.
-            path_to_root_file: ROOT file path.
-            tree_name: Tree name to write/overwrite.
-        """
-        print(
-            f"Warning: _save_dataset_to_ntuple is deprecated. "
-            f"Use save_datasets() instead for proper multi-tree handling."
-        )
-        # Filter to available branches
-        available_branches = [b for b in self.branches_all if b in dataset.columns]
-        df_filtered = dataset[available_branches]
-
-        # Write using the fixed logic
-        self._write_file_with_trees(path_to_root_file, {tree_name: df_filtered})
 
     def merge_dataframe_dict_for_training(self, 
                                         dataset_dict, 

@@ -173,7 +173,7 @@ def main():
     
     logger.info("Saving datasets with new 'presel_score' branch...")
     datasets_helper.add_appended_branches(['presel_score'])
-    datasets_helper.save_datasets(dataset_incl_dict, save_systematics=True)
+    datasets_helper.save_dataset_to_ntuple(dataset_incl_dict, save_systematics=True)
 
     logger.info("Saving the 'Preselection Score' plots...")
     plot_score_distribution(
