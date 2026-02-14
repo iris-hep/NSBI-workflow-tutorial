@@ -196,6 +196,20 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
+
+        batch_size = y.size(0)
+
+        # Test all three normalization approaches
+        loss_v1 = (loss * w).sum() / w.sum()          # Your current
+        loss_v2 = (loss * w).sum() / batch_size        # Keras default
+        loss_v3 = (loss * w).mean()                    # Simple weighted mean
+        
+        if batch_idx % 100 == 0:
+            print(f"Loss v1 (÷w.sum): {loss_v1.item():.4f}")
+            print(f"Loss v2 (÷batch): {loss_v2.item():.4f}")
+            print(f"Loss v3 (mean):   {loss_v3.item():.4f}")
+            print(f"Batch weight sum:   {w.sum():.4f}")
+            
         loss = (loss * w).sum()  / w.sum()
 
         self.log("train_loss", loss, prog_bar=True)
@@ -408,11 +422,11 @@ class preselection_network_trainer:
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
 
-        test_size: the fraction of dataset to set aside for diagnostics, not used in training and validation of the loss vs epoch curves
-        random_state: random state to use for splitting the train/test dataset before training NN
-        epochs: the number of epochs to train the NNs
-        batch_size: the size of each batch used during gradient optimization
-        learning_rate: the initial learning rate to pass to the optimizer
+        test_size:      the fraction of dataset to set aside for diagnostics, not used in training and validation of the loss vs epoch curves
+        random_state:   random state to use for splitting the train/test dataset before training NN
+        epochs:         the number of epochs to train the NNs
+        batch_size:     the size of each batch used during gradient optimization
+        learning_rate:  the initial learning rate to pass to the optimizer
         '''
 
         # Split data into training and validation sets (including weights)
@@ -477,8 +491,9 @@ class preselection_network_trainer:
 
         trainer.fit(self.model, train_loader, val_loader)
 
-        # Convert Keras model to ONNX
-        self.model                  = convert_torch_to_onnx(self.model, input_dim=len(self.features))
+        # Convert PyTorch model to ONNX
+        self.model                  = convert_torch_to_onnx(self.model, 
+                                                            input_dim=len(self.features))
 
         # Save the trained model if user provides with a path
         if path_to_save!='':

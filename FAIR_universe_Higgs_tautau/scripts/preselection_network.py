@@ -102,19 +102,19 @@ def main():
     config_preselection = config_workflow["preselection_observable"]
 
     
-    nsbi_config_path = config_workflow["nsbi_config"]
-    logger.info(f"Initializing ConfigManager from: {nsbi_config_path}")
+    fit_config_path = config_workflow["fit_config_path"]
+    logger.info(f"Initializing ConfigManager from: {fit_config_path}")
     
-    config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
+    fit_config = nsbi_common_utils.configuration.ConfigManager(file_path_string = fit_config_path)
     
-    features, features_scaling = config_nsbi.get_training_features()
+    features, features_scaling = fit_config.get_training_features()
     logger.info(f"Training features loaded from NSBI config: {len(features)} features")
     
     label_dict = config_train["labels"]
     
     logger.info(f"Initializing Datasets...")
     datasets_helper = nsbi_common_utils.datasets.datasets(
-        config_path=nsbi_config_path,
+        config_path=fit_config_path,
         branches_to_load=features
     )
 
@@ -138,7 +138,7 @@ def main():
     force_train = config_workflow["force_train"]
     load_trained_models = config_workflow["load_trained_models"]
     
-    if force_train or load_trained_models:
+    if force_train or not load_trained_models:
         logger.info(f"Starting Training")
         preselectionTraining.train(
             test_size=config_train["test_size"], 
@@ -150,7 +150,7 @@ def main():
         )
         logger.info(f"Training complete. Model saved to {model_path}")
     else:
-        logger.info(f"Using load_trained_models={settings['load_trained_models']} from config for {process_type}.")
+        logger.info(f"Using load_trained_models={load_trained_models} from config.")
         preselectionTraining.assign_trained_model(model_path)
 
     logger.info("Running inference on all regions...")

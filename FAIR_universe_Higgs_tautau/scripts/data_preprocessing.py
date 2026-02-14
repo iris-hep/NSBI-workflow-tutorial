@@ -162,9 +162,8 @@ def main() -> None:
 
     try:
         logger.info("Loading dataset into Pandas DataFrames...")
-        logger.info(f"DEBUG: Config path = {config['config_path']}")
         datasets_helper = nsbi_common_utils.datasets.datasets(
-                                                                config_path=config['config_path'],
+                                                                config_path=config['fit_config_path'],
                                                                 branches_to_load=branches_to_load
                                                             )
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics = True)
