@@ -88,7 +88,7 @@ def plot_score_distribution(dataset_dict, output_dir):
     plt.yscale('log')
     
   
-    save_path = os.path.join(output_dir, "score_distribution_notebook_style.png")
+    save_path = os.path.join(output_dir, "preselection_score_distributions.png")
     plt.savefig(save_path)
     plt.close()
     print(f"Score distribution plot saved to {save_path}")
@@ -160,7 +160,9 @@ def main():
         for sample_name, dataset in dataset_sample_dict.items():
             
             pred_NN_incl = preselectionTraining.predict(dataset)
-            
+
+            print(f"DEBUG: prediction raw = {pred_NN_incl}")
+
             presel_score = calculate_preselection_observable(
                 pred_NN_incl, 
                 samples_list        =   label_dict,
