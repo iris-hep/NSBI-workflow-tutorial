@@ -198,19 +198,7 @@ class MultiClassLightning(pl.LightningModule):
         loss = F.cross_entropy(y_hat, y, reduction='none')
 
         batch_size = y.size(0)
-
-        # Test all three normalization approaches
-        loss_v1 = (loss * w).sum() / w.sum()          # Your current
-        loss_v2 = (loss * w).sum() / batch_size        # Keras default
-        loss_v3 = (loss * w).mean()                    # Simple weighted mean
-        
-        if batch_idx % 100 == 0:
-            print(f"Loss v1 (÷w.sum): {loss_v1.item():.4f}")
-            print(f"Loss v2 (÷batch): {loss_v2.item():.4f}")
-            print(f"Loss v3 (mean):   {loss_v3.item():.4f}")
-            print(f"Batch weight sum:   {w.sum():.4f}")
-            
-        loss = (loss * w).sum()  / w.sum()
+        loss = (loss * w).sum()  / batch_size
 
         self.log("train_loss", loss, prog_bar=True)
         return loss
@@ -219,7 +207,9 @@ class MultiClassLightning(pl.LightningModule):
         x, y, w = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).sum()  / w.sum()
+
+        batch_size = y.size(0)
+        loss = (loss * w).sum()  / batch_size
 
         self.log("val_loss", loss, prog_bar=True)
 
@@ -417,7 +407,7 @@ class preselection_network_trainer:
                     learning_rate=0.1,
                     validation_split=0.1,
                     activation='swish',
-                    num_workers=0):
+                    num_workers=4):
 
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
@@ -456,12 +446,18 @@ class preselection_network_trainer:
         train_loader = DataLoader(train_ds, 
                                   batch_size=batch_size, 
                                   shuffle=True,
-                                  num_workers = num_workers)
+                                  num_workers=num_workers,  
+                                pin_memory=True,  
+                                persistent_workers=True  
+                                )
         
         val_loader   = DataLoader(val_ds, 
                                   batch_size=batch_size, 
                                   shuffle=False, 
-                                  num_workers = num_workers)
+                                  num_workers=num_workers,  
+                                pin_memory=True,  
+                                persistent_workers=True  
+                                )
         
         self.model = MultiClassLightning(
                 n_hidden=hidden_layers,
@@ -811,8 +807,18 @@ class density_ratio_trainer:
 
             train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
-            train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-            val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+            train_loader = DataLoader(train_ds, 
+                                        batch_size=batch_size, 
+                                        shuffle=True,
+                                        num_workers=num_workers,  
+                                        pin_memory=True,  
+                                        persistent_workers=True)
+            val_loader   = DataLoader(val_ds, 
+                                      batch_size=batch_size, 
+                                      shuffle=False,
+                                        num_workers=num_workers,  
+                                        pin_memory=True,  
+                                        persistent_workers=True)
 
             model = DensityRatioLightning(
                 n_hidden=hidden_layers,

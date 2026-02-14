@@ -153,7 +153,7 @@ def main():
         logger.info(f"Using load_trained_models={load_trained_models} from config.")
         preselectionTraining.assign_trained_model(model_path)
 
-    logger.info("Running inference on all regions...")
+    logger.info("Running inference")
 
     for region_name, dataset_sample_dict in dataset_incl_dict.items():
         for sample_name, dataset in dataset_sample_dict.items():
