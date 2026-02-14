@@ -60,6 +60,7 @@ def plot_score_distribution(dataset_dict, output_dir):
     all_scores = np.concatenate(presel_scores)
     min_pred = np.min(all_scores)
     max_pred = np.max(all_scores)
+    print(f"DEBUG: minimum {min_pred} and maximum {max_pred}")
     
     bins = np.linspace(min_pred, max_pred, num=50)
     

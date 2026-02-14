@@ -2,18 +2,16 @@
 import os, importlib, sys, shutil
 import numpy as np
 import pandas as pd
-import math
 pd.options.mode.chained_assignment = None 
+import math
+import pickle 
 
 import warnings
 from sklearn.exceptions import InconsistentVersionWarning
 warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 
-import pickle 
-
 import torch
 torch.set_float32_matmul_precision("high")
-
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -23,35 +21,29 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 
 from pathlib import Path
-
 from typing import Union, Dict
+from joblib import dump, load
+
 import onnx
 import onnxruntime as rt
-
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from sklearn.compose import ColumnTransformer
-from joblib import dump, load
-
-
-import pickle 
 
 from nsbi_common_utils.calibration import HistogramCalibrator, IsotonicCalibrator
-
 from nsbi_common_utils.plotting import plot_loss, plot_all_features, plot_all_features, plot_reweighted, plot_calibration_curve, plot_calibration_curve_ratio
-
-from joblib import dump, load
 
 import logging
 _LOG_LEVELS = {
-    0: logging.WARNING,  # only warnings/errors
-    1: logging.INFO,     # info + warnings/errors
-    2: logging.DEBUG,    # debug + info + warnings/errors
+    0: logging.WARNING,  
+    1: logging.INFO,    
+    2: logging.DEBUG,   
 }
 
 logger = logging.getLogger("Training Logs")
-logger.propagate = True  # let the application decide handlers/formatters
+logger.propagate = True  
+
 
 def configure_logging(verbose_level: int = 1):
     """
@@ -70,6 +62,7 @@ def configure_logging(verbose_level: int = 1):
         h.setFormatter(fmt)
         logger.addHandler(h)
 
+
 def save_model(onnx_model_instance, 
                     path_to_save_model: Union[str, Path], 
                     scaler_instance, 
@@ -80,6 +73,7 @@ def save_model(onnx_model_instance,
 
         # Save the standardization scaler
         dump(scaler_instance, str(path_to_save_scaler), compress=True)
+
 
 
 def load_trained_model(path_to_saved_model: Union[Path, str], 
@@ -149,13 +143,13 @@ def convert_torch_to_onnx(lightning_model, input_dim, opset=17):
 
     return onnx.load(onnx_path)
 
+
 class MultiClassLightning(pl.LightningModule):
     def __init__(self,
                 n_hidden        = 4,
                 n_neurons       = 1000,
                 input_dim       = 11,
                 learning_rate   = 0.1,
-                use_log_loss    = False,
                 activation      = "swish",
                 num_classes     = 3,
                 callback_factor = 0.1,
@@ -167,49 +161,50 @@ class MultiClassLightning(pl.LightningModule):
         self.save_hyperparameters()
         
         self.lr = learning_rate
-        self.use_log_loss = use_log_loss
 
         # Get activation function
         activations = {
-            "swish": nn.SiLU(),
-            "relu": nn.ReLU(),
-            "tanh": nn.Tanh(),
+            "swish": nn.SiLU,
+            "relu": nn.ReLU,
+            "tanh": nn.Tanh,
         }
-        activation = activations.get(activation, nn.SiLU())
+        activation_choice = activations.get(activation, nn.SiLU)
 
         # Build architecture - feed forward MLP
         layers = []
         input_dim_ = input_dim
         for _ in range(n_hidden):
             layers.append(nn.Linear(input_dim_, n_neurons))
-            layers.append(activation)
+            layers.append(activation_choice())
             input_dim_ = n_neurons
         
-        self.net = nn.Sequential(*layers)
+        self.mlp = nn.Sequential(*layers)
         self.out = nn.Linear(input_dim_, num_classes)
 
     def forward(self,x):
-        x = self.net(x)
+        x = self.mlp(x)
         return self.out(x)
 
     def training_step(self, batch, batch_idx):
         x, y, w = batch
+        y = y.long()
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
 
-        batch_size = y.size(0)
-        loss = (loss * w).sum()  / batch_size
+        # batch_size = y.size(0)
+        loss = (loss * w).sum()
 
         self.log("train_loss", loss, prog_bar=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
         x, y, w = batch
+        y = y.long()
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
 
-        batch_size = y.size(0)
-        loss = (loss * w).sum()  / batch_size
+        # batch_size = y.size(0)
+        loss = (loss * w).sum()
 
         self.log("val_loss", loss, prog_bar=True)
 
@@ -233,6 +228,7 @@ class MultiClassLightning(pl.LightningModule):
                 "frequency": 1
             }
         }
+    
 
 class DensityRatioLightning(pl.LightningModule):
     '''
@@ -257,21 +253,21 @@ class DensityRatioLightning(pl.LightningModule):
 
         # Get activation function
         activations = {
-            "swish": nn.SiLU(),
-            "relu": nn.ReLU(),
-            "tanh": nn.Tanh(),
+            "swish": nn.SiLU,
+            "relu": nn.ReLU,
+            "tanh": nn.Tanh,
         }
-        activation = activations.get(activation, nn.SiLU())
+        activation_choice = activations.get(activation, nn.SiLU)
 
         # Build architecture - feed forward MLP
         layers = []
         input_dim_ = input_dim
         for _ in range(n_hidden):
             layers.append(nn.Linear(input_dim_, n_neurons))
-            layers.append(activation)
+            layers.append(activation_choice())
             input_dim_ = n_neurons
         
-        self.net = nn.Sequential(*layers)
+        self.mlp = nn.Sequential(*layers)
 
         if use_log_loss:
             self.out = nn.Linear(input_dim_, 1)
@@ -282,7 +278,7 @@ class DensityRatioLightning(pl.LightningModule):
 
     def forward(self, x):
 
-        x = self.net(x)
+        x = self.mlp(x)
         x = self.out(x)
         if not self.use_log_loss:
             x = torch.sigmoid(x)
@@ -293,9 +289,11 @@ class DensityRatioLightning(pl.LightningModule):
         y = y.float().view(-1, 1)
         s_hat = self(x)
         if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
+            loss = F.binary_cross_entropy_with_logits(s_hat, y)
         else:
-            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
+            loss = F.binary_cross_entropy(s_hat, y)
+
+        loss = (loss * w.view(-1, 1)).sum()
     
         self.log("train_loss", loss, prog_bar=True)
         return loss
@@ -307,9 +305,11 @@ class DensityRatioLightning(pl.LightningModule):
         s_hat = self(x)
 
         if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
+            loss = F.binary_cross_entropy_with_logits(s_hat, y)
         else:
-            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
+            loss = F.binary_cross_entropy(s_hat, y)
+
+        loss = (loss * w.view(-1, 1)).sum()
 
         self.log("val_loss", loss, prog_bar=True)
 
@@ -482,7 +482,8 @@ class preselection_network_trainer:
             ],
             logger=True,
             enable_checkpointing=False,
-            enable_progress_bar=True
+            enable_progress_bar=True,
+            precision='32-true'
         )
 
         trainer.fit(self.model, train_loader, val_loader)
@@ -693,7 +694,7 @@ class density_ratio_trainer:
                     plot_scaled_features=False, 
                     load_trained_models = False,
                     recalibrate_output=False,
-                    summarize_model: bool = False):
+                    num_workers=4):
         '''
         Method that trains the density ratio NNs
 
@@ -1006,7 +1007,6 @@ class density_ratio_trainer:
             pred = pred.reshape(pred.shape[0],)
             pred = np.clip(pred, 1e-25, 0.9999)
 
-        K.clear_session()
         return pred
     
     def print_architecture(self, ensemble_index=0):
@@ -1193,8 +1193,8 @@ class density_ratio_trainer:
     def evaluate_ratios(self, dataset, aggregation_type = 'mean_ratio'):
         '''
         Evaluate with self.model on the input dataset, and save to self.path_to_ratios
-
-        aggregation_type: choose an option on how to aggregate the ensemble models - 'median_ratio', 'mean_ratio', 'median_score', 'mean_score'
+        dataset             : dataset on which to evaluate density ratios
+        aggregation_type    : choose an option on how to aggregate the ensemble models - 'median_ratio', 'mean_ratio', 'median_score', 'mean_score'
         '''
 
         logger.info(f"Evaluating density ratios")
