@@ -2,18 +2,16 @@
 import os, importlib, sys, shutil
 import numpy as np
 import pandas as pd
-import math
 pd.options.mode.chained_assignment = None 
+import math
+import pickle 
 
 import warnings
 from sklearn.exceptions import InconsistentVersionWarning
 warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 
-import pickle 
-
 import torch
 torch.set_float32_matmul_precision("high")
-
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -22,36 +20,32 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 
-from pathlib import Path
+from nsbi_common_utils.lightning_tools import MultiClassLightning, DensityRatioLightning, PrintEpochMetrics, LossHistory, WeightedTensorDataset
 
+from pathlib import Path
 from typing import Union, Dict
+from joblib import dump, load
+
 import onnx
 import onnxruntime as rt
-
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from sklearn.compose import ColumnTransformer
-from joblib import dump, load
-
-
-import pickle 
 
 from nsbi_common_utils.calibration import HistogramCalibrator, IsotonicCalibrator
-
 from nsbi_common_utils.plotting import plot_loss, plot_all_features, plot_all_features, plot_reweighted, plot_calibration_curve, plot_calibration_curve_ratio
-
-from joblib import dump, load
 
 import logging
 _LOG_LEVELS = {
-    0: logging.WARNING,  # only warnings/errors
-    1: logging.INFO,     # info + warnings/errors
-    2: logging.DEBUG,    # debug + info + warnings/errors
+    0: logging.WARNING,  
+    1: logging.INFO,    
+    2: logging.DEBUG,   
 }
 
 logger = logging.getLogger("Training Logs")
-logger.propagate = True  # let the application decide handlers/formatters
+logger.propagate = True  
+
 
 def configure_logging(verbose_level: int = 1):
     """
@@ -69,304 +63,6 @@ def configure_logging(verbose_level: int = 1):
         )
         h.setFormatter(fmt)
         logger.addHandler(h)
-
-def save_model(onnx_model_instance, 
-                    path_to_save_model: Union[str, Path], 
-                    scaler_instance, 
-                    path_to_save_scaler: Union[str, Path]) -> None:
-
-        # Save ONNX model
-        onnx.save_model(onnx_model_instance, str(path_to_save_model))
-
-        # Save the standardization scaler
-        dump(scaler_instance, str(path_to_save_scaler), compress=True)
-
-
-def load_trained_model(path_to_saved_model: Union[Path, str], 
-                        path_to_saved_scaler: Union[Path, str]):
-
-    # Load scaler
-    scaler          = load(str(path_to_saved_scaler))
-
-    # Load ONNX model
-    model           = onnx.load(str(path_to_saved_model))
-
-    return scaler, model
-
-
-def predict_with_onnx(dataset, scaler, model, batch_size = 10_000):
-
-    sess_opts = rt.SessionOptions()
-    sess_opts.intra_op_num_threads = 1
-    sess_opts.inter_op_num_threads = 1
-
-    if isinstance(model, onnx.ModelProto):
-        model = rt.InferenceSession(model.SerializeToString(), 
-                                    sess_options = sess_opts,
-                                    providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
-    
-    elif isinstance(model, rt.InferenceSession):
-        model = model
-    else:
-        raise TypeError(f"Unsupported model type: {type(model)}")
-
-    scaled_dataset              = scaler.transform(dataset)
-
-    # Get model input/output names
-    input_name                  = model.get_inputs()[0].name
-    output_name                 = model.get_outputs()[0].name
-
-    preds = []
-    for i in range(0, len(scaled_dataset), batch_size):
-        batch       = scaled_dataset[i:i+batch_size]
-        pred        = model.run([output_name], {input_name: batch})[0]
-        preds.append(pred)
-
-    final_pred = np.concatenate(preds, axis=0)
-
-    return final_pred
-
-def convert_torch_to_onnx(lightning_model, input_dim, opset=17):
-
-    lightning_model.eval()
-
-    dummy = torch.randn(1, input_dim, device=next(lightning_model.parameters()).device)
-
-    onnx_path = "__tmp_model.onnx"
-
-    torch.onnx.export(
-        lightning_model,
-        dummy,
-        onnx_path,
-        input_names=["input"],
-        output_names=["output"],
-        dynamic_axes={
-            "input": {0: "batch"},
-            "output": {0: "batch"}
-        },
-        opset_version=opset
-    )
-
-    return onnx.load(onnx_path)
-
-class MultiClassLightning(pl.LightningModule):
-    def __init__(self,
-                n_hidden        = 4,
-                n_neurons       = 1000,
-                input_dim       = 11,
-                learning_rate   = 0.1,
-                use_log_loss    = False,
-                activation      = "swish",
-                num_classes     = 3,
-                callback_factor = 0.1,
-                callback_patience = 30
-                ):
-        
-        super().__init__()
-
-        self.save_hyperparameters()
-        
-        self.lr = learning_rate
-        self.use_log_loss = use_log_loss
-
-        # Get activation function
-        activations = {
-            "swish": nn.SiLU(),
-            "relu": nn.ReLU(),
-            "tanh": nn.Tanh(),
-        }
-        activation = activations.get(activation, nn.SiLU())
-
-        # Build architecture - feed forward MLP
-        layers = []
-        input_dim_ = input_dim
-        for _ in range(n_hidden):
-            layers.append(nn.Linear(input_dim_, n_neurons))
-            layers.append(activation)
-            input_dim_ = n_neurons
-        
-        self.net = nn.Sequential(*layers)
-        self.out = nn.Linear(input_dim_, num_classes)
-
-    def forward(self,x):
-        x = self.net(x)
-        return self.out(x)
-
-    def training_step(self, batch, batch_idx):
-        x, y, w = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).sum()  / w.sum()
-
-        self.log("train_loss", loss, prog_bar=True)
-        return loss
-    
-    def validation_step(self, batch, batch_idx):
-        x, y, w = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y, reduction='none')
-        loss = (loss * w).sum()  / w.sum()
-
-        self.log("val_loss", loss, prog_bar=True)
-
-    def configure_optimizers(self):
-
-        optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode="min",
-            factor=self.hparams.callback_factor,
-            patience=self.hparams.callback_patience,
-            min_lr=1e-9
-        )
-
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "monitor": "val_loss",   
-                "interval": "epoch",
-                "frequency": 1
-            }
-        }
-
-class DensityRatioLightning(pl.LightningModule):
-    '''
-    Pytorch-lighning module for estimation of density ratios
-    '''
-    def __init__(self,
-                n_hidden        = 4,
-                n_neurons       = 1000,
-                input_dim       = 11,
-                learning_rate   = 0.1,
-                use_log_loss    = False,
-                activation      = "swish", 
-                callback_factor = 0.01, 
-                callback_patience = 30):
-        
-        super().__init__()
-
-        self.save_hyperparameters()
-
-        self.lr = learning_rate
-        self.use_log_loss = use_log_loss
-
-        # Get activation function
-        activations = {
-            "swish": nn.SiLU(),
-            "relu": nn.ReLU(),
-            "tanh": nn.Tanh(),
-        }
-        activation = activations.get(activation, nn.SiLU())
-
-        # Build architecture - feed forward MLP
-        layers = []
-        input_dim_ = input_dim
-        for _ in range(n_hidden):
-            layers.append(nn.Linear(input_dim_, n_neurons))
-            layers.append(activation)
-            input_dim_ = n_neurons
-        
-        self.net = nn.Sequential(*layers)
-
-        if use_log_loss:
-            self.out = nn.Linear(input_dim_, 1)
-            self.from_logits = True
-        else:
-            self.out = nn.Linear(input_dim_, 1)
-            self.from_logits = False
-
-    def forward(self, x):
-
-        x = self.net(x)
-        x = self.out(x)
-        if not self.use_log_loss:
-            x = torch.sigmoid(x)
-        return x
-    
-    def training_step(self, batch, batch_idx):
-        x, y, w = batch
-        y = y.float().view(-1, 1)
-        s_hat = self(x)
-        if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
-        else:
-            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
-    
-        self.log("train_loss", loss, prog_bar=True)
-        return loss
-    
-    def validation_step(self, batch, batch_idx):
-        x, y, w = batch
-        y = y.float().view(-1, 1)
-
-        s_hat = self(x)
-
-        if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y, weight=w.view(-1,1))
-        else:
-            loss = F.binary_cross_entropy(s_hat, y, weight=w.view(-1,1))
-
-        self.log("val_loss", loss, prog_bar=True)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode="min",
-            factor=self.hparams.callback_factor,
-            patience=self.hparams.callback_patience,
-            min_lr=1e-9
-        )
-
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "monitor": "val_loss",  
-                "interval": "epoch",
-                "frequency": 1
-            }
-        }
-
-class PrintEpochMetrics(pl.Callback):
-    def on_validation_epoch_end(self, trainer, pl_module):
-        m = trainer.callback_metrics
-        if "train_loss" in m and "val_loss" in m:
-            print(
-                f"Epoch {trainer.current_epoch:4d} | "
-                f"train_loss = {m['train_loss'].item():.6f} | "
-                f"val_loss = {m['val_loss'].item():.6f}"
-            )
-
-class WeightedTensorDataset(Dataset):
-
-    def __init__(self, x, y, w):
-        self.x = torch.as_tensor(np.asarray(x), dtype=torch.float32)
-        self.y = torch.as_tensor(np.asarray(y), dtype=torch.long)
-        self.w = torch.as_tensor(np.asarray(w), dtype=torch.float32)
-
-    def __len__(self):
-        return len(self.x)
-
-    def __getitem__(self, i):
-        return self.x[i], self.y[i], self.w[i]
-
-class LossHistory(pl.Callback):
-
-    def __init__(self):
-        self.train_loss = []
-        self.val_loss = []
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        v = trainer.callback_metrics.get("train_loss")
-        if v is not None:
-            self.train_loss.append(v.cpu().item())
-
-    def on_validation_epoch_end(self, trainer, pl_module):
-        v = trainer.callback_metrics.get("val_loss")
-        if v is not None:
-            self.val_loss.append(v.cpu().item())
 
 
 class preselection_network_trainer:
@@ -403,16 +99,16 @@ class preselection_network_trainer:
                     learning_rate=0.1,
                     validation_split=0.1,
                     activation='swish',
-                    num_workers=0):
+                    num_workers=4):
 
         '''
         The function will train the preselection NN, assign it to self.model variable, and save the model to user-provided path_to_save directory.
 
-        test_size: the fraction of dataset to set aside for diagnostics, not used in training and validation of the loss vs epoch curves
-        random_state: random state to use for splitting the train/test dataset before training NN
-        epochs: the number of epochs to train the NNs
-        batch_size: the size of each batch used during gradient optimization
-        learning_rate: the initial learning rate to pass to the optimizer
+        test_size:      the fraction of dataset to set aside for diagnostics, not used in training and validation of the loss vs epoch curves
+        random_state:   random state to use for splitting the train/test dataset before training NN
+        epochs:         the number of epochs to train the NNs
+        batch_size:     the size of each batch used during gradient optimization
+        learning_rate:  the initial learning rate to pass to the optimizer
         '''
 
         # Split data into training and validation sets (including weights)
@@ -442,12 +138,18 @@ class preselection_network_trainer:
         train_loader = DataLoader(train_ds, 
                                   batch_size=batch_size, 
                                   shuffle=True,
-                                  num_workers = num_workers)
+                                  num_workers=num_workers,  
+                                pin_memory=True,  
+                                persistent_workers=False  
+                                )
         
         val_loader   = DataLoader(val_ds, 
                                   batch_size=batch_size, 
                                   shuffle=False, 
-                                  num_workers = num_workers)
+                                  num_workers=num_workers,  
+                                pin_memory=True,  
+                                persistent_workers=False  
+                                )
         
         self.model = MultiClassLightning(
                 n_hidden=hidden_layers,
@@ -460,7 +162,7 @@ class preselection_network_trainer:
 
         loss_history = LossHistory()
 
-        trainer = Trainer(
+        self.trainer = Trainer(
             accelerator="auto",
             devices="auto",
             max_epochs=epochs,
@@ -472,24 +174,27 @@ class preselection_network_trainer:
             ],
             logger=True,
             enable_checkpointing=False,
-            enable_progress_bar=True
+            enable_progress_bar=True,
+            # precision='32-true'
         )
 
-        trainer.fit(self.model, train_loader, val_loader)
-
-        # Convert Keras model to ONNX
-        self.model                  = convert_torch_to_onnx(self.model, input_dim=len(self.features))
+        self.trainer.fit(self.model, train_loader, val_loader)
 
         # Save the trained model if user provides with a path
-        if path_to_save!='':
-
+        if path_to_save=='': 
+            path_to_save='./'
+        else:
             path_to_save      = Path(path_to_save)
             path_to_save.mkdir(parents=True, exist_ok=True)
 
-            path_to_model           = path_to_save / 'model_preselection.onnx'
-            path_to_scaler          = path_to_save / 'model_scaler_presel.bin'
+        path_to_model           = path_to_save / 'model_preselection.onnx'
+        path_to_scaler          = path_to_save / 'model_scaler_presel.bin'
 
-            save_model(self.model, path_to_model, self.scaler, path_to_scaler)
+        # Save lightning module as ONNX
+        save_model(self.model, torch.randn((1, len(self.features))), path_to_model, self.scaler, path_to_scaler)
+
+        # Reassign the model to be in ONNX format
+        self.model = load_trained_model(path_to_model, path_to_scaler)
 
 
     def assign_trained_model(self, 
@@ -682,7 +387,7 @@ class density_ratio_trainer:
                     plot_scaled_features=False, 
                     load_trained_models = False,
                     recalibrate_output=False,
-                    summarize_model: bool = False):
+                    num_workers=4):
         '''
         Method that trains the density ratio NNs
 
@@ -796,8 +501,18 @@ class density_ratio_trainer:
 
             train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
-            train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-            val_loader   = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+            train_loader = DataLoader(train_ds, 
+                                        batch_size=batch_size, 
+                                        shuffle=True,
+                                        num_workers=num_workers,  
+                                        pin_memory=True,  
+                                        persistent_workers=True)
+            val_loader   = DataLoader(val_ds, 
+                                      batch_size=batch_size, 
+                                      shuffle=False,
+                                        num_workers=num_workers,  
+                                        pin_memory=True,  
+                                        persistent_workers=True)
 
             model = DensityRatioLightning(
                 n_hidden=hidden_layers,
@@ -955,10 +670,10 @@ class density_ratio_trainer:
         for name, training_holdout_label, min_val, max_val in min_max_values:
             
             if min_val == 0:
-                raise Warning(f"WARNING: {name} {training_holdout_label} data has min score = 0 for ensemble member {ensemble_index}, which may indicate numerical instability!")
+                logger.warning(f"{name} {training_holdout_label} data has min score = 0 for ensemble member {ensemble_index}, which may indicate numerical instability!")
             
             if max_val == 1:
-                raise Warning(f"WARNING: {name} {training_holdout_label} data has max score = 1 for ensemble member {ensemble_index}, which may indicate numerical instability!")            
+                logger.warning(f"{name} {training_holdout_label} data has max score = 1 for ensemble member {ensemble_index}, which may indicate numerical instability!")            
 
 
     
@@ -977,15 +692,14 @@ class density_ratio_trainer:
 
         if use_log_loss:
 
-            pred = convert_to_score(pred)
+            pred = convert_logLR_to_score(pred)
 
         if (self.calibration) & (self.calibration_switch):
     
             pred = self.histogram_calibrator[ensemble_index].cali_pred(pred)
             pred = pred.reshape(pred.shape[0],)
-            pred = np.clip(pred, 1e-25, 0.9999)
+            pred = np.clip(pred, 1e-8, 1.0 - 1e-8)
 
-        K.clear_session()
         return pred
     
     def print_architecture(self, ensemble_index=0):
@@ -999,8 +713,6 @@ class density_ratio_trainer:
         '''
         Plot predictions for training and holdout to test compatibility
         '''
-        importlib.reload(sys.modules['nsbi_common_utils.plotting'])
-        from nsbi_common_utils.plotting import plot_overfit_side_by_side
 
         plot_overfit_side_by_side(
             self.score_den_training, self.score_den_holdout,
@@ -1172,8 +884,8 @@ class density_ratio_trainer:
     def evaluate_ratios(self, dataset, aggregation_type = 'mean_ratio'):
         '''
         Evaluate with self.model on the input dataset, and save to self.path_to_ratios
-
-        aggregation_type: choose an option on how to aggregate the ensemble models - 'median_ratio', 'mean_ratio', 'median_score', 'mean_score'
+        dataset             : dataset on which to evaluate density ratios
+        aggregation_type    : choose an option on how to aggregate the ensemble models - 'median_ratio', 'mean_ratio', 'median_score', 'mean_score'
         '''
 
         logger.info(f"Evaluating density ratios")
@@ -1207,9 +919,102 @@ class density_ratio_trainer:
             raise Exception("aggregation_type not recognized, please choose between median_ratio, mean_ratio, median_score or mean_score")
 
         return ratio_ensemble
+    
 
-def convert_to_score(logLR):
+def save_model(lightning_model, 
+               input_sample,
+                path_to_save_model: Union[str, Path], 
+                scaler_instance, 
+                path_to_save_scaler: Union[str, Path]) -> None:
+        
+
+        lightning_model.to_onnx(str(path_to_save_model), input_sample, export_params=True)
+
+        # Save the standardization scaler
+        dump(scaler_instance, str(path_to_save_scaler), compress=True)
+
+
+
+def load_trained_model(path_to_saved_model: Union[Path, str], 
+                        path_to_saved_scaler: Union[Path, str]):
+
+    # Load scaler
+    scaler          = load(str(path_to_saved_scaler))
+
+    # Load ONNX model
+    model           = onnx.load(str(path_to_saved_model))
+
+    return scaler, model
+
+
+def predict_with_onnx(dataset, scaler, model, batch_size = 10_000):
+
+    sess_opts = rt.SessionOptions()
+    sess_opts.intra_op_num_threads = 1
+    sess_opts.inter_op_num_threads = 1
+
+    if isinstance(model, onnx.ModelProto):
+        model = rt.InferenceSession(model.SerializeToString(), 
+                                    sess_options = sess_opts,
+                                    providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    
+    elif isinstance(model, rt.InferenceSession):
+        model = model
+    else:
+        raise TypeError(f"Unsupported model type: {type(model)}")
+
+    scaled_dataset  = scaler.transform(dataset)
+    n_samples       = len(scaled_dataset)
+    
+    input_name      = model.get_inputs()[0].name
+    output_name     = model.get_outputs()[0].name
+    
+    first_batch     = scaled_dataset[:min(batch_size, n_samples)]
+    first_pred      = model.run([output_name], {input_name: first_batch})[0]
+    
+    if len(first_pred.shape) > 1:
+        output_shape = (n_samples, first_pred.shape[1])
+    else:
+        output_shape = (n_samples,)
+    
+    preds = np.empty(output_shape, dtype=np.float32)
+    preds[:len(first_batch)] = first_pred
+    
+    # Process remaining batches
+    for i in range(batch_size, n_samples, batch_size):
+        end_idx = min(i + batch_size, n_samples)
+        batch = scaled_dataset[i:end_idx]
+        preds[i:end_idx] = model.run([output_name], {input_name: batch})[0]
+    
+    return preds
+
+def convert_torch_to_onnx(lightning_model, input_dim, opset=17):
+
+    lightning_model.eval()
+
+    dummy = torch.randn(1, input_dim, device=next(lightning_model.parameters()).device)
+
+    onnx_path = "__tmp_model.onnx"
+
+    torch.onnx.export(
+        lightning_model,
+        dummy,
+        onnx_path,
+        input_names=["input"],
+        output_names=["output"],
+        dynamic_axes={
+            "input": {0: "batch"},
+            "output": {0: "batch"}
+        },
+        opset_version=opset
+    )
+
+    return onnx.load(onnx_path)
+
+
+def convert_logLR_to_score(logLR):
     '''
     Convert regressed logLR into relative probabilities for compatibility with other methods
     '''
     return 1.0/(1.0+np.exp(-logLR))
+

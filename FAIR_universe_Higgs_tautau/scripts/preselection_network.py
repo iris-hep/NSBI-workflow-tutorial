@@ -60,6 +60,7 @@ def plot_score_distribution(dataset_dict, output_dir):
     all_scores = np.concatenate(presel_scores)
     min_pred = np.min(all_scores)
     max_pred = np.max(all_scores)
+    print(f"DEBUG: minimum {min_pred} and maximum {max_pred}")
     
     bins = np.linspace(min_pred, max_pred, num=50)
     
@@ -87,7 +88,7 @@ def plot_score_distribution(dataset_dict, output_dir):
     plt.yscale('log')
     
   
-    save_path = os.path.join(output_dir, "score_distribution_notebook_style.png")
+    save_path = os.path.join(output_dir, "preselection_score_distributions.png")
     plt.savefig(save_path)
     plt.close()
     print(f"Score distribution plot saved to {save_path}")
@@ -102,19 +103,19 @@ def main():
     config_preselection = config_workflow["preselection_observable"]
 
     
-    nsbi_config_path = config_workflow["nsbi_config"]
-    logger.info(f"Initializing ConfigManager from: {nsbi_config_path}")
+    fit_config_path = config_workflow["fit_config_path"]
+    logger.info(f"Initializing ConfigManager from: {fit_config_path}")
     
-    config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
+    fit_config = nsbi_common_utils.configuration.ConfigManager(file_path_string = fit_config_path)
     
-    features, features_scaling = config_nsbi.get_training_features()
+    features, features_scaling = fit_config.get_training_features()
     logger.info(f"Training features loaded from NSBI config: {len(features)} features")
     
     label_dict = config_train["labels"]
     
     logger.info(f"Initializing Datasets...")
     datasets_helper = nsbi_common_utils.datasets.datasets(
-        config_path=nsbi_config_path,
+        config_path=fit_config_path,
         branches_to_load=features
     )
 
@@ -138,7 +139,7 @@ def main():
     force_train = config_workflow["force_train"]
     load_trained_models = config_workflow["load_trained_models"]
     
-    if force_train or load_trained_models:
+    if force_train or not load_trained_models:
         logger.info(f"Starting Training")
         preselectionTraining.train(
             test_size=config_train["test_size"], 
@@ -150,16 +151,18 @@ def main():
         )
         logger.info(f"Training complete. Model saved to {model_path}")
     else:
-        logger.info(f"Using load_trained_models={settings['load_trained_models']} from config for {process_type}.")
+        logger.info(f"Using load_trained_models={load_trained_models} from config.")
         preselectionTraining.assign_trained_model(model_path)
 
-    logger.info("Running inference on all regions...")
+    logger.info("Running inference")
 
     for region_name, dataset_sample_dict in dataset_incl_dict.items():
         for sample_name, dataset in dataset_sample_dict.items():
             
             pred_NN_incl = preselectionTraining.predict(dataset)
-            
+
+            print(f"DEBUG: prediction raw = {pred_NN_incl}")
+
             presel_score = calculate_preselection_observable(
                 pred_NN_incl, 
                 samples_list        =   label_dict,
@@ -173,7 +176,7 @@ def main():
     
     logger.info("Saving datasets with new 'presel_score' branch...")
     datasets_helper.add_appended_branches(['presel_score'])
-    datasets_helper.save_datasets(dataset_incl_dict, save_systematics=True)
+    datasets_helper.save_dataset_to_ntuple(dataset_incl_dict, save_systematics=True)
 
     logger.info("Saving the 'Preselection Score' plots...")
     plot_score_distribution(

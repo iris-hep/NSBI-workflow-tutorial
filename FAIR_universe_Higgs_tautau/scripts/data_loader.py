@@ -9,11 +9,8 @@ from HiggsML.systematics import systematics
 
 import yaml
 
-
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
 
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
@@ -30,7 +27,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
 def download_and_load(url: str, train_size: float) -> pd.DataFrame:
     """Download the dataset and return the training set as a DataFrame."""
     logger.info(f"Downloading dataset from {url}...")
@@ -43,10 +39,8 @@ def download_and_load(url: str, train_size: float) -> pd.DataFrame:
     del data
     return df
 
-
 def process_data(df: pd.DataFrame, list_of_processes: list, seed: int) -> pd.DataFrame:
     """
-    (Completely optimal utility)
     Filter to the requested processes and balance by downsampling to the smallest class.
     """
 
@@ -59,7 +53,7 @@ def process_data(df: pd.DataFrame, list_of_processes: list, seed: int) -> pd.Dat
     counts = df_filtered["detailed_labels"].value_counts()
     logger.info(f"Counts before balancing:\n{counts}")
 
-    # Downsample every process to the size of the smallest one ,
+    # Downsample every process to the size of the smallest one,
     # rescaling weights so the total weight sum is preserved per process.
     min_process = counts.idxmin()
     n_min = counts.min()
@@ -125,7 +119,6 @@ def save_root_files(
                         f"  No events for process '{process}' in sample '{sample}' "
                         f"after selection — tree not written."
                     )
-
 
 def main() -> None:
     args = parse_args()

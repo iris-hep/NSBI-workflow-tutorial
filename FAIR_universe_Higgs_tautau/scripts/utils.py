@@ -17,7 +17,6 @@ def calculate_preselection_observable(pred_NN_incl, samples_list, signal_process
 
     return presel_score
 
-
 def preselection_using_score(dataset, channel_selections):
 
     mask_channel = {}

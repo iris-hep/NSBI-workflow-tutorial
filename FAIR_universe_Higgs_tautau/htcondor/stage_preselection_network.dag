@@ -1,2 +1,2 @@
 JOB preselection_network FAIR_universe_Higgs_tautau/htcondor/job_preselection_network.sub
-VARS preselection_network STEP="preselection_network" CONFIG="config.pipeline.yaml" CPUS="12" MEM="32GB" GPUS="1" DISK="32GB"
+VARS preselection_network STEP="preselection_network" CONFIG="config.pipeline.yaml" CPUS="8" MEM="32GB" GPUS="1" DISK="32GB"

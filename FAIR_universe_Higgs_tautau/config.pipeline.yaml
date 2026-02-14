@@ -1,4 +1,4 @@
-# Data loader settings - these are specific to the example
+# Data loader settings - these are specific to the Higgs to tau tau example
 data_loader:
   data:
     url: "https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip"
@@ -34,8 +34,7 @@ data_loader:
 
 # Data processing settings - these are specific to the example
 data_preprocessing:
-
-  config_path: "./config_fit_nsbi.yml"
+  fit_config_path: "./config_fit_nsbi.yml"
   features:
       - PRI_lep_pt
       - PRI_lep_eta
@@ -67,18 +66,18 @@ data_preprocessing:
       - PRI_n_jets
 
 preselection_network:
-  nsbi_config: "./config_fit_nsbi.yml"
+  fit_config_path: "./config_fit_nsbi.yml"
   
   model_path: "./saved_datasets/preselection_model/"
   force_train: false
-  load_trained_models: true
+  load_trained_models: false
   
   training:
     test_size: 0.2
     random_state: 42
     batch_size: 1024
     epochs: 50
-    learning_rate: 0.001
+    learning_rate: 0.0001
     
     labels:
       htautau: 0
@@ -97,7 +96,7 @@ preselection_network:
     plots_dir: "./output/plots/preselection_network"
 
 
-# Section for Density Ratio Estimation
+# Settings for nominal density ratio estimation
 neural_likelihood_ratio_estimation:
   nsbi_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
