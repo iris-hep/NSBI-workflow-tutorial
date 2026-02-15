@@ -1,3 +1,4 @@
+# Data loader settings - these are specific to the Higgs to tau tau example
 data_loader:
   data:
     url: "https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip"
@@ -30,4 +31,171 @@ data_loader:
 
   output:
     dir: "./saved_datasets"
+
+# Data processing settings - these are specific to the example
+data_preprocessing:
+  fit_config_path: "./config_fit_nsbi.yml"
+  features:
+      - PRI_lep_pt
+      - PRI_lep_eta
+      - PRI_lep_phi
+      - PRI_had_pt
+      - PRI_had_eta
+      - PRI_had_phi
+      - PRI_met
+      - PRI_met_phi
+      - DER_mass_transverse_met_lep
+      - DER_mass_vis
+      - DER_pt_h
+      - DER_deltar_had_lep
+      - DER_pt_tot
+      - DER_sum_pt
+      - DER_pt_ratio_lep_had
+      - DER_met_phi_centrality
+      - PRI_jet_leading_pt
+      - PRI_jet_leading_eta
+      - PRI_jet_leading_phi
+      - PRI_jet_all_pt
+      - PRI_jet_subleading_pt
+      - PRI_jet_subleading_eta
+      - PRI_jet_subleading_phi
+      - DER_deltaeta_jet_jet
+      - DER_mass_jet_jet
+      - DER_prodeta_jet_jet
+      - DER_lep_eta_centrality
+      - PRI_n_jets
+
+preselection_network:
+  fit_config_path: "./config_fit_nsbi.yml"
+  
+  model_path: "./saved_datasets/preselection_model/"
+  force_train: false
+  load_trained_models: false
+  
+  training:
+    test_size: 0.2
+    random_state: 42
+    batch_size: 1024
+    epochs: 50
+    learning_rate: 0.000001
+    
+    labels:
+      htautau: 0
+      ttbar: 1
+      ztautau: 2
+      
+  preselection_observable:
+    signal_processes: ["htautau"]
+    background_processes: ["ttbar", "ztautau"]
+    pre_factor_dict:
+      htautau: 1.0
+      ttbar: 1.0
+      ztautau: 1.0
+    
+  output:
+    plots_dir: "./output/plots/preselection_network"
+
+
+# Settings for nominal density ratio estimation
+neural_likelihood_ratio_estimation:
+  nsbi_config: "./config_fit_nsbi.yml"
+  saved_data_path: "./saved_datasets/"
+  output_training_dir: "output_training_nominal"
+  
+  use_log_loss: false
+  delete_existing_models: false
+  force_train: false
+
+  # ---------------------------------------------------------
+  # DEFINITION OF COMMON HYPERPARAMETERS
+  # ---------------------------------------------------------
+  common_training_params: &common_params
+    hidden_layers: 4
+    neurons: 1000
+    number_of_epochs: 100
+    batch_size: 512
+    learning_rate: 0.1
+    scalerType: "MinMax"
+    
+    calibration: false
+    recalibrate_output: false
+    type_of_calibration: "histogram"
+    num_bins_cal: null
+    
+    callback: true
+    callback_patience: 30
+    callback_factor: 0.01
+    
+    validation_split: 0.1
+    holdout_split: 0.25
+
+    num_ensemble_members: 10
+    load_trained_models: true  # 'force_train' flag in script overrides this
+    
+    verbose: 1
+    plot_scaled_features: false
+    summarize_model: true
+
+  # ---------------------------------------------------------
+  # PROCESS SPECIFIC SETTINGS
+  # ---------------------------------------------------------
+  training_settings:
+    htautau:
+      <<: *common_params
+      
+    ttbar:
+      <<: *common_params
+      
+    ztautau:
+      <<: *common_params
+
+
+
+# Section for Systematic Uncertainty Estimation
+systematic_uncertainty:
+  nsbi_config: "./config_fit_nsbi.yml"
+  saved_data_path: "./saved_datasets/"
+  filter_region: "SR"
+  force_train: false
+  
+  training_settings:
+    hidden_layers: 4
+    neurons: 1000
+    number_of_epochs: 50
+    batch_size: 10000
+    learning_rate: 0.001
+    scalerType: "MinMax"
+    
+    calibration: false
+    recalibrate_output: false
+    type_of_calibration: "histogram"
+    num_bins_cal: null
+    
+    callback: true
+    callback_patience: 10
+    callback_factor: 0.5
+    
+    validation_split: 0.2
+    holdout_split: 0.2
+    
+    verbose: 0
+    plot_scaled_features: false
+    load_trained_models: true
+    num_ensemble_members: 1
+    summarize_model: false
+
+
+# Parameter fit settings
+parameter_fitting:
+  configs:
+    histogram: "./config_fit_histogram.yml"   
+    nsbi: "./config_fit_nsbi.yml" 
+  measurement: "higgs_tautau_signal_strength" 
+  output:
+    plots_dir: "./output/plots/parameter_fitting"
+    logs_dir: "./output/logs/parameter_fitting"
+  scan:
+    parameter: "mu_htautau"
+    range: [0.0, 3.0]
+    steps: 50
 

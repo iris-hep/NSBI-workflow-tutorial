@@ -1,153 +1,188 @@
-import os, sys, importlib
+import os
+import sys
 import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mplhep as hep
 import yaml
-import uproot
-
-from utils import plot_kinematic_features
+import logging
+import warnings
 
 sys.path.append('../src')
 import nsbi_common_utils
-from nsbi_common_utils import configuration
 from nsbi_common_utils import datasets
 
-import logging
-import warnings
-# Suppress warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 hep.style.use(hep.style.ATLAS)
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Download and process HiggsML data for analysis.")
-    
+def load_config(path: str) -> dict:
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Process HiggsML data features.")
     parser.add_argument(
         "--config", 
         type=str, 
-        default='./config.yml',
-        help="config file path"
+        default="config.pipeline.yaml",
+        help="Path to configuration file."
     )
-    
-    
     return parser.parse_args()
 
-def ds_helper(cfg, branches):
-    '''
-    Uses nsbi_common_utils.datasets to load data.
-    '''
-    datasets_helper = nsbi_common_utils.datasets.datasets(config_path = cfg,
-                                                branches_to_load = branches)
-    return datasets_helper
-
-def process_data(df, input_features_by_jet, branches):
-    """Filters specific processes and balances the dataset."""
+def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple:
+    """
+    Apply feature engineering to all samples in all regions.
     
+    Returns:
+        (modified_df_dict, list_of_new_branch_names)
+    """
     median_feature = {}
 
-    for sample, sample_dataset in df["Nominal"].items(): 
+    # 1. Calculate medians from nominal samples
+    nominal_data = df["Nominal"]
 
+    logger.info("Computing medians from Nominal samples for imputation...")
+    for sample, sample_dataset in nominal_data.items(): 
         median_feature[sample] = {}
-
-        for nJets, feat_list in input_features_by_jet.items():
+        for n_jets, feat_list in input_features_by_jet.items():
             for feature in feat_list:
+                # Calculate median for events with n_jets >= threshold
+                vals = sample_dataset.loc[sample_dataset['PRI_n_jets'] >= n_jets, feature]
+                median_feature[sample][feature] = np.median(vals)
 
-                median_feature[sample][feature] = np.median(sample_dataset.loc[sample_dataset['PRI_n_jets'] >= nJets, feature])
-
-    logger.info(f"extracting additional branches from the engineered features") 
+    logger.info("Applying feature engineering to all regions and samples...")
     branches_to_add = []
 
+    # 2. Apply engineering to all datasets (systematics/regions)
     for region, sample_datasets in df.items():
-
-        for sample, sample_dataset in sample_datasets.items():   
+        for sample, sample_dataset in sample_datasets.items():
             
-            sample_dataset['njet_0'] = (sample_dataset['PRI_n_jets'] == 0).astype(int)
-            sample_dataset['njet_1'] = (sample_dataset['PRI_n_jets'] == 1).astype(int)
-            sample_dataset['njet_2'] = (sample_dataset['PRI_n_jets'] >= 2).astype(int)
+            df_modified = sample_dataset.copy()
+            
+            # --- Categorical jet masks ---
+            df_modified['njet_0'] = (df_modified['PRI_n_jets'] == 0).astype(int)
+            df_modified['njet_1'] = (df_modified['PRI_n_jets'] == 1).astype(int)
+            df_modified['njet_2'] = (df_modified['PRI_n_jets'] >= 2).astype(int)
 
-            branches_to_add += ['njet_0', 'njet_1', 'njet_2']
+            for mask_name in ['njet_0', 'njet_1', 'njet_2']:
+                if mask_name not in branches_to_add:
+                    branches_to_add.append(mask_name)
 
-            for i, feat_list in input_features_by_jet.items():
-                mask_i = (sample_dataset['PRI_n_jets'] >= i).astype(float)
-                sample_dataset[f'jet{i}_mask'] = mask_i
-
-                branches_to_add += [f'jet{i}_mask']
+            # --- Jet feature processing ---
+            for n_jets, feat_list in input_features_by_jet.items():
+                mask_col = f'jet{n_jets}_mask'
+                df_modified[mask_col] = (df_modified['PRI_n_jets'] >= n_jets).astype(float)
+                
+                if mask_col not in branches_to_add:
+                    branches_to_add.append(mask_col)
 
                 for feat in feat_list:
-                    sample_dataset[feat] = sample_dataset[feat].where(sample_dataset['PRI_n_jets'] >= i, median_feature[sample][feat])
+                    df_modified[feat] = df_modified[feat].where(df_modified['PRI_n_jets'] >= n_jets, 
+                                                                median_feature[sample][feat])
+                    
 
-            for feat in branches.copy():
+            # --- Log transformations when distributions spread out ---
+            for feat in branches:
+                if feat not in df_modified.columns:
+                    continue
 
-                kin = sample_dataset[feat].to_numpy()
-                
-                if (np.amin(kin) > 0.0) and (np.amax(kin)>100):
-                    log_feat = 'log_'+feat
-                    sample_dataset[log_feat] = np.log(kin+10.0)
+                kin = df_modified[feat].to_numpy()
 
+                # Only apply log if all values are positive and range is large
+                if (np.amin(kin) > 0.0) and (np.amax(kin) > 100.0):
+                    log_feat = f'log_{feat}'
+                    df_modified[log_feat] = np.log(kin + 10.0)
+                    
                     if log_feat not in branches_to_add:
-                        branches_to_add  += [log_feat]
+                        branches_to_add.append(log_feat)
 
-            df[region][sample] = sample_dataset
-    
+            df[region][sample] = df_modified.copy()
+
     return df, branches_to_add
 
 
-def main():
+def main() -> None:
     args = parse_args()
-    
-    # Specify branches to load from the ROOT ntuples
+    config = load_config(args.config)["data_preprocessing"]
+
+    features = config["features"]
+
+     # Specify branches to load from the ROOT ntuples
     input_features_noJets = ['PRI_lep_pt', 'PRI_lep_eta', 'PRI_lep_phi', 'PRI_had_pt', 'PRI_had_eta',
         'PRI_had_phi', 'PRI_met', 'PRI_met_phi', 'DER_mass_transverse_met_lep',
         'DER_mass_vis', 'DER_pt_h', 'DER_deltar_had_lep', 'DER_pt_tot', 'DER_sum_pt',
         'DER_pt_ratio_lep_had', 'DER_met_phi_centrality']
+    
+    for feat in input_features_noJets:
+        if feat not in features:
+            input_features_noJets.remove(feat)
 
     input_features_1Jets = ['PRI_jet_leading_pt', 'PRI_jet_leading_eta',
         'PRI_jet_leading_phi',
         'PRI_jet_all_pt']
+    
+    for feat in input_features_1Jets:
+        if feat not in features:
+            input_features_1Jets.remove(feat)
 
     input_features_2Jets = ['PRI_jet_subleading_pt',
         'PRI_jet_subleading_eta', 'PRI_jet_subleading_phi', 'DER_deltaeta_jet_jet', 'DER_mass_jet_jet',
         'DER_prodeta_jet_jet',
         'DER_lep_eta_centrality']
+    
+    for feat in input_features_2Jets:
+        if feat not in features:
+            input_features_2Jets.remove(feat)
 
     input_features_nJets = ['PRI_n_jets']
+
+    for feat in input_features_nJets:
+        if feat not in features:
+            input_features_nJets.remove(feat)
 
     branches_to_load = input_features_noJets \
                         + input_features_1Jets \
                         + input_features_2Jets \
                         + input_features_nJets
+    
+
     input_features_by_jet = {
-        1   :   input_features_1Jets, 
-        2   :   input_features_2Jets
+        1: input_features_1Jets, 
+        2: input_features_2Jets
     }
 
-    # Execution Flow
     try:
-        logger.info(f"Loading and converting the dataset to Pandas DataFrame for processing...")
-        datasets_helper = ds_helper(args.config, branches_to_load)
+        logger.info("Loading dataset into Pandas DataFrames...")
+        datasets_helper = nsbi_common_utils.datasets.datasets(
+                                                                config_path=config['fit_config_path'],
+                                                                branches_to_load=branches_to_load
+                                                            )
         datasets_all = datasets_helper.load_datasets_from_config(load_systematics = True)
 
-        datasets_all, add_branches = process_data(datasets_all, input_features_by_jet, 
-                                                     branches=branches_to_load)
-        
-        logger.info(f"adding additional branches to the DataFrame")
-        datasets_helper.add_appended_branches(add_branches)
+        logger.info("Applying feature engineering...")
+        datasets_all, new_branches = process_data(
+            datasets_all, 
+            input_features_by_jet, 
+            branches=branches_to_load
+        )
 
-        datasets_helper.save_datasets(datasets_all, 
-                        save_systematics = True)
-        
-        
-        logger.info("Data Preprocessing workflow completed successfully.")
+        logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
+        datasets_helper.add_appended_branches(new_branches)
+
+        logger.info("Saving processed datasets...")
+        datasets_helper.save_dataset_to_ntuple(datasets_all, save_systematics=True)
+
+        logger.info("Data preprocessing workflow completed successfully.")
 
     except Exception as e:
-        logger.error(f"An error occurred: {e}", exc_info=True)
+        logger.error(f"Workflow failed: {e}", exc_info=True)
         raise
+
 
 if __name__ == "__main__":
     main()

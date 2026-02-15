@@ -1,2 +1,0 @@
-JOB LOAD FAIR_universe_Higgs_tautau/htcondor/job.sub
-VARS LOAD CONFIG="config.pipeline.yaml" STEP="data_loader" CPUS="12" MEM="128GB" GPUS="0" DISK="64GB"

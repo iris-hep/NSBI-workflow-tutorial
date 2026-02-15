@@ -24,7 +24,7 @@ Samples:
       UseAsReference    : True
       UseAsBasis        : True
         
-    - Name : ztautau
+    - Name              : ztautau
       Tree              : tree_ztautau
       SamplePath        : saved_datasets/dataset_nominal.root
       Weight            : weights

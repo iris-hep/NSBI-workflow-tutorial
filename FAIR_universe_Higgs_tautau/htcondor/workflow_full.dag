@@ -1,0 +1,20 @@
+JOB likelihood_ratio_estimation FAIR_universe_Higgs_tautau/htcondor/job.sub
+VARS likelihood_ratio_estimation STEP="neural_likelihood_ratio_estimation" CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
+
+JOB systematic_uncertainty FAIR_universe_Higgs_tautau/htcondor/job.sub
+VARS systematic_uncertainty STEP="systematic_uncertainty_training" CONFIG="config.pipeline.yaml" CPUS="4" MEM="32GB" GPUS="1" DISK="32GB"
+
+JOB parameter_fitting FAIR_universe_Higgs_tautau/htcondor/job.sub
+VARS parameter_fitting STEP="parameter_fitting" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="0" DISK="16GB"
+
+#########################################################
+
+SPLICE data_processing stage_data_processing.dag
+SPLICE preselection_network stage_preselection_network.dag
+
+PARENT data_processing CHILD preselection_network
+
+PARENT preselection_network CHILD likelihood_ratio_estimation
+PARENT preselection_network CHILD systematic_uncertainty
+
+PARENT likelihood_ratio_estimation systematic_uncertainty CHILD parameter_fitting

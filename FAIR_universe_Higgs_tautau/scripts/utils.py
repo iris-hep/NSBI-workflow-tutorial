@@ -3,7 +3,7 @@ import pandas as pd
 import mplhep as hep
 import matplotlib.pyplot as plt
 
-def calculate_preselection_observable(pred_NN_incl, samples_list, signal_processes, background_processes, pre_factor_dict = {'htautau': 1.0, 'ttbar': 1.0, 'ztautau': 1.0}):
+def calculate_preselection_observable(pred_NN_incl, samples_list, signal_processes, background_processes, pre_factor_dict = {}):
 
     signal_sum = np.sum(
         [pre_factor_dict[signal] * pred_NN_incl[:, samples_list[signal]] for signal in signal_processes], axis=0
@@ -16,7 +16,6 @@ def calculate_preselection_observable(pred_NN_incl, samples_list, signal_process
     presel_score = np.log(signal_sum/background_sum)
 
     return presel_score
-
 
 def preselection_using_score(dataset, channel_selections):
 

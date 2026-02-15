@@ -6,69 +6,52 @@ import logging
 import numpy as np
 import tensorflow as tf
 import yaml
-sys.path.append('../')
+import mplhep as hep
 
-# Load the package and modules for training and plotting
+sys.path.append('../src')
 import nsbi_common_utils
 from nsbi_common_utils import datasets, configuration
 from nsbi_common_utils.training import density_ratio_trainer
 
-
-import mplhep as hep
 hep.style.use(hep.style.ATLAS)
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def load_config(path):
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
-
-def load_training_settings(config_path):
-    """
-    Helper function to load training settings from the config_training_NN_parms.yml file.
-    """
-    with open(config_path, 'r') as file:
-        full_config = yaml.safe_load(file)
-    
-    if 'training_settings' not in full_config:
-        raise KeyError(f"The configuration file {config_path} must contain a 'training_settings' section.")
-        
-    return full_config['training_settings']
-
-def main():
-    
+def parse_args():
     parser = argparse.ArgumentParser(description="Neural Likelihood Ratio Estimation Trainer")
-    parser.add_argument('--config', type=str, default='./config.yml', 
+    parser.add_argument('--config', type=str, default='config.pipeline.yaml', 
                         help='Path to the YAML configuration file')
     parser.add_argument('--train', action='store_true', 
-                        help='Force training of new models (overrides training_NN_paras.py USE_SAVED_MODELS)')
-    parser.add_argument('--savedDataPath', type=str, default='./saved_datasets/', 
-                        help='path to the saved dataset')
-    parser.add_argument('--use-log-loss', action='store_true', 
-                        help='Use log loss instead of default loss')
-    parser.add_argument('--delete-existing-models', action='store_true',
-                        help='Delete existing models before training')
-    parser.add_argument('--training-config', type=str, default='./config_training_NN_parms.yml', 
-                        help='Path to the training parameter YAML file')
-    args = parser.parse_args()
- 
+                        help='Force training of new models (overrides config settings)')
+    return parser.parse_args()
 
+def main():
+    args = parse_args()
     logger.info("Starting Neural Likelihood Ratio Estimation workflow.")
 
     logger.info(f"Loading configuration from {args.config}")
-    config = nsbi_common_utils.configuration.ConfigManager(file_path_string=args.config)
+    config_workflow = load_config(args.config)["neural_likelihood_ratio_estimation"]
+    
+    nsbi_config_path = config_workflow["nsbi_config"]
+    logger.info(f"Initializing NSBI ConfigManager from: {nsbi_config_path}")
+    config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_config_path)
 
-    features, features_scaling = config.get_training_features()
-    logger.info(f"Training features: {features}")
+    features, features_scaling = config_nsbi.get_training_features()
+    logger.info(f"Training features loaded: {len(features)} features")
 
     logger.info("Initializing Datasets...")
     branches_to_load = features + ['presel_score']
     
     Datasets = nsbi_common_utils.datasets.datasets(
-        config_path=args.config,
+        config_path=nsbi_config_path,
         branches_to_load=branches_to_load
     )
 
@@ -77,23 +60,28 @@ def main():
     dataset_incl_nominal = dataset_incl_dict["Nominal"].copy()
     dataset_SR_nominal = Datasets.filter_region_dataset(dataset_incl_nominal, region="SR")
 
-    PATH_TO_SAVED_DATA = args.savedDataPath
-    if not PATH_TO_SAVED_DATA.endswith('/'):
-        PATH_TO_SAVED_DATA += '/'
-    TRAINING_OUTPUT_PATH = f'{PATH_TO_SAVED_DATA}output_training_nominal/'
+    path_to_saved_data = config_workflow["saved_data_path"]
+    if not path_to_saved_data.endswith('/'):
+        path_to_saved_data += '/'
+        
+    training_output_dir_name = config_workflow["output_training_dir"]
+    training_output_path = os.path.join(path_to_saved_data, training_output_dir_name)
+    if not training_output_path.endswith('/'):
+        training_output_path += '/'
+        
+    logger.info(f"Training output path: {training_output_path}")
     
-    basis_processes = config.get_basis_samples()
-    ref_processes = config.get_reference_samples()
+    basis_processes = config_nsbi.get_basis_samples()
+    ref_processes = config_nsbi.get_reference_samples()
     logger.info(f"Basis processes: {basis_processes}")
     logger.info(f"Reference processes: {ref_processes}")
 
-
     NN_training_mix_model = {}
-    use_log_loss = args.use_log_loss
-    DELETE_EXISTING_MODELS = args.delete_existing_models
+    use_log_loss = config_workflow["use_log_loss"]
+    delete_existing = config_workflow["delete_existing_models"]
 
-    if DELETE_EXISTING_MODELS:
-        logger.warning("DELETE_EXISTING_MODELS is True. Old models in the output directory will be removed.")
+    if delete_existing:
+        logger.warning("DELETE_EXISTING_MODELS is True. Old models will be removed.")
 
     path_to_ratios = {}
     path_to_figures = {}
@@ -106,10 +94,11 @@ def main():
         )
 
         output_name = f'{process_type}'
-        output_dir = f'{TRAINING_OUTPUT_PATH}general_output_{process_type}'
-        path_to_ratios[process_type] = f'{TRAINING_OUTPUT_PATH}output_ratios_{process_type}/'
-        path_to_figures[process_type] = f'{TRAINING_OUTPUT_PATH}output_figures_{process_type}/'
-        path_to_models[process_type] = f'{TRAINING_OUTPUT_PATH}output_model_params_{process_type}/'
+        output_dir = os.path.join(training_output_path, f'general_output_{process_type}')
+        
+        path_to_ratios[process_type] = os.path.join(training_output_path, f'output_ratios_{process_type}/')
+        path_to_figures[process_type] = os.path.join(training_output_path, f'output_figures_{process_type}/')
+        path_to_models[process_type] = os.path.join(training_output_path, f'output_model_params_{process_type}/')
 
         NN_training_mix_model[process_type] = density_ratio_trainer(
             dataset_mix_model,
@@ -123,38 +112,34 @@ def main():
             path_to_ratios=path_to_ratios[process_type],
             path_to_models=path_to_models[process_type],
             use_log_loss=use_log_loss,
-            delete_existing_models=DELETE_EXISTING_MODELS
+            delete_existing_models=delete_existing
         )
         
         del dataset_mix_model
 
     num_gpus = len(tf.config.list_physical_devices('GPU'))
     logger.info(f"Num GPUs Available: {num_gpus}")
-
     if num_gpus == 0:
         logger.warning("No GPUs found. Training might be slow.")
 
+    force_train = args.train or config_workflow["force_train"]
     
-    force_train = args.train
-    
-    # Load the raw training parameters dictionary
-    training_params_dict = load_training_settings(args.training_config)
+    training_settings = config_workflow["training_settings"]
 
-    for count, process_type in enumerate(basis_processes):
+    for process_type in basis_processes:
         logger.info(f"Processing {process_type}...")
         
-        if process_type not in training_params_dict:
-            logger.error(f"Settings for process '{process_type}' not found in 'training_settings' section of YAML.")
+        if process_type not in training_settings:
+            logger.error(f"Settings for process '{process_type}' not found in 'density_ratio_estimation.training_settings'.")
             raise KeyError(f"Missing config for {process_type}")
 
-        settings = training_params_dict[process_type].copy()
+        settings = training_settings[process_type].copy()
         
-        # Override load_trained_models if --train argument is present
         if force_train:
-            logger.info("Force training mode enabled via CLI.")
+            logger.info(f"Force training enabled. Setting load_trained_models=False for {process_type}.")
             settings['load_trained_models'] = False
         else:
-            logger.info(f"Using USE_SAVED_MODELS={settings['load_trained_models']} from config.")
+            logger.info(f"Using load_trained_models={settings['load_trained_models']} from config for {process_type}.")
         
         logger.info(f"Starting training/loading for {process_type}")
         NN_training_mix_model[process_type].train_ensemble(**settings)
@@ -172,8 +157,7 @@ def main():
     path_to_saved_ratios = {}
     
     for process_type in basis_processes:
-        logger.info(f"Evaluating the density ratios p_c/p_ref for the full dataset and ")
-        logger.info(f"saveing for the inference step for {process_type}...")
+        logger.info(f"Evaluating density ratios for {process_type}...")
         path_to_saved_ratios[process_type] = NN_training_mix_model[process_type].evaluate_and_save_ratios(
             dataset_combined_SR, 
             aggregation_type='median_score'
@@ -181,7 +165,7 @@ def main():
     
     logger.info(f"Ratios saved to: {path_to_saved_ratios}")
 
-    path_to_save_root = f"{PATH_TO_SAVED_DATA}/dataset_Asimov_SR.root"
+    path_to_save_root = os.path.join(path_to_saved_data, "dataset_Asimov_SR.root")
     logger.info(f"Saving Asimov_SR dataset to {path_to_save_root}...")
     nsbi_common_utils.datasets.save_dataframe_as_root(
         dataset_combined_SR, 
@@ -189,10 +173,9 @@ def main():
         tree_name="nominal"
     )
 
-    # Save Asimov weights
-    path_to_save_weights = f"{PATH_TO_SAVED_DATA}/asimov_weights.npy"
+    path_to_save_weights = os.path.join(path_to_saved_data, "asimov_weights.npy")
     logger.info(f"Saving Asimov_weights to {path_to_save_weights}...")
-    np.save(f"{path_to_save_weights}", dataset_combined_SR["weights"].to_numpy())
+    np.save(path_to_save_weights, dataset_combined_SR["weights"].to_numpy())
 
     logger.info("Workflow completed successfully.")
 
