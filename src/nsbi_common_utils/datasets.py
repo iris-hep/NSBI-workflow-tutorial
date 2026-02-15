@@ -283,7 +283,6 @@ class datasets:
                             trees_to_write[tree_name] = fin[tree_name].arrays(library="ak")
             except Exception as e:
                 print(f"Warning: Could not read existing trees from {file_path}: {e}")
-                # Continue anyway — we'll just write the new trees
 
         # 2. Add the new/updated trees
         trees_to_write.update(new_trees_dict)
@@ -294,7 +293,7 @@ class datasets:
                 fout[tree_name] = data
 
         os.replace(tmp_path, file_path)
-        print(f"✓ Saved {len(new_trees_dict)} tree(s) to {file_path}: {list(new_trees_dict.keys())}")
+        print(f"Saved {len(new_trees_dict)} tree(s) to {file_path}: {list(new_trees_dict.keys())}")
 
 
     def merge_dataframe_dict_for_training(self, 
