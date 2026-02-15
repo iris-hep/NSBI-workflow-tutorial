@@ -56,10 +56,16 @@ class MultiClassLightning(pl.LightningModule):
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
 
-        loss = (loss * w).sum() / w.sum()
+        weighted_loss = (loss * w).sum() / w.sum()
 
-        self.log("train_loss", loss, prog_bar=True)
-        return loss
+        preds = torch.argmax(y_hat, dim=1)
+        correct = (preds == y).float()
+        weighted_acc = (correct * w).sum() / w.sum()
+
+        self.log("train_loss", weighted_loss, prog_bar=True)
+        self.log("train_acc", weighted_acc, prog_bar=True)
+        
+        return weighted_loss
     
     def validation_step(self, batch, batch_idx):
         x, y, w = batch
@@ -67,9 +73,14 @@ class MultiClassLightning(pl.LightningModule):
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y, reduction='none')
 
-        loss = (loss * w).sum() / w.sum()
+        weighted_loss = (loss * w).sum() / w.sum()
 
-        self.log("val_loss", loss, prog_bar=True)
+        preds = torch.argmax(y_hat, dim=1)
+        correct = (preds == y).float()
+        weighted_acc =  (correct * w).sum() / w.sum()
+
+        self.log("val_loss", weighted_loss, prog_bar=True)
+        self.log("val_acc", weighted_acc, prog_bar=True)
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         logits = self(batch)

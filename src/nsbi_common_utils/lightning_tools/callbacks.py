@@ -11,12 +11,19 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 class PrintEpochMetrics(pl.Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         m = trainer.callback_metrics
-        if "train_loss" in m and "val_loss" in m:
-            print(
-                f"Epoch {trainer.current_epoch:4d} | "
-                f"train_loss = {m['train_loss'].item():.6f} | "
-                f"val_loss = {m['val_loss'].item():.6f}"
-            )
+        
+        output = f"Epoch {trainer.current_epoch:4d} | "
+        
+        if "train_loss" in m:
+            output += f"train_loss = {m['train_loss'].item():.6f} | "
+        if "train_acc" in m:
+            output += f"train_acc = {m['train_acc'].item():.4f} | "
+        if "val_loss" in m:
+            output += f"val_loss = {m['val_loss'].item():.6f} | "
+        if "val_acc" in m:
+            output += f"val_acc = {m['val_acc'].item():.4f}"
+        
+        print(output)
 
 class LossHistory(pl.Callback):
 
