@@ -19,6 +19,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
+from torch.utils.data import Subset
 
 from nsbi_common_utils.lightning_tools import MultiClassLightning, DensityRatioLightning, PrintEpochMetrics, LossHistory, WeightedTensorDataset
 
@@ -194,7 +195,7 @@ class preselection_network_trainer:
         save_model(self.model, torch.randn((1, len(self.features))), path_to_model, self.scaler, path_to_scaler)
 
         # Reassign the model to be in ONNX format
-        self.model = load_trained_model(path_to_model, path_to_scaler)
+        self.scaler, self.model = load_trained_model(path_to_model, path_to_scaler)
 
 
     def assign_trained_model(self, 
