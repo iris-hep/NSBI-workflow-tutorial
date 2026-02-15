@@ -144,17 +144,13 @@ class datasets:
 
         try:
             with uproot.open(f"{file_path}:{tree_name}") as tree:
-                # First, try library="pd" which should work for flat branches
                 try:
                     arrays = tree.arrays(branches, library="pd")
-                    # Verify it's actually a DataFrame (not Awkward masquerading as one)
                     if isinstance(arrays, pd.DataFrame):
                         return arrays
                 except (ValueError, TypeError):
-                    pass  # Fall through to numpy conversion
+                    pass  
                 
-                # If library="pd" failed or returned Awkward, use numpy conversion
-                # This works for flat (non-jagged) branches and explicitly constructs a DataFrame
                 arrays_dict = tree.arrays(branches, library="np")
                 return pd.DataFrame(arrays_dict)
                 

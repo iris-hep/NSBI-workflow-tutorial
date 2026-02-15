@@ -53,7 +53,7 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
             for feature in feat_list:
                 # Calculate median for events with n_jets >= threshold
                 vals = sample_dataset.loc[sample_dataset['PRI_n_jets'] >= n_jets, feature]
-                median_feature[sample][feature] = np.median(vals) if len(vals) > 0 else 0.0
+                median_feature[sample][feature] = np.median(vals)
 
     logger.info("Applying feature engineering to all regions and samples...")
     branches_to_add = []
@@ -82,11 +82,9 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                     branches_to_add.append(mask_col)
 
                 for feat in feat_list:
-                    med_val = median_feature.get(sample, {}).get(feat, 0.0)
-                    df_modified[feat] = df_modified[feat].where(
-                        df_modified['PRI_n_jets'] >= n_jets, 
-                        med_val
-                    )
+                    df_modified[feat] = df_modified[feat].where(df_modified['PRI_n_jets'] >= n_jets, 
+                                                                median_feature[sample][feat])
+                    
 
             # --- Log transformations when distributions spread out ---
             for feat in branches:
@@ -94,8 +92,6 @@ def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple
                     continue
 
                 kin = df_modified[feat].to_numpy()
-                if len(kin) == 0:
-                    continue
 
                 # Only apply log if all values are positive and range is large
                 if (np.amin(kin) > 0.0) and (np.amax(kin) > 100.0):

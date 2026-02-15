@@ -19,6 +19,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
+from torch.utils.data import Subset
 
 from nsbi_common_utils.lightning_tools import MultiClassLightning, DensityRatioLightning, PrintEpochMetrics, LossHistory, WeightedTensorDataset
 
@@ -191,10 +192,15 @@ class preselection_network_trainer:
         path_to_scaler          = path_to_save / 'model_scaler_presel.bin'
 
         # Save lightning module as ONNX
-        save_model(self.model, torch.randn((1, len(self.features))), path_to_model, self.scaler, path_to_scaler)
+        save_model(self.model, 
+                   torch.randn((1, len(self.features))), 
+                   path_to_model, 
+                   self.scaler, 
+                   path_to_scaler,
+                   softmax_output = True)
 
         # Reassign the model to be in ONNX format
-        self.model = load_trained_model(path_to_model, path_to_scaler)
+        self.scaler, self.model = load_trained_model(path_to_model, path_to_scaler)
 
 
     def assign_trained_model(self, 
@@ -923,17 +929,46 @@ class density_ratio_trainer:
 
 def save_model(lightning_model, 
                input_sample,
-                path_to_save_model: Union[str, Path], 
-                scaler_instance, 
-                path_to_save_scaler: Union[str, Path]) -> None:
+               path_to_save_model: Union[str, Path], 
+               scaler_instance, 
+               path_to_save_scaler: Union[str, Path],
+               softmax_output: bool = False) -> None:
+    
+    lightning_model.eval()
+
+    class ModelWithSoftmax(torch.nn.Module):
+        def __init__(self, model):
+            super().__init__()
+            self.model = model
         
-
-        lightning_model.to_onnx(str(path_to_save_model), input_sample, export_params=True)
-
-        # Save the standardization scaler
-        dump(scaler_instance, str(path_to_save_scaler), compress=True)
-
-
+        def forward(self, x):
+            # Get logits from the model
+            x = self.model.mlp(x)
+            logits = self.model.out(x)
+            # Apply softmax output
+            return F.softmax(logits, dim=1)
+        
+    if softmax_output:
+        lightning_model_export = ModelWithSoftmax(lightning_model)
+        print("Exporting ONNX model with softmax output (probabilities)")
+    else:
+        lightning_model_export = lightning_model
+    
+    torch.onnx.export(
+        lightning_model_export,
+        input_sample,
+        str(path_to_save_model),
+        export_params=True,
+        opset_version=17,
+        input_names=['features'], 
+        output_names=['output'],   
+        dynamic_axes={
+            'features': {0: 'batch_size'},
+            'output': {0: 'batch_size'}
+        }
+    )
+    
+    dump(scaler_instance, str(path_to_save_scaler), compress=True)
 
 def load_trained_model(path_to_saved_model: Union[Path, str], 
                         path_to_saved_scaler: Union[Path, str]):
