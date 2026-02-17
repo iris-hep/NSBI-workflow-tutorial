@@ -1,4 +1,5 @@
-universe = vanilla
+universe = container
+container_image = file:///staging/jsandesara/nsbi-env-gpu.sif
 
 executable = FAIR_universe_Higgs_tautau/htcondor/run_step.sh
 arguments  = preselection_network $(CONFIG) $(SKIP)

@@ -127,7 +127,7 @@ neural_likelihood_ratio_estimation:
     validation_split: 0.1
     holdout_split: 0.25
 
-    num_ensemble_members: 10
+    num_ensemble_members: 1
     load_trained_models: true  # 'force_train' flag in script overrides this
     
     verbose: 1
