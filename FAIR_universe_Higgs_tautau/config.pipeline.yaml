@@ -98,7 +98,7 @@ preselection_network:
 
 # Settings for nominal density ratio estimation
 neural_likelihood_ratio_estimation:
-  nsbi_config: "./config_fit_nsbi.yml"
+  nsbi_fit_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
   output_training_dir: "output_training_nominal"
   
@@ -106,15 +106,13 @@ neural_likelihood_ratio_estimation:
   delete_existing_models: false
   force_train: false
 
-  # ---------------------------------------------------------
-  # DEFINITION OF COMMON HYPERPARAMETERS
-  # ---------------------------------------------------------
+  # Some default hyper-parameters -- Quality tested for SBI
   common_training_params: &common_params
     hidden_layers: 4
     neurons: 1000
     number_of_epochs: 100
     batch_size: 512
-    learning_rate: 0.1
+    learning_rate: 0.0001
     scalerType: "MinMax"
     
     calibration: false
@@ -136,9 +134,7 @@ neural_likelihood_ratio_estimation:
     plot_scaled_features: false
     summarize_model: true
 
-  # ---------------------------------------------------------
-  # PROCESS SPECIFIC SETTINGS
-  # ---------------------------------------------------------
+  # Process-specific settings - can be different from the default
   training_settings:
     htautau:
       <<: *common_params
@@ -153,7 +149,7 @@ neural_likelihood_ratio_estimation:
 
 # Section for Systematic Uncertainty Estimation
 systematic_uncertainty:
-  nsbi_config: "./config_fit_nsbi.yml"
+  nsbi_fit_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
   filter_region: "SR"
   force_train: false
