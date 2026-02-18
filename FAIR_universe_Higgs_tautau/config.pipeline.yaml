@@ -2,6 +2,7 @@
 data_loader:
   data:
     url: "https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip"
+    data_input_dir: "data/"
     train_size: 0.35
     processes:
       - htautau
