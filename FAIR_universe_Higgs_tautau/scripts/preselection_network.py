@@ -22,7 +22,6 @@ hep.style.use(hep.style.ATLAS)
 
 sys.path.append('../src')
 import nsbi_common_utils
-from nsbi_common_utils import training, datasets, configuration
 from nsbi_common_utils.training import preselection_network_trainer
 
 def load_config(path):

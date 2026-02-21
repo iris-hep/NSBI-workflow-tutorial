@@ -68,7 +68,8 @@ def configure_logging(verbose_level: int = 1):
 
 class preselection_network_trainer:
     '''
-    A class for training the multi-class classification neural network for preselecting phase space for SBI
+    A class for training the multi-class classification neural network 
+    used to preselect phase space for SBI
     '''
     def __init__(self, dataset, features, features_scaling, 
                     train_labels_column = 'train_labels',
@@ -367,10 +368,8 @@ class density_ratio_trainer:
                         holdout_split           = holdout_split, 
                         plot_scaled_features    = plot_scaled_features, 
                         load_trained_models     = load_trained_models_ensemble_member,
-                        recalibrate_output      = recalibrate_output,
-                        summarize_model         = summarize_model)
+                        recalibrate_output      = recalibrate_output)
             
-            summarize_model = False
         
     def train(self, hidden_layers, 
                     neurons, 
@@ -479,7 +478,7 @@ class density_ratio_trainer:
 
 
         scaled_data_train = self.scaler[ensemble_index].fit_transform(data_train)
-        scaled_data_train= pd.DataFrame(scaled_data_train, columns=self.features)
+        scaled_data_train = pd.DataFrame(scaled_data_train, columns=self.features)
 
         if plot_scaled_features:
             plot_all_features(scaled_data_train, weight_train, label_train)
@@ -512,13 +511,14 @@ class density_ratio_trainer:
                                         shuffle=True,
                                         num_workers=num_workers,  
                                         pin_memory=True,  
-                                        persistent_workers=True)
+                                        persistent_workers=False)
+            
             val_loader   = DataLoader(val_ds, 
                                       batch_size=batch_size, 
                                       shuffle=False,
                                         num_workers=num_workers,  
                                         pin_memory=True,  
-                                        persistent_workers=True)
+                                        persistent_workers=False)
 
             model = DensityRatioLightning(
                 n_hidden=hidden_layers,
@@ -535,20 +535,26 @@ class density_ratio_trainer:
 
             if callback:
                 trainer = Trainer(
+                    accelerator="auto",
+                    devices="auto",
                     max_epochs=number_of_epochs,
                     callbacks=[
                         EarlyStopping(monitor="val_loss", patience=callback_patience),
                         LearningRateMonitor(),
-                        loss_history
+                        loss_history,
+                        PrintEpochMetrics()
                     ],
-                    logger=False,
-                    enable_checkpointing=False
+                    logger=True,
+                    enable_checkpointing=False,
+                    enable_progress_bar=True,
                 )
             else:
                 trainer = Trainer(
+                    accelerator="auto",
+                    devices="auto",
                     max_epochs=number_of_epochs,
                     callbacks=[loss_history],
-                    logger=False,
+                    logger=True,
                     enable_checkpointing=False
                 )
 
@@ -558,18 +564,20 @@ class density_ratio_trainer:
         
             logger.info("Finished Training")
                 
-            # Convert Keras model to ONNX
-            self.model_NN[ensemble_index] = convert_torch_to_onnx(
-                self.model_NN[ensemble_index],
-                input_dim=len(self.features)
-            )
-
             path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index}.bin"
             path_to_saved_model         = f"{self.path_to_models}model{ensemble_index}.onnx"
 
-            save_model(self.model_NN[ensemble_index], path_to_saved_model,
-                        self.scaler[ensemble_index], path_to_saved_scaler)
-    
+            save_model(self.model_NN[ensemble_index], 
+                        torch.randn((1, len(self.features))), 
+                        path_to_saved_model,
+                        self.scaler[ensemble_index], 
+                        path_to_saved_scaler,
+                        softmax_output = False)
+            
+            # Reassign the model to be in ONNX format
+            self.scaler[ensemble_index], self.model_NN[ensemble_index] = load_trained_model(path_to_saved_model, 
+                                                                                            path_to_saved_scaler)
+
             # Save metadata
             np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index}.npy", 
                     np.array([holdout_num, rnd_seed]))
