@@ -162,7 +162,7 @@ systematic_uncertainty:
     neurons: 1000
     number_of_epochs: 50
     batch_size: 10000
-    learning_rate: 0.00001
+    learning_rate: 0.000001
     scalerType: "MinMax"
     
     calibration: true
