@@ -4,9 +4,6 @@ import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
 
 from sklearn.model_selection import train_test_split
-import tensorflow as tf
-tf.get_logger().setLevel('ERROR')
-from tensorflow.keras.optimizers import Nadam
 import matplotlib.pyplot as plt
 from iminuit import Minuit
 

@@ -3,8 +3,9 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Union
 import uproot
 import numpy as np
+import awkward as ak
 import pandas as pd
-
+import nsbi_common_utils
 
 class datasets:
     """
@@ -25,15 +26,10 @@ class datasets:
             branches_to_load: List of branch/column names to read from ROOT files.
         """
         self.config_path = config_path
-        self.config = self._load_config(config_path)
-        self.branches_to_load = branches_to_load
-        self.branches_all = branches_to_load.copy()
+        self.config_helper              = nsbi_common_utils.configuration.ConfigManager(file_path_string = config_path)
 
-    def _load_config(self, path: str) -> dict:
-        """Load YAML configuration file."""
-        import yaml
-        with open(path, "r") as f:
-            return yaml.safe_load(f)
+        self.branches_to_load           = branches_to_load
+        self.branches_all               = branches_to_load.copy()
 
     def add_appended_branches(self, new_branches: List[str]) -> None:
         """
@@ -62,7 +58,9 @@ class datasets:
 
         # 1. Load nominal samples
         dict_datasets["Nominal"] = {}
-        for sample_dict in self.config["Samples"]:
+        for sample_dict in self.config_helper.config["Samples"]:
+
+            # Extract metadata for the "sample" making up the model
             sample_name = sample_dict["Name"]
             file_path = sample_dict["SamplePath"]
             tree_name = sample_dict["Tree"]
@@ -75,7 +73,7 @@ class datasets:
 
             df = self._load_dataframe_from_root(file_path, tree_name, branches)
             
-            df["sample_name"] = sample_name
+            df["sample_name"] = str(sample_name)
             if weight_branch:
                 df = df.rename(columns={weight_branch: "weights"})
             else:
@@ -83,19 +81,25 @@ class datasets:
             
             dict_datasets["Nominal"][sample_name] = df
 
-        # 2. Load systematic variations (if requested)
+        # 2. Load systematic variations for constrained systematics (if load_systematics=True)
         if load_systematics:
-            systematics_list = self.config.get("Systematics", [])
+            systematics_list = self.config_helper.config.get("Systematics", [])
             for syst_dict in systematics_list:
+
+                # Extract systematic uncertainty metadata
                 syst_name = syst_dict["Name"]
                 syst_type = syst_dict["Type"]
 
+                # Different treatment for different types of constrained uncertainty
+                # Currently only supporting NormPlusShape, no MCstat
                 if syst_type == "NormPlusShape":
                     for direction in ["Up", "Dn"]:
                         region_key = f"{syst_name}_{direction}"
                         dict_datasets[region_key] = {}
 
                         for sample_dict in syst_dict.get(direction, []):
+
+                            # Extract sample metadata
                             sample_name = sample_dict["SampleName"]
                             file_path = sample_dict["Path"]
                             tree_name = sample_dict["Tree"]
@@ -108,7 +112,7 @@ class datasets:
 
                             df = self._load_dataframe_from_root(file_path, tree_name, branches)
                             
-                            df["sample_name"] = sample_name
+                            df["sample_name"] = str(sample_name)
                             if weight_branch:
                                 df = df.rename(columns={weight_branch: "weights"})
                             else:
@@ -191,12 +195,12 @@ class datasets:
         # 1. Save nominal samples
         self._save_region_datasets(
             dict_datasets["Nominal"], 
-            self.config["Samples"]
+            self.config_helper.config["Samples"]
         )
 
         # 2. Save systematic variations (if requested)
         if save_systematics:
-            systematics_list = self.config.get("Systematics", [])
+            systematics_list = self.config_helper.config.get("Systematics", [])
             for syst_dict in systematics_list:
                 syst_name = syst_dict["Name"]
                 syst_type = syst_dict["Type"]
@@ -249,6 +253,7 @@ class datasets:
 
             file_to_trees[file_path][tree_name] = df_filtered
 
+        print(f"DEBUG: ")
         # Write each file atomically with all its trees
         for file_path, trees_dict in file_to_trees.items():
             self._write_file_with_trees(file_path, trees_dict)
@@ -276,7 +281,7 @@ class datasets:
             try:
                 with uproot.open(file_path) as fin:
                     for key, classname in fin.classnames().items():
-                        tree_name = key.split(";")[0]  # strip cycle number
+                        tree_name = key.split(";")[0]  
                         if tree_name in new_trees_dict:
                             continue  # will be replaced by new version
                         if classname == "TTree":
@@ -308,7 +313,7 @@ class datasets:
         Returns:
             New dict with filtered DataFrames (copy).
         """
-        region_filters = self.config.get_channel_filters(channel_name = region)
+        region_filters = self.config_helper.get_channel_filters(channel_name = region)
         for sample_name, sample_dataframe in dataset.items():
             dataset[sample_name] = sample_dataframe.query(region_filters).copy()
         return dataset
@@ -415,8 +420,28 @@ def save_dataframe_as_root(dataset        : pd.DataFrame,
         path_to_save: Target ROOT file path.
         tree_name: Name of the TTree to create.
     """
+
     with uproot.recreate(f"{path_to_save}") as ntuple:
+        ntuple[tree_name] = ak.Array({col: dataset[col].values for col in dataset.columns})
 
-        arrays = {col: dataset[col].to_numpy() for col in dataset.columns}
 
-        ntuple[tree_name] = arrays
+def load_dataframe_from_root(path_to_load: str,
+                             tree_name: str,
+                             branches_to_load: list = None) -> pd.DataFrame:
+    """
+    Utility: read selected branches from a ROOT TTree into a DataFrame.
+
+    Args:
+        path_to_load: Source ROOT file path.
+        tree_name: TTree name inside the file.
+        branches_to_load: Branch names to read. If empty or None, load all branches.
+    Returns:
+        pd.DataFrame containing the requested branches.
+    """
+    with uproot.open(f"{path_to_load}:{tree_name}") as tree:
+        # If no branches are specified, load all
+        if not branches_to_load:
+            branches_to_load = tree.keys()
+        dataframe = tree.arrays(branches_to_load, library="pd")
+
+    return dataframe

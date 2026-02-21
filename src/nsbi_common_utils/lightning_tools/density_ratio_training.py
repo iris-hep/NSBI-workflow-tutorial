@@ -65,20 +65,24 @@ class DensityRatioLightning(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
+        w = w.float().view(-1, 1)
+
         s_hat = self(x)
         if self.use_log_loss:
             loss = F.binary_cross_entropy_with_logits(s_hat, y)
         else:
             loss = F.binary_cross_entropy(s_hat, y)
 
-        loss = (loss * w.view(-1, 1)).sum()
+        weighted_loss = (loss * w).sum() / w.sum()
     
-        self.log("train_loss", loss, prog_bar=True)
-        return loss
+        self.log("train_loss", weighted_loss, prog_bar=True)
+        return weighted_loss
+    
     
     def validation_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
+        w = w.float().view(-1, 1)
 
         s_hat = self(x)
 
@@ -87,7 +91,7 @@ class DensityRatioLightning(pl.LightningModule):
         else:
             loss = F.binary_cross_entropy(s_hat, y)
 
-        loss = (loss * w.view(-1, 1)).sum()
+        loss = (loss * w).sum() / w.sum()
 
         self.log("val_loss", loss, prog_bar=True)
 

@@ -4,6 +4,10 @@
 
 from nsbi_common_utils import configuration
 from nsbi_common_utils import datasets
+from nsbi_common_utils import training
+from nsbi_common_utils import plotting
+from nsbi_common_utils import inference
+from nsbi_common_utils import model
 
 __all__ = [
     'configuration',
@@ -11,6 +15,5 @@ __all__ = [
     'training',
     'plotting',
     'inference',
-    'flows',
     'model'
 ]
