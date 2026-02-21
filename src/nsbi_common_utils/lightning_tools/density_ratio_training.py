@@ -69,9 +69,9 @@ class DensityRatioLightning(pl.LightningModule):
 
         s_hat = self(x)
         if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y)
+            loss = F.binary_cross_entropy_with_logits(s_hat, y, reduction="none")
         else:
-            loss = F.binary_cross_entropy(s_hat, y)
+            loss = F.binary_cross_entropy(s_hat, y, reduction="none")
 
         weighted_loss = (loss * w).sum() / w.sum()
     
@@ -87,9 +87,9 @@ class DensityRatioLightning(pl.LightningModule):
         s_hat = self(x)
 
         if self.use_log_loss:
-            loss = F.binary_cross_entropy_with_logits(s_hat, y)
+            loss = F.binary_cross_entropy_with_logits(s_hat, y, reduction="none")
         else:
-            loss = F.binary_cross_entropy(s_hat, y)
+            loss = F.binary_cross_entropy(s_hat, y, reduction="none")
 
         loss = (loss * w).sum() / w.sum()
 

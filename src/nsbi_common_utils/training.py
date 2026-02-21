@@ -591,7 +591,6 @@ class density_ratio_trainer:
                                                         use_log_loss = self.use_log_loss)
 
         calibration_method = 'direct'
-        # calibration_method = ''
         
         # If calibrating, use the train_data_prediction for building histogram
         if self.calibration:
