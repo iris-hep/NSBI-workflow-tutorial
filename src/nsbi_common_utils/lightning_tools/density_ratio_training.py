@@ -96,20 +96,19 @@ class DensityRatioLightning(pl.LightningModule):
         self.log("val_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
+
         optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+
+        scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer,
-            mode="min",
-            factor=self.hparams.callback_factor,
-            patience=self.hparams.callback_patience,
-            min_lr=1e-9
+            step_size=self.hparams.callback_patience,   
+            gamma=self.hparams.callback_factor        
         )
 
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "monitor": "val_loss",  
                 "interval": "epoch",
                 "frequency": 1
             }

@@ -22,7 +22,7 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from torch.utils.data import Subset
 
 from nsbi_common_utils.lightning_tools import MultiClassLightning, DensityRatioLightning, PrintEpochMetrics, LossHistory, WeightedTensorDataset
-from nsbi_common_utils.training import save_model, predict_with_onnx, convert_torch_to_onnx, convert_logLR_to_score, load_trained_model
+from nsbi_common_utils.training.utils import save_model, predict_with_onnx, convert_torch_to_onnx, convert_logLR_to_score, load_trained_model
 
 from pathlib import Path
 from typing import Union, Dict
@@ -152,7 +152,8 @@ class density_ratio_trainer:
                             load_trained_models = False,
                             recalibrate_output=False,
                             summarize_model: bool = False,
-                            num_ensemble_members=1):
+                            num_ensemble_members=1,
+                            num_workers = 0):
         '''
         Train an ensemble of NNs
         '''
@@ -205,7 +206,8 @@ class density_ratio_trainer:
                         holdout_split           = holdout_split, 
                         plot_scaled_features    = plot_scaled_features, 
                         load_trained_models     = load_trained_models_ensemble_member,
-                        recalibrate_output      = recalibrate_output)
+                        recalibrate_output      = recalibrate_output,
+                        num_workers             = num_workers)
             
         
     def train(self, hidden_layers, 
@@ -229,7 +231,7 @@ class density_ratio_trainer:
                     plot_scaled_features=False, 
                     load_trained_models = False,
                     recalibrate_output=False,
-                    num_workers=4):
+                    num_workers=0):
         '''
         Method that trains the density ratio NNs
 
@@ -347,14 +349,14 @@ class density_ratio_trainer:
                                         batch_size=batch_size, 
                                         shuffle=True,
                                         num_workers=num_workers,  
-                                        pin_memory=True,  
+                                        pin_memory=False,  
                                         persistent_workers=False)
             
             val_loader   = DataLoader(val_ds, 
                                       batch_size=batch_size, 
                                       shuffle=False,
                                         num_workers=num_workers,  
-                                        pin_memory=True,  
+                                        pin_memory=False,  
                                         persistent_workers=False)
 
             model = DensityRatioLightning(

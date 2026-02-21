@@ -300,6 +300,22 @@ class datasets:
         os.replace(tmp_path, file_path)
         print(f"Saved {len(new_trees_dict)} tree(s) to {file_path}: {list(new_trees_dict.keys())}")
 
+    def filter_region_by_type(self,
+                             dataset: Dict[str, Dict[str, pd.DataFrame]],
+                             region: str) -> Dict[str, Dict[str, pd.DataFrame]]:
+        """
+        Apply region filters
+
+        Args:
+            dataset: dict[type_name][sample_name] -> DataFrame.
+            region: Config channel name to query against.
+        Returns:
+            Same structure with rows filtered per region expression.
+        """
+        for type_name, type_dict in dataset.items():
+            dataset[type_name] = self.filter_region_dataset(type_dict, region = region)
+
+        return dataset
 
     def filter_region_dataset(self,
                               dataset: Dict[str, pd.DataFrame],

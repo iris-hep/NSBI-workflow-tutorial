@@ -22,7 +22,7 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from torch.utils.data import Subset
 
 from nsbi_common_utils.lightning_tools import MultiClassLightning, DensityRatioLightning, PrintEpochMetrics, LossHistory, WeightedTensorDataset
-from nsbi_common_utils.training import save_model, predict_with_onnx, convert_torch_to_onnx, convert_logLR_to_score, load_trained_model
+from nsbi_common_utils.training.utils import save_model, predict_with_onnx, convert_torch_to_onnx, convert_logLR_to_score, load_trained_model
 
 
 from pathlib import Path

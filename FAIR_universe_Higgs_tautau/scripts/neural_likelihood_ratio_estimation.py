@@ -64,7 +64,8 @@ def main():
     dataset_incl_nominal = dataset_incl_dict["Nominal"].copy()
 
     # Get the signal region events to be used for SBI fit
-    dataset_SR_nominal = datasets_helper.filter_region_dataset(dataset_incl_nominal, region="SR")
+    region = config_workflow["filter_region"]
+    dataset_SR_nominal = datasets_helper.filter_region_dataset(dataset_incl_nominal, region=region)
 
     # Get the path where intermediate data from the workflow is saved
     path_to_saved_data = config_workflow["saved_data_path"]
@@ -94,7 +95,7 @@ def main():
     delete_existing = config_workflow["delete_existing_models"]
 
     if delete_existing:
-        logger.warning("DELETE_EXISTING_MODELS is True. Old models will be removed.")
+        logger.warning("delete_existing_models is True. Old models will be removed.")
 
     path_to_ratios = {}
     path_to_figures = {}
@@ -162,34 +163,6 @@ def main():
         NN_training_mix_model[process_type].test_normalization()
 
     logger.info("Training/Loading complete.")
-
-    logger.info("Merging dataframes for final evaluation.")
-    dataset_combined_SR = datasets_helper.merge_dataframe_dict_for_training(
-        dataset_SR_nominal, None, samples_to_merge=["htautau", "ztautau", "ttbar"]
-    )
-
-    path_to_saved_ratios = {}
-    
-    for process_type in basis_processes:
-        logger.info(f"Evaluating density ratios for {process_type}...")
-        path_to_saved_ratios[process_type] = NN_training_mix_model[process_type].evaluate_and_save_ratios(
-            dataset_combined_SR, 
-            aggregation_type='median_score'
-        )
-    
-    logger.info(f"Ratios saved to: {path_to_saved_ratios}")
-
-    path_to_save_root = os.path.join(path_to_saved_data, "dataset_Asimov_SR.root")
-    logger.info(f"Saving Asimov signal region dataset to {path_to_save_root}...")
-    nsbi_common_utils.datasets.save_dataframe_as_root(
-        dataset_combined_SR, 
-        path_to_save=path_to_save_root,
-        tree_name="nominal"
-    )
-
-    path_to_save_weights = os.path.join(path_to_saved_data, "asimov_weights.npy")
-    logger.info(f"Saving Asimov weights array to {path_to_save_weights}...")
-    np.save(path_to_save_weights, dataset_combined_SR["weights"].to_numpy())
 
     logger.info("Workflow completed successfully.")
 
