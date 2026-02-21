@@ -112,7 +112,7 @@ neural_likelihood_ratio_estimation:
     neurons: 1000
     number_of_epochs: 100
     batch_size: 512
-    learning_rate: 0.001
+    learning_rate: 0.0001
     scalerType: "MinMax"
     
     calibration: false

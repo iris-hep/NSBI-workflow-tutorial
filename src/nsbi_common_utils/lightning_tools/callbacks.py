@@ -13,7 +13,11 @@ class PrintEpochMetrics(pl.Callback):
         m = trainer.callback_metrics
         
         output = f"Epoch {trainer.current_epoch:4d} | "
+
+        lr = trainer.optimizers[0].param_groups[0]["lr"]
         
+        output += f"lr = {lr:.3e} | "
+
         if "train_loss" in m:
             output += f"train_loss = {m['train_loss'].item():.6f} | "
         if "train_acc" in m:
