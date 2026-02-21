@@ -104,7 +104,7 @@ neural_likelihood_ratio_estimation:
   
   use_log_loss: false
   delete_existing_models: false
-  force_train: true
+  force_train: false
 
   # Some default hyper-parameters -- Quality tested for SBI
   common_training_params: &common_params

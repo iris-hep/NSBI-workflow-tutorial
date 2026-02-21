@@ -35,7 +35,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, PowerTransformer
 from sklearn.compose import ColumnTransformer
 
 from nsbi_common_utils.calibration import HistogramCalibrator, IsotonicCalibrator
-from nsbi_common_utils.plotting import plot_loss, plot_all_features, plot_all_features, plot_reweighted, plot_calibration_curve, plot_calibration_curve_ratio
+from nsbi_common_utils.plotting import plot_loss, plot_all_features, plot_all_features, plot_reweighted, plot_calibration_curve, plot_calibration_curve_ratio, plot_overfit_side_by_side
 
 import logging
 _LOG_LEVELS = {
