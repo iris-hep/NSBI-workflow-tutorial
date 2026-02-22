@@ -1,0 +1,2 @@
+JOB parameter_fitting FAIR_universe_Higgs_tautau/htcondor/job_parameter_fits.sub
+VARS parameter_fitting STEP="parameter_fitting" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="0" DISK="16GB"

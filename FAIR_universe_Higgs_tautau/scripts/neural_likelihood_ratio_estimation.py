@@ -106,7 +106,11 @@ def main():
 
         # Prepare dataset to be passed to training
         dataset_mix_model = datasets_helper.prepare_basis_training_dataset(
-            dataset_SR_nominal, [process_type], dataset_SR_nominal, ref_processes
+            dataset_SR_nominal, 
+            [process_type], 
+            dataset_SR_nominal, 
+            ref_processes, 
+            denominatorisreferencehypothesis=True
         )
 
         output_name = f'{process_type}'

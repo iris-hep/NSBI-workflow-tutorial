@@ -166,13 +166,13 @@ Regions:
              - SystName: TES
                ModelsUp: saved_datasets/output_training_systematics/output_model_params_htautau_TES_Up/
                ModelsDn: saved_datasets/output_training_systematics/output_model_params_htautau_TES_Dn/
-               RatiosUp: saved_datasets/output_training_systematics/output_ratios_htautau_TES_Up/ratio_TES_Up.npy
-               RatiosDn: saved_datasets/output_training_systematics/output_ratios_htautau_TES_Dn/ratio_TES_Dn.npy
+               RatiosUp: saved_datasets/output_training_systematics/output_ratios_htautau_TES_Up/ratio_htautau.npy
+               RatiosDn: saved_datasets/output_training_systematics/output_ratios_htautau_TES_Dn/ratio_htautau.npy
              - SystName: JES
                ModelsUp: saved_datasets/output_training_systematics/output_model_params_htautau_JES_Up/
                ModelsDn: saved_datasets/output_training_systematics/output_model_params_htautau_JES_Dn/
-               RatiosUp: saved_datasets/output_training_systematics/output_ratios_htautau_JES_Up/ratio_JES_Up.npy
-               RatiosDn: saved_datasets/output_training_systematics/output_ratios_htautau_JES_Dn/ratio_JES_Dn.npy
+               RatiosUp: saved_datasets/output_training_systematics/output_ratios_htautau_JES_Up/ratio_htautau.npy
+               RatiosDn: saved_datasets/output_training_systematics/output_ratios_htautau_JES_Dn/ratio_htautau.npy
         - SampleName    : ttbar
           Nominal       : 
                 Models  : saved_datasets/output_training_nominal/output_model_params_ttbar/
@@ -181,13 +181,13 @@ Regions:
             - SystName: TES
               ModelsUp: saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Up/
               ModelsDn: saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Dn/
-              RatiosUp: saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Up/ratio_TES_Up.npy
-              RatiosDn: saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Dn/ratio_TES_Dn.npy
+              RatiosUp: saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Up/ratio_ttbar.npy
+              RatiosDn: saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Dn/ratio_ttbar.npy
             - SystName: JES
               ModelsUp: saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Up/
               ModelsDn: saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Dn/ 
-              RatiosUp: saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Up/ratio_JES_Up.npy
-              RatiosDn: saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Dn/ratio_JES_Dn.npy
+              RatiosUp: saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Up/ratio_ttbar.npy
+              RatiosDn: saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Dn/ratio_ttbar.npy
         - SampleName    : ztautau
           Nominal       : 
                 Models  : saved_datasets/output_training_nominal/output_model_params_ztautau/
@@ -196,13 +196,13 @@ Regions:
              - SystName: TES
                ModelsUp: saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Up/
                ModelsDn: saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Dn/
-               RatiosUp: saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Up/ratio_TES_Up.npy
-               RatiosDn: saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Dn/ratio_TES_Dn.npy
+               RatiosUp: saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Up/ratio_ztautau.npy
+               RatiosDn: saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Dn/ratio_ztautau.npy
              - SystName: JES
                ModelsUp: saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Up/
                ModelsDn: saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Dn/
-               RatiosUp: saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Up/ratio_JES_Up.npy
-               RatiosDn: saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Dn/ratio_JES_Dn.npy
+               RatiosUp: saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Up/ratio_ztautau.npy
+               RatiosDn: saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Dn/ratio_ztautau.npy
                            
 
                  

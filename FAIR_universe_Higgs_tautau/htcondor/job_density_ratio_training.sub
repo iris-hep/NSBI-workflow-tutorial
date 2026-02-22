@@ -19,6 +19,18 @@ stream_error  = True
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
+# Require a machine with a modern version of the CUDA driver
+requirements = (GPUs_DriverVersion >= 12.0)
+
+# Don't use CentOS7 to ensure pty support
+requirements = (OpSysMajorVer > 7)
+
+# Optional: specify the GPU hardware architecture required
+# Check against the CUDA GPU Compute Capability for your software
+# e.g. python -c "import torch; print(torch.cuda.get_arch_list())"
+# The listed 'sm_xy' values show the x.y gpu capability supported
+gpus_minimum_capability = 5.0
+
 transfer_input_files = pyproject.toml, src, FAIR_universe_Higgs_tautau, README.md
 transfer_output_files = FAIR_universe_Higgs_tautau/saved_datasets, FAIR_universe_Higgs_tautau/output
 transfer_output_remaps = "saved_datasets = ./FAIR_universe_Higgs_tautau/saved_datasets; output = ./FAIR_universe_Higgs_tautau/output"

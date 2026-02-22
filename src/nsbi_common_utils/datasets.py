@@ -338,7 +338,8 @@ class datasets:
     def merge_dataframe_dict_for_training(self, 
                                         dataset_dict, 
                                         label_sample_dict: Union[dict[str, int], None] = None,
-                                        samples_to_merge = []):
+                                        samples_to_merge = [],
+                                        isreferencehypothesis = False):
         """
         Concatenate selected samples; optionally add normalized weights + labels. 
         The returned sample is ready for training.
@@ -357,6 +358,9 @@ class datasets:
         list_dataframes = []
         for sample_name, dataset in dataset_dict.items():
             if sample_name not in samples_to_merge: continue
+            if isreferencehypothesis:
+                weight_arr = dataset["weights"].to_numpy()
+                dataset["weights"] = weight_arr/np.sum(weight_arr)
             list_dataframes.append(dataset)
 
         dataset = pd.concat(list_dataframes)
@@ -405,19 +409,26 @@ class datasets:
 
         return dataset
     
-    def prepare_basis_training_dataset(self, dataset_numerator, processes_numerator, dataset_denominator, processes_denominator):
+    def prepare_basis_training_dataset(self, 
+                                       dataset_numerator, 
+                                       processes_numerator, 
+                                       dataset_denominator, 
+                                       processes_denominator, 
+                                       denominatorisreferencehypothesis = False):
 
         ref_train_label_sample_dict = {**{ref: 0 for ref in processes_denominator}}
 
         dataset_ref     = self.merge_dataframe_dict_for_training(dataset_denominator, 
                                                                   ref_train_label_sample_dict, 
-                                                                  samples_to_merge = processes_denominator)
+                                                                  samples_to_merge = processes_denominator,
+                                                                  isreferencehypothesis = denominatorisreferencehypothesis)
         
         numerator_train_label_sample_dict = {**{numerator: 1 for numerator in processes_numerator}}
         
         dataset_num = self.merge_dataframe_dict_for_training(dataset_numerator, 
                                                             numerator_train_label_sample_dict, 
-                                                            samples_to_merge = processes_numerator)
+                                                            samples_to_merge = processes_numerator,
+                                                            isreferencehypothesis = False)
         
         dataset_mix_model = pd.concat([dataset_num, dataset_ref])
 

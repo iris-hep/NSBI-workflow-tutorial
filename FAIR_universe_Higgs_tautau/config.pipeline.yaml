@@ -194,8 +194,7 @@ parameter_fitting:
     nsbi: "./config_fit_nsbi.yml" 
   measurement: "higgs_tautau_signal_strength" 
   output:
-    plots_dir: "./output/plots/parameter_fitting"
-    logs_dir: "./output/logs/parameter_fitting"
+    plots_dir: "./output/fit_plots/parameter_fitting"
   scan:
     parameter: "mu_htautau"
     range: [0.0, 3.0]

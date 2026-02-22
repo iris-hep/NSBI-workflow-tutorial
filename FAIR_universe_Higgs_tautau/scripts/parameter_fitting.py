@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 import mplhep as hep
 import yaml
 import jax
-import contextlib
 
-sys.path.append('../src')
 import nsbi_common_utils
-from nsbi_common_utils import workspace_builder, model, inference
 
 jax.config.update("jax_enable_x64", True)
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Set Style
 hep.style.use(hep.style.ATLAS)
@@ -72,15 +72,10 @@ def main():
     args = parse_args()
     config_workflow = load_config(args.config)["parameter_fitting"]
     
-    
     plots_dir = config_workflow["output"]["plots_dir"]
-    logs_dir = config_workflow["output"]["logs_dir"]
-    
-
-    logger, log_file = setup_logging(logs_dir)
     
     logger.info("Starting Inference Pipeline...")
-    logger.info(f"Configurations: Hist={config_workflow['configs']['hist']}, NSBI={config_workflow['configs']['nsbi']}")
+    logger.info(f"Configurations: Hist={config_workflow['configs']['histogram']}, NSBI={config_workflow['configs']['nsbi']}")
 
     measurement = config_workflow["measurement"]
     scan_param = config_workflow["scan"]["parameter"]
@@ -91,7 +86,7 @@ def main():
         
         logger.info("Building Workspaces")
 
-        hist_config_path = config_workflow["configs"]["hist"]
+        hist_config_path = config_workflow["configs"]["histogram"]
         ws_hist = nsbi_common_utils.workspace_builder.WorkspaceBuilder(config_path=hist_config_path).build()
 
         nsbi_config_path = config_workflow["configs"]["nsbi"]
@@ -124,16 +119,15 @@ def main():
 
         logger.info("\nPerforming Fits (Tables logged to file)")
         
-        with open(log_file, "a") as f, contextlib.redirect_stdout(f):
-            print("\n" + "="*40)
-            print(" NSBI FIT RESULTS ")
-            print("="*40 + "\n")
-            inf_nsbi.perform_fit()
-            
-            print("\n" + "="*40)
-            print(" HISTOGRAM FIT RESULTS ")
-            print("="*40 + "\n")
-            inf_hist.perform_fit()
+        print("\n" + "="*40)
+        print(" NSBI FIT RESULTS ")
+        print("="*40 + "\n")
+        inf_nsbi.perform_fit()
+        
+        print("\n" + "="*40)
+        print(" HISTOGRAM FIT RESULTS ")
+        print("="*40 + "\n")
+        inf_hist.perform_fit()
 
         logger.info(f"\nRunning Profile Scans for {scan_param}")
         freeze_params = []
@@ -184,7 +178,6 @@ def main():
         plot_path = save_nll_plot(plot_data, plots_dir, parameter_label_latex)
         
         logger.info(f"Plot saved to: {plot_path}")
-        logger.info(f"Full log file: {log_file}")
         logger.info("Inference workflow completed successfully.")
 
     except Exception as e:

@@ -8,6 +8,7 @@ from nsbi_common_utils import training
 from nsbi_common_utils import plotting
 from nsbi_common_utils import inference
 from nsbi_common_utils import model
+from nsbi_common_utils import workspace_builder
 
 __all__ = [
     'configuration',
@@ -15,5 +16,6 @@ __all__ = [
     'training',
     'plotting',
     'inference',
+    'workspace_builder',
     'model'
 ]
