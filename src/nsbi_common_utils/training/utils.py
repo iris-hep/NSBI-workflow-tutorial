@@ -92,7 +92,7 @@ def load_trained_model(path_to_saved_model: Union[Path, str],
     return scaler, model
 
 
-def predict_with_onnx(dataset, scaler, model, batch_size = 10_000):
+def predict_with_onnx(dataset, scaler, model, calibration_model = None, batch_size = 10_000):
 
     sess_opts = rt.SessionOptions()
     sess_opts.intra_op_num_threads = 1
@@ -130,6 +130,12 @@ def predict_with_onnx(dataset, scaler, model, batch_size = 10_000):
         end_idx = min(i + batch_size, n_samples)
         batch = scaled_dataset[i:end_idx]
         preds[i:end_idx] = model.run([output_name], {input_name: batch})[0]
+
+    preds = preds.reshape(preds.shape[0],)
+
+    if calibration_model is not None:
+        preds = calibration_model.cali_pred(preds)
+        preds = preds.reshape(preds.shape[0],)
     
     return preds
 
@@ -162,4 +168,7 @@ def convert_logLR_to_score(logLR):
     Convert regressed logLR into relative probabilities for compatibility with other methods
     '''
     return 1.0/(1.0+np.exp(-logLR))
+
+def convert_score_to_ratio(score):
+    return score / (1.0 - score)
 

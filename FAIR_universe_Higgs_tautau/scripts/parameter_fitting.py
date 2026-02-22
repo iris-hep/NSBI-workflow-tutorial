@@ -34,47 +34,6 @@ def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
-def setup_logging(log_dir):
-    """
-    Sets up the root logger to write to both Console and File.
-    Returns the logger and the path to the log file.
-    """
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    
-    log_file = os.path.join(log_dir, "fit_results.log")
-    
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    
-    if root_logger.hasHandlers():
-        root_logger.handlers.clear()
-        
-    
-    file_fmt = logging.Formatter('%(asctime)s - %(message)s')
-    fh = logging.FileHandler(log_file, mode='w')
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(file_fmt)
-    
-    # Console Handler (Message only)
-    console_fmt = logging.Formatter('%(message)s')
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(console_fmt)
-    
-    root_logger.addHandler(fh)
-    root_logger.addHandler(ch)
-    
-    return root_logger, log_file
-
-def build_workspace(cfg_path):
-    """Builds the workspace."""
-    if not os.path.exists(cfg_path):
-        raise FileNotFoundError(f"Config file not found: {cfg_path}")
-    
-    ws_builder = nsbi_common_utils.workspace_builder.WorkspaceBuilder(config_path=cfg_path)
-    return ws_builder.build()
-
 def save_nll_plot(scan_data, output_dir, parameter_label):
     """Plots the NLL scans and saves the figure."""
     if not os.path.exists(output_dir):
@@ -130,14 +89,21 @@ def main():
 
     try:
         
-        logger.info("\n=== Building Workspaces ===")
-        ws_hist = build_workspace(config_workflow["configs"]["hist"])
-        ws_nsbi = build_workspace(config_workflow["configs"]["nsbi"])
+        logger.info("Building Workspaces")
+
+        hist_config_path = config_workflow["configs"]["hist"]
+        ws_hist = nsbi_common_utils.workspace_builder.WorkspaceBuilder(config_path=hist_config_path).build()
+
+        nsbi_config_path = config_workflow["configs"]["nsbi"]
+        ws_nsbi = nsbi_common_utils.workspace_builder.WorkspaceBuilder(config_path=nsbi_config_path).build()
         
+        logger.info("Initializing Models")
+
+        model_hist = nsbi_common_utils.model.Model(workspace=ws_hist, 
+                                                   measurement_to_fit=measurement)
         
-        logger.info("\n=== Initializing Models ===")
-        model_hist = nsbi_common_utils.model.Model(workspace=ws_hist, measurement_to_fit=measurement)
-        model_nsbi = nsbi_common_utils.model.Model(workspace=ws_nsbi, measurement_to_fit=measurement)
+        model_nsbi = nsbi_common_utils.model.Model(workspace=ws_nsbi, 
+                                                   measurement_to_fit=measurement)
         
         list_params, init_values = model_hist.get_model_parameters()
         num_unconstrained = model_hist.num_unconstrained_param
@@ -156,7 +122,7 @@ def main():
             num_unconstrained_params=num_unconstrained
         )
 
-        logger.info("\n=== Performing Fits (Tables logged to file) ===")
+        logger.info("\nPerforming Fits (Tables logged to file)")
         
         with open(log_file, "a") as f, contextlib.redirect_stdout(f):
             print("\n" + "="*40)
@@ -169,7 +135,7 @@ def main():
             print("="*40 + "\n")
             inf_hist.perform_fit()
 
-        logger.info(f"\n=== Running Profile Scans for {scan_param} ===")
+        logger.info(f"\nRunning Profile Scans for {scan_param}")
         freeze_params = []
 
         logger.info("Scanning Histogram Model...")
@@ -193,7 +159,7 @@ def main():
         )
 
         
-        logger.info("\n=== Generating Plots ===")
+        logger.info("\nGenerating Plots")
         
         plot_data = [
             {

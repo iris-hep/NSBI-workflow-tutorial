@@ -246,6 +246,17 @@ class ConfigManager:
         filter_string = self.config["Regions"][idx]["Filter"]
 
         return filter_string
+    
+    def get_channel_asimov_weight_path(self, channel_name: str) -> str:
+        
+        idx = self._index_of_region(channel_name = channel_name)
+
+        if idx is None:
+            log.info(f"Region {channel_name} not found in the config.")
+
+        asimov_weight_path = self.config["Regions"][idx]["AsimovWeights"]
+
+        return asimov_weight_path
 
     def _index_of_region(self, channel_name: str) -> Optional[int]:
         regions: list[dict[str, Any]] = self.config["Regions"]

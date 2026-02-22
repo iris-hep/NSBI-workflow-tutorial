@@ -110,7 +110,6 @@ def main():
         )
 
         output_name = f'{process_type}'
-        output_dir = os.path.join(training_output_path, f'general_output_{process_type}')
 
         path_to_ratios[process_type] = os.path.join(training_output_path, f'output_ratios_{process_type}/')
         path_to_figures[process_type] = os.path.join(training_output_path, f'output_figures_{process_type}/')
@@ -124,7 +123,6 @@ def main():
                                                                                                 features                = features,
                                                                                                 features_scaling        = features_scaling,
                                                                                                 sample_name             = [process_type, 'ref'],
-                                                                                                output_dir              = output_dir, 
                                                                                                 output_name             = output_name,
                                                                                                 path_to_figures         = path_to_figures[process_type],
                                                                                                 path_to_ratios          = path_to_ratios[process_type],

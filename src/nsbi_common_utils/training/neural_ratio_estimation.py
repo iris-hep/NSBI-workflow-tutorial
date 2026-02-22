@@ -77,7 +77,6 @@ class density_ratio_trainer:
                       features, 
                       features_scaling, 
                       sample_name, 
-                      output_dir, 
                       output_name, 
                       path_to_figures='',
                       path_to_models='', 
@@ -99,7 +98,6 @@ class density_ratio_trainer:
         self.features = features
         self.features_scaling = features_scaling
         self.sample_name = sample_name
-        self.output_dir = output_dir
         self.output_name = output_name
         self.use_log_loss = use_log_loss
         self.split_using_fold = split_using_fold
@@ -539,8 +537,6 @@ class density_ratio_trainer:
         pred = predict_with_onnx(data[self.features], 
                                 self.scaler[ensemble_index],
                                 self.model_NN[ensemble_index])
-        
-        pred = pred.reshape(pred.shape[0],)
 
         if use_log_loss:
 
@@ -554,12 +550,6 @@ class density_ratio_trainer:
 
         return pred
     
-    def print_architecture(self, ensemble_index=0):
-        """
-        Print a concise architecture summary for the given ensemble member.
-        Works after reload because it reads the saved JSON summary.
-        """
-        logger.info(f"Model summary \n\n {onnx.helper.printable_graph(self.model_NN[ensemble_index].graph)}") 
     
     def make_overfit_plots(self, ensemble_index=0):
         '''
@@ -732,43 +722,4 @@ class density_ratio_trainer:
         np.save(saved_ratio_path, ratio_ensemble)
 
         return saved_ratio_path
-    
-    def evaluate_ratios(self, dataset, aggregation_type = 'mean_ratio'):
-        '''
-        Evaluate with self.model on the input dataset, and save to self.path_to_ratios
-        dataset             : dataset on which to evaluate density ratios
-        aggregation_type    : choose an option on how to aggregate the ensemble models - 'median_ratio', 'mean_ratio', 'median_score', 'mean_score'
-        '''
 
-        logger.info(f"Evaluating density ratios")
-        score_pred = np.ones((self.num_ensemble_members, dataset.shape[0]))
-        ratio_pred = np.ones((self.num_ensemble_members, dataset.shape[0]))
-        log_ratio_pred = np.ones((self.num_ensemble_members, dataset.shape[0]))
-
-        for ensemble_index in range(self.num_ensemble_members):
-            score_pred[ensemble_index] = self.predict_with_model(dataset[self.features], 
-                                                                 use_log_loss=self.use_log_loss, 
-                                                                 ensemble_index=ensemble_index)
-            
-            ratio_pred[ensemble_index] = score_pred[ensemble_index] / (1.0 - score_pred[ensemble_index])
-            log_ratio_pred[ensemble_index] = np.log(score_pred[ensemble_index] / (1.0 - score_pred[ensemble_index]))
-
-        if aggregation_type == 'median_ratio':
-            ratio_ensemble = np.median(ratio_pred, axis=0)
-            
-        elif aggregation_type == 'mean_ratio':
-            ratio_ensemble = np.mean(ratio_pred, axis=0)
-            
-        elif aggregation_type == 'median_score':
-            score_aggregate = np.median(score_pred, axis=0)
-            ratio_ensemble = score_aggregate / (1.0 - score_aggregate)
-            
-        elif aggregation_type == 'mean_score':
-            score_aggregate = np.mean(score_pred, axis=0)
-            ratio_ensemble = score_aggregate / (1.0 - score_aggregate)
-
-        else:
-            raise Exception("aggregation_type not recognized, please choose between median_ratio, mean_ratio, median_score or mean_score")
-
-        return ratio_ensemble
-    

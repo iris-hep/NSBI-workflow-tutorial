@@ -4,6 +4,7 @@ from nsbi_common_utils.training.utils import (
     convert_torch_to_onnx,
     convert_logLR_to_score,
     load_trained_model,
+    convert_score_to_ratio
 )
 
 from nsbi_common_utils.training.neural_ratio_estimation import density_ratio_trainer
@@ -17,4 +18,5 @@ __all__ = [
     "convert_torch_to_onnx",
     "convert_logLR_to_score",
     "load_trained_model",
+    "convert_score_to_ratio"
 ]

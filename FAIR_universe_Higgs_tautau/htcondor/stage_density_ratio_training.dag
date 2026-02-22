@@ -1,5 +1,11 @@
-JOB neural_likelihood_ratio_estimation FAIR_universe_Higgs_tautau/htcondor/job_density_ratio_training.sub
-VARS neural_likelihood_ratio_estimation STEP="neural_likelihood_ratio_estimation" CONFIG="config.pipeline.yaml" CPUS="8" MEM="8GB" GPUS="1" DISK="32GB"
+# JOB neural_likelihood_ratio_estimation FAIR_universe_Higgs_tautau/htcondor/job_density_ratio_training.sub
+# VARS neural_likelihood_ratio_estimation STEP="neural_likelihood_ratio_estimation" CONFIG="config.pipeline.yaml" CPUS="8" MEM="8GB" GPUS="1" DISK="32GB"
 
 # JOB systematic_uncertainty_training FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
 # VARS systematic_uncertainty_training STEP="systematic_uncertainty_training" CONFIG="config.pipeline.yaml" CPUS="8" MEM="8GB" GPUS="1" DISK="32GB"
+
+JOB data_nn_eval FAIR_universe_Higgs_tautau/htcondor/job_density_ratio_eval.sub
+VARS data_nn_eval STEP="data_nn_eval" CONFIG="config.pipeline.yaml" CPUS="8" MEM="8GB" GPUS="0" DISK="32GB"
+
+# PARENT neural_likelihood_ratio_estimation CHILD data_nn_eval
+# PARENT systematic_uncertainty_training CHILD data_nn_eval

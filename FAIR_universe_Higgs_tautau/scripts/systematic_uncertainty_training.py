@@ -69,30 +69,6 @@ def main():
     if not os.path.exists(path_to_saved_data):
         os.makedirs(path_to_saved_data)
 
-    
-    # # =================================================================================
-    # # PART 1: SAVE ROOT FILES 
-    # # =================================================================================
-    # logger.info("--- Starting Part 1: Saving ROOT files for variations ---")
-
-    # samples_to_merge = ["htautau", "ztautau", "ttbar"]
-
-    # for variation_name, sample_dataset in dataset_SR_dict.items():
-    #     if variation_name == 'Nominal': continue
-
-    #     try:
-    #         dataset_SR = datasets_helper.merge_dataframe_dict_for_training(
-    #             sample_dataset, None, samples_to_merge=samples_to_merge
-    #         )
-    #         filename = f"dataset_{variation_name}_{region}.root"
-    #         path_to_save = os.path.join(path_to_saved_data, filename)
-            
-    #         logger.info(f"Saving {filename}...")
-    #         nsbi_common_utils.datasets.save_dataframe_as_root(
-    #             dataset_SR, path_to_save=path_to_save, tree_name="nominal"
-    #         )
-    #     except Exception as e:
-    #         logger.error(f"Failed to save {variation_name}: {e}")
 
     # =================================================================================
     # PART 2: SYSTEMATIC TRAINING 
@@ -156,13 +132,19 @@ def main():
                         [process]
                     )
 
-                    top_path = os.path.join(path_to_saved_data, 'output_training_systematics/')
-                    output_name = f'{process}_{syst}_{direction}'
-                    output_dir = os.path.join(top_path, f'general_output_{output_name}')
+                    # Get the path where trained models will be saved
+                    training_output_dir_name = config_workflow["output_training_dir"]
+                    training_output_path = os.path.join(path_to_saved_data, training_output_dir_name)
+                    if not training_output_path.endswith('/'):
+                        training_output_path += '/'
+
+                    logger.info(f"Training output path: {training_output_path}")
                     
-                    path_to_ratios[process][syst][direction]    = os.path.join(top_path, f'output_ratios_{output_name}/')
-                    path_to_figures[process][syst][direction]   = os.path.join(top_path, f'output_figures_{output_name}/')
-                    path_to_models[process][syst][direction]    = os.path.join(top_path, f'output_model_params_{output_name}/')
+                    output_name = f'{process}_{syst}_{direction}'
+                    
+                    path_to_ratios[process][syst][direction]    = os.path.join(training_output_path, f'output_ratios_{output_name}/')
+                    path_to_figures[process][syst][direction]   = os.path.join(training_output_path, f'output_figures_{output_name}/')
+                    path_to_models[process][syst][direction]    = os.path.join(training_output_path, f'output_model_params_{output_name}/')
                     
                     NN_training_syst_process[process][syst][direction] = nsbi_common_utils.training.density_ratio_trainer(
                         dataset_syst_nom, 
@@ -171,7 +153,7 @@ def main():
                         features, 
                         features_scaling,
                         [syst+'_'+direction, process], 
-                        output_dir, output_name, 
+                        output_name, 
                         path_to_figures=path_to_figures[process][syst][direction],
                         path_to_ratios=path_to_ratios[process][syst][direction], 
                         path_to_models=path_to_models[process][syst][direction],
@@ -186,37 +168,6 @@ def main():
                     
                     logger.info(f"Training: {process} | {syst} | {direction}")
                     NN_training_syst_process[process][syst][direction].train_ensemble(**sys_training_params)
-
-        # # =================================================================================
-        # # PART 3: EVALUATION ON ASIMOV
-        # # =================================================================================
-        # logger.info("Evaluating Ratios on Asimov Dataset...")
-        # path_to_load = os.path.join(path_to_saved_data, "dataset_Asimov_SR.root")
-        
-        # # Load Asimov dataset for evaluation
-        # dataset_Asimov_SR = nsbi_common_utils.datasets.load_dataframe_from_root(
-        #     path_to_load=path_to_load, tree_name="nominal", branches_to_load=branches_to_load
-        # )
-        
-        # ensemble_aggregation_type = 'mean_ratio'
-        # path_to_saved_ratios_eval = {} 
-
-        # for process in config_nsbi.get_basis_samples():
-        #     path_to_saved_ratios_eval[process] = {}
-        #     for dict_syst in config_nsbi.config["Systematics"]:
-        #         syst = dict_syst["Name"]
-        #         # Only evaluate norm+shape systematics where the process is involved
-        #         if (process not in dict_syst["Samples"]) or (dict_syst["Type"] != "NormPlusShape"): continue
-                
-        #         path_to_saved_ratios_eval[process][syst] = {}
-        #         for direction in ["Up", "Dn"]:
-        #              logger.info(f"Evaluating and Saving Ratios for {process} {syst} {direction}")
-        #              # Ensure the trainer exists for this combo
-        #              if syst in NN_training_syst_process[process] and direction in NN_training_syst_process[process][syst]:
-        #                 path_to_saved_ratios_eval[process][syst][direction] = \
-        #                     NN_training_syst_process[process][syst][direction].evaluate_and_save_ratios(
-        #                         dataset_Asimov_SR, aggregation_type=ensemble_aggregation_type
-        #                     )
     
     logger.info("Systematic workflow completed.")
 

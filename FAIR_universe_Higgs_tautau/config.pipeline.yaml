@@ -154,6 +154,7 @@ neural_likelihood_ratio_estimation:
 systematic_uncertainty:
   nsbi_fit_config: "./config_fit_nsbi.yml"
   saved_data_path: "./saved_datasets/"
+  output_training_dir: "output_training_systematics"
   filter_region: "SR"
   force_train: true
   

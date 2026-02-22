@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import yaml
 import mplhep as hep
+import pickle
 
 import nsbi_common_utils
 
@@ -36,7 +37,7 @@ def main():
     config_workflow_nominal         = load_config(args.config)["neural_likelihood_ratio_estimation"]
     config_workflow_systematics     = load_config(args.config)["systematic_uncertainty"]
 
-    nsbi_fit_config_path = config_workflow["nsbi_fit_config"]
+    nsbi_fit_config_path = config_workflow_nominal["nsbi_fit_config"]
     logger.info(f"Initializing NSBI ConfigManager from: {nsbi_fit_config_path}")
     fit_config_nsbi = nsbi_common_utils.configuration.ConfigManager(file_path_string=nsbi_fit_config_path)
 
@@ -63,122 +64,143 @@ def main():
     region = config_workflow_nominal["filter_region"]
     dataset_SR_nominal = datasets_helper.filter_region_dataset(dataset_incl_nominal, region=region)
 
-    logger.info("Merging dataframes for final evaluation.")
-    dataset_Asimov_SR = datasets_helper.merge_dataframe_dict_for_training(
-        dataset_SR_nominal, None, samples_to_merge=["htautau", "ztautau", "ttbar"]
-    )
-
-    # Get the path where intermediate data from the workflow is saved
-    path_to_saved_data = config_workflow["saved_data_path"]
-    if not path_to_saved_data.endswith('/'):
-        path_to_saved_data += '/'
-    
-    # Get the path where trained models will be saved
-    training_output_dir_name = config_workflow["output_training_dir"]
-    training_output_path = os.path.join(path_to_saved_data, training_output_dir_name)
-    if not training_output_path.endswith('/'):
-        training_output_path += '/'
-        
-    logger.info(f"Training output path: {training_output_path}")
-    
     # Get the anchor/basis points used to build the full statistical model
     basis_processes = fit_config_nsbi.get_basis_samples()
     logger.info(f"Basis processes: {basis_processes}")
 
-    # Basis points making up the reference hypothesis -- this can in principle be not restricted to basis points
-    ref_processes = fit_config_nsbi.get_reference_samples()
-    logger.info(f"Reference processes: {ref_processes}")
+    logger.info("Merging dataframes for final evaluation.")
+    dataset_Asimov_SR = datasets_helper.merge_dataframe_dict_for_training(
+        dataset_SR_nominal, None, samples_to_merge=basis_processes
+    )
 
-    NN_training_mix_model = {}
-    use_log_loss = config_workflow["use_log_loss"]
+    # Save Asimov weights for inference
+    weight_save_path = fit_config_nsbi.get_channel_asimov_weight_path(channel_name=region) # Get path to asimov weights from fit config
+    np.save(weight_save_path, dataset_Asimov_SR.weights.to_numpy()) # save the weights
 
-    # Start afresh? Set delete_existing_models=True
-    delete_existing = config_workflow["delete_existing_models"]
-
-    if delete_existing:
-        logger.warning("delete_existing_models is True. Old models will be removed.")
-
-    path_to_ratios = {}
-    path_to_figures = {}
-    path_to_models = {}
-
-    logger.info("Preparing datasets and initializing trainers...")
-    for process_type in basis_processes:
-
-        # Prepare dataset to be passed to training
-        dataset_mix_model = datasets_helper.prepare_basis_training_dataset(
-            dataset_SR_nominal, [process_type], dataset_SR_nominal, ref_processes
-        )
-
-        output_name = f'{process_type}'
-        output_dir = os.path.join(training_output_path, f'general_output_{process_type}')
-
-        path_to_ratios[process_type] = os.path.join(training_output_path, f'output_ratios_{process_type}/')
-        path_to_figures[process_type] = os.path.join(training_output_path, f'output_figures_{process_type}/')
-        path_to_models[process_type] = os.path.join(training_output_path, f'output_model_params_{process_type}/')
-        
-        # setup the training of density ratios using density_ratio_trainer API
-        NN_training_mix_model[process_type] = nsbi_common_utils.training.density_ratio_trainer(
-                                                                                                dataset                 = dataset_mix_model,    # dataframe containing all the relevant features for training
-                                                                                                weights                 = dataset_mix_model['weights_normed'].to_numpy(),
-                                                                                                training_labels         = dataset_mix_model['train_labels'].to_numpy(),
-                                                                                                features                = features,
-                                                                                                features_scaling        = features_scaling,
-                                                                                                sample_name             = [process_type, 'ref'],
-                                                                                                output_dir              = output_dir, 
-                                                                                                output_name             = output_name,
-                                                                                                path_to_figures         = path_to_figures[process_type],
-                                                                                                path_to_ratios          = path_to_ratios[process_type],
-                                                                                                path_to_models          = path_to_models[process_type],
-                                                                                                use_log_loss            = use_log_loss,
-                                                                                                delete_existing_models  = delete_existing
-                                                                                            )
-        
-        del dataset_mix_model
-
-    # Flag that forces the retraining of density ratios
-    force_train = config_workflow["force_train"]
+    # Get the path where intermediate data from the workflow is saved
+    path_to_saved_data = config_workflow_nominal["saved_data_path"]
+    if not path_to_saved_data.endswith('/'):
+        path_to_saved_data += '/'
     
-    # Get training hyperparameters
-    training_settings = config_workflow["training_settings"]
+    # Get the path where trained models were saved
+    training_input_dir_name = config_workflow_nominal["output_training_dir"]
+    trained_models_path = os.path.join(path_to_saved_data, training_input_dir_name)
+    if not trained_models_path.endswith('/'):
+        trained_models_path += '/'
+        
+    logger.info(f"Trained models path: {trained_models_path}")
 
+    # TODO: add support for use_log_loss
+    use_log_loss = config_workflow_nominal["use_log_loss"]
+
+    ensemble_members    = config_workflow_nominal.get("num_ensemble_members", 1)
+    aggregation_type    = config_workflow_nominal.get("ensemble_aggregation_type", "median_score")
+
+    logger.info("Evaluating and saving nominal density ratios on Asimov dataset")
     for process_type in basis_processes:
-        logger.info(f"Processing {process_type}...")
-        
-        if process_type not in training_settings:
-            logger.error(f"Settings for process '{process_type}' not found in 'density_ratio_estimation.training_settings'.")
-            raise KeyError(f"Missing config for {process_type}")
 
-        settings = training_settings[process_type].copy()
-        
-        if force_train:
-            logger.info(f"Force training enabled. Setting load_trained_models=False for {process_type}.")
-            settings['load_trained_models'] = False
+        path_to_saving_evaluated_ratios         = os.path.join(trained_models_path, f'output_ratios_{process_type}/')
+        path_to_trained_models                  = os.path.join(trained_models_path, f'output_model_params_{process_type}/')
+
+        score_pred = np.ones((ensemble_members, dataset_Asimov_SR.shape[0]))
+        ratio_pred = np.ones((ensemble_members, dataset_Asimov_SR.shape[0]))
+
+        for ensemble_index in range(ensemble_members):
+
+            path_to_saved_scaler        = f"{path_to_trained_models}model_scaler{ensemble_index}.bin"
+            path_to_saved_model         = f"{path_to_trained_models}model{ensemble_index}.onnx"
+
+            logger.info(f"Reading saved models from {path_to_trained_models}")
+            scaler, model_NN                = nsbi_common_utils.training.load_trained_model(path_to_saved_model, path_to_saved_scaler)
+            score_pred[ensemble_index]      = nsbi_common_utils.training.predict_with_onnx(dataset_Asimov_SR[features], scaler, model_NN, batch_size = 10_000)
+            ratio_pred[ensemble_index]      = nsbi_common_utils.training.convert_score_to_ratio(score_pred[ensemble_index])    
+
+
+        if aggregation_type == 'median_ratio':
+            ratio_ensemble = np.median(ratio_pred, axis=0)
+            
+        elif aggregation_type == 'mean_ratio':
+            ratio_ensemble = np.mean(ratio_pred, axis=0)
+            
+        elif aggregation_type == 'median_score':
+            score_aggregate = np.median(score_pred, axis=0)
+            ratio_ensemble = score_aggregate / (1.0 - score_aggregate)
+            
+        elif aggregation_type == 'mean_score':
+            score_aggregate = np.mean(score_pred, axis=0)
+            ratio_ensemble = score_aggregate / (1.0 - score_aggregate)
+    
         else:
-            logger.info(f"Using load_trained_models={settings['load_trained_models']} from config for {process_type}.")
+            raise Exception("aggregation_type not recognized, please choose between median_ratio, mean_ratio, median_score or mean_score")
+
+        saved_ratio_path = f"{path_to_saving_evaluated_ratios}ratio_{process_type}.npy"
+        np.save(saved_ratio_path, ratio_ensemble)
+
+        logger.info(f"Nominal density ratios for {process_type} basis point saved to: {saved_ratio_path}")
+
+    logger.info("All nominal ratios evaluated on Asimov and saved.")
+
+    logger.info("Running evaluation on Asimov with systematic variation networks...")
+
+    # Get the path where trained models were saved
+    training_input_dir_name = config_workflow_systematics["output_training_dir"]
+    trained_models_path = os.path.join(path_to_saved_data, training_input_dir_name)
+    if not trained_models_path.endswith('/'):
+        trained_models_path += '/'
         
-        logger.info(f"Starting training/loading for {process_type}")
-        NN_training_mix_model[process_type].train_ensemble(**settings)
+    logger.info(f"Trained models path: {trained_models_path}")
 
-    path_to_saved_ratios = {}
-    
+    calibration_flag        = config_workflow_systematics["training_settings"].get("calibration", False)
+
     for process_type in basis_processes:
-        logger.info(f"Evaluating density ratios for {process_type}...")
-        path_to_saved_ratios[process_type] = NN_training_mix_model[process_type].evaluate_and_save_ratios(
-            dataset_Asimov_SR, 
-            aggregation_type='median_score'
-        )
-    
-    logger.info(f"Ratios saved to: {path_to_saved_ratios}")
 
-    # path_to_save_root = os.path.join(path_to_saved_data, "dataset_Asimov_SR.root")
-    # logger.info(f"Saving Asimov signal region dataset to {path_to_save_root}...")
-    # nsbi_common_utils.datasets.save_dataframe_as_root(
-    #     dataset_Asimov_SR, 
-    #     path_to_save=path_to_save_root,
-    #     tree_name="nominal"
-    # )
+        ensemble_index = 0 #TODO: support ensemble evaluations for systematics too
 
-    # path_to_save_weights = os.path.join(path_to_saved_data, "asimov_weights.npy")
-    # logger.info(f"Saving Asimov weights array to {path_to_save_weights}...")
-    # np.save(path_to_save_weights, dataset_Asimov_SR["weights"].to_numpy())
+        for dict_syst in fit_config_nsbi.config["Systematics"]:
+
+            # Only evaluate norm+shape systematics where the process_type is involved
+            if (process_type not in dict_syst["Samples"]) or (dict_syst["Type"] != "NormPlusShape"): continue
+
+            syst = dict_syst["Name"]
+
+            for direction in ["Up", "Dn"]:
+
+                output_name = f'{process_type}_{syst}_{direction}'
+                        
+                path_to_saving_evaluated_ratios     = os.path.join(trained_models_path, f'output_ratios_{output_name}/')
+                path_to_trained_models              = os.path.join(trained_models_path, f'output_model_params_{output_name}/')
+
+                path_to_saved_scaler        = f"{path_to_trained_models}model_scaler{ensemble_index}.bin"
+                path_to_saved_model         = f"{path_to_trained_models}model{ensemble_index}.onnx"
+
+                logger.info(f"Evaluating and Saving Ratios for {process_type} {syst} {direction}")
+
+                logger.info(f"Reading saved models from {path_to_trained_models}")
+                scaler, model_NN                = nsbi_common_utils.training.load_trained_model(path_to_saved_model, path_to_saved_scaler)
+
+                path_to_calibrator_model    = None
+                if calibration_flag:
+                    path_to_calibrator_model         = f"{path_to_trained_models}model_calibrated_hist{ensemble_index}.obj"
+                    if not os.path.exists(path_to_calibrator_model):
+                        logger.warning(f"No calibration model found with name {path_to_calibrator_model}")
+                        calibration_model = None
+                    else:
+                        file_calibration = open(path_to_calibrator_model, 'rb') 
+                        calibration_model = pickle.load(file_calibration)
+
+                score_pred      = nsbi_common_utils.training.predict_with_onnx(dataset_Asimov_SR[features], 
+                                                                                               scaler, model_NN, 
+                                                                                               calibration_model = calibration_model, 
+                                                                                               batch_size = 10_000)
+                ratio_pred      = nsbi_common_utils.training.convert_score_to_ratio(score_pred)    
+
+                saved_ratio_path = f"{path_to_saving_evaluated_ratios}ratio_{process_type}.npy"
+
+                np.save(saved_ratio_path, ratio_pred)
+
+                logger.info(f"Systematic density ratios for {syst}_{direction} affecting the {process_type} basis point saved to: {saved_ratio_path}")
+
+                logger.info("All systematic density ratios evaluated on Asimov and saved.")
+
+if __name__ == "__main__":
+    main()
