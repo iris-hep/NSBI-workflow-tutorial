@@ -139,11 +139,21 @@ class preselection_network_trainer:
         
         train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
 
+        use_mps = torch.backends.mps.is_available()
+        accelerator = 'cpu'
+        devices = 'auto'
+        pinMemory = True
+        if use_mps:
+            accelerator = "mps"
+            devices = 1 
+            pinMemory = False
+        print("selected accelerator:", accelerator)
+
         train_loader = DataLoader(train_ds, 
                                   batch_size=batch_size, 
                                   shuffle=True,
                                   num_workers=num_workers,  
-                                pin_memory=True,  
+                                pin_memory=pinMemory,  
                                 persistent_workers=False  
                                 )
         
@@ -151,7 +161,7 @@ class preselection_network_trainer:
                                   batch_size=batch_size, 
                                   shuffle=False, 
                                   num_workers=num_workers,  
-                                pin_memory=True,  
+                                pin_memory=pinMemory,  
                                 persistent_workers=False  
                                 )
         
@@ -164,11 +174,11 @@ class preselection_network_trainer:
                 num_classes=self.num_classes
             )
 
-        loss_history = LossHistory()
-
+        loss_history = LossHistory()  
+        
         self.trainer = Trainer(
-            accelerator="auto",
-            devices="auto",
+            accelerator=accelerator,
+            devices=devices,
             max_epochs=epochs,
             callbacks=[
                 EarlyStopping(monitor="val_loss", patience=30),
@@ -184,6 +194,12 @@ class preselection_network_trainer:
 
         self.trainer.fit(self.model, train_loader, val_loader)
 
+        ###### extra block to check if appleSilicon is working on GPUs
+        print("trainer root device:", self.trainer.strategy.root_device)
+        print("model device:", next(self.model.parameters()).device)
+        ########
+
+        
         # Save the trained model if user provides with a path
         if path_to_save=='': 
             path_to_save='./'

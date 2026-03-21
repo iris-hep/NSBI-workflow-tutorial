@@ -7,7 +7,8 @@ import mplhep as hep
 import math
 from scipy import stats
 
-hep.set_style("ATLAS")
+# hep.set_style("ATLAS")
+hep.style.use("ATLAS")
 
 # method for plotting lines
 def abline(slope, intercept):
