@@ -10,6 +10,7 @@ from nsbi_common_utils.training.utils import (
 
 from nsbi_common_utils.training.neural_ratio_estimation import density_ratio_trainer
 from nsbi_common_utils.training.preselection_training import preselection_network_trainer
+import nsbi_common_utils.training.utils
 
 __all__ = [
     "density_ratio_trainer",

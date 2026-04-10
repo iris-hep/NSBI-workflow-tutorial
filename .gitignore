@@ -210,3 +210,8 @@ data/
 docs/_build/
 
 .snakemake
+
+
+examples/madminer_dataset/models/
+examples/madminer_dataset/plots/
+examples/madminer_dataset/checkpoints/
