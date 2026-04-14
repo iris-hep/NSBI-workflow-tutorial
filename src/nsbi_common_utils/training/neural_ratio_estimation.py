@@ -5,6 +5,8 @@ import pandas as pd
 pd.options.mode.chained_assignment = None 
 import math
 import pickle 
+import time
+
 
 import warnings
 try:
@@ -157,116 +159,30 @@ class density_ratio_trainer:
         if not os.path.exists(path_to_models):
                 os.makedirs(path_to_models)
 
-    def train(self, hidden_layers, 
-                    neurons, 
-                    number_of_epochs, 
-                    batch_size,
-                    learning_rate, 
-                    scalerType, 
-                    calibration=False,
-                    type_of_calibration="isotonic", 
-                    num_bins_cal = 40, 
-                    callback = True, 
-                    callback_patience=30, 
-                    callback_factor=0.01,
-                    activation='swish', 
-                    verbose=2, 
-                    rnd_seed=None,
-                    ensemble_index=None, 
-                    validation_split=0.1, 
-                    holdout_split=0.3, 
-                    plot_scaled_features=False, 
-                    load_trained_models = False,
-                    recalibrate_output=False,
-                    num_workers=0):
+
+    def _train(
+        self,
+        model, # the model to be trained
+        number_of_epochs, 
+        batch_size,
+        scalerType, 
+        calibration=False,
+        type_of_calibration="isotonic", 
+        num_bins_cal = 40, 
+        callback = True, 
+        callback_patience=30, 
+        verbose=2, 
+        rnd_seed=None,
+        ensemble_index=None, 
+        validation_split=0.1, 
+        holdout_split=0.3, 
+        plot_scaled_features=False, 
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+    ):
         """
-        Train a density-ratio neural network.
-
-        This is the core training routine called internally by :meth:`train_ensemble`. It can also be called directly when no ensemble averaging is required. After training, the model is exported to ONNX format and reloaded for inference so that subsequent calls to :meth:`predict_with_model` are backend-agnostic.
-
-        Parameters
-        ----------
-        hidden_layers : int
-            Number of hidden layers in the neural network.
-
-        neurons : int
-            Number of neurons per hidden layer.
-
-        number_of_epochs : int
-            Maximum number of training epochs.
-
-        batch_size : int
-            Mini-batch size for gradient optimisation.
-
-        learning_rate : float
-            Initial learning rate for the Adam optimiser.
-
-        scalerType : str
-            Feature scaling method. See :meth:`train_ensemble` for accepted values.
-
-        calibration : bool, optional
-            Apply post-hoc probability calibration. Default ``False``.
-
-        type_of_calibration : str, optional
-            Calibration algorithm. One of ``'isotonic'`` or ``'histogram'``. Default ``'isotonic'``.
-
-        num_bins_cal : int, optional
-            Bins for histogram calibration. Default ``40``.
-
-        callback : bool, optional
-            Enable early stopping and learning-rate monitoring callbacks. Default ``True``.
-
-        callback_patience : int, optional
-            Early stopping patience in epochs. Default ``30``.
-
-        callback_factor : float, optional
-            Learning-rate reduction factor at plateau. Default ``0.01``.
-
-        activation : str, optional
-            Hidden-layer activation function. Default ``'swish'``.
-
-        verbose : int, optional
-            Logging verbosity (0=warnings, 1=info, 2=debug). Default ``2``.
-
-        rnd_seed : int or None, optional
-            Random seed for the train/holdout split. If ``None`` (default), a random seed is drawn from a uniform integer distribution and saved to disk alongside the model so the same split can be recovered when ``load_trained_models=True``.
-
-        ensemble_index : int or None, optional
-            Integer suffix appended to saved model, scaler, calibrator and metadata filenames (e.g. ``model0.onnx``, ``model_scaler0.bin``). Pass the ensemble index here to avoid filename collisions when multiple members are trained in parallel. When ``None``, no suffix is appended (files saved as ``model.onnx`` etc.).
-
-        validation_split : float, optional
-            Fraction of training data used for validation loss. Default ``0.1``.
-
-        holdout_split : float, optional
-            Fraction of total data reserved for holdout diagnostics. Default ``0.3``.
-
-        plot_scaled_features : bool, optional
-            Plot feature distributions after scaling. Default ``False``.
-
-        load_trained_models : bool, optional
-            Load a previously saved model instead of training. Default ``False``.
-
-        recalibrate_output : bool, optional
-            Force recalibration even when a saved calibrator exists. Default ``False``.
-
-        num_workers : int, optional
-            DataLoader worker processes. Default ``0``.
-
-        Raises
-        ------
-        Exception
-            If ``type_of_calibration`` is not ``'isotonic'`` or ``'histogram'``.
-
-        Warns
-        -----
-        UserWarning
-            Logs a warning if the minimum predicted score for any class equals ``0`` or the maximum equals ``1``, which may indicate numerical saturation and unreliable ratio estimates.
-
-        Notes
-        -----
-        * The holdout set is stratified by ``training_labels`` to ensure class balance is preserved.
-        * When ``load_trained_models=True``, the ``holdout_num`` and ``rnd_seed`` are recovered from a saved ``.npy`` file so that the same holdout split is used, guaranteeing consistency between the saved model and any subsequent diagnostic plots.
-        * A loss-vs-epoch plot is automatically saved to ``path_to_figures`` after each successful training run.
+        Train a density-ratio neural network (internal).
         """
         self.calibration = calibration
         self.calibration_switch = False # Set the switch to false for first evaluation for calibration
@@ -357,8 +273,6 @@ class density_ratio_trainer:
             logger.info(f"Sum of weights of class 0: {np.sum(weight_train[label_train==0])}")
             logger.info(f"Sum of weights of class 1: {np.sum(weight_train[label_train==1])}")
     
-            logger.info(f"Using {activation} activation function")
-
             train_ds = nsbi_common_utils.lightning_tools.WeightedTensorDataset(
                 scaled_data_train.values,
                 label_train,
@@ -384,24 +298,12 @@ class density_ratio_trainer:
                                         pin_memory=True,  
                                         persistent_workers=False)
 
-            # Example use of training API
-            model = nsbi_common_utils.lightning_tools.DensityRatioLightning(
-                n_hidden=hidden_layers,
-                n_neurons=neurons,
-                input_dim=len(self.features),
-                learning_rate=learning_rate,
-                use_log_loss=self.use_log_loss,
-                activation=activation,
-                callback_factor=callback_factor,
-                callback_patience=callback_patience
-            )
-
             loss_history = nsbi_common_utils.lightning_tools.LossHistory()
 
             checkpoint_callback = ModelCheckpoint(
                                                     monitor="val_loss",          
                                                     dirpath="checkpoints/",      
-                                                    filename="best-{epoch:03d}-{val_loss:.6f}"+f"_{self.sample_name[0]}vs{self.sample_name[1]}",
+                                                    filename=f"best-{type(model).__name__}" + "-{epoch:03d}-{val_loss:.6f}"+f"_{self.sample_name[0]}vs{self.sample_name[1]}",
                                                     save_top_k=1,                
                                                     mode="min",                  
                                                     save_last=False,             
@@ -434,7 +336,10 @@ class density_ratio_trainer:
                     enable_progress_bar=False
                 )
 
+            start_time = time.time()    
             trainer.fit(model, train_loader, val_loader)
+            end_time = time.time()
+            logger.info(f"Training time: {end_time - start_time:.2f} seconds")
 
             device = next(model.parameters()).device
 
@@ -445,9 +350,10 @@ class density_ratio_trainer:
             gc.collect()
             torch.cuda.empty_cache()
 
-            best_model = nsbi_common_utils.lightning_tools.DensityRatioLightning.load_from_checkpoint(
+            best_model = type(model).load_from_checkpoint(
                 checkpoint_callback.best_model_path,
-                map_location=device
+                map_location=device,
+                weights_only=False,
                 )
 
             self.model_NN = best_model
@@ -586,8 +492,304 @@ class density_ratio_trainer:
                 logger.warning(f"{name} {training_holdout_label} data has min score = 0, which may indicate numerical instability!")
             
             if max_val == 1:
-                logger.warning(f"{name} {training_holdout_label} data has max score = 1, which may indicate numerical instability!")            
-    
+                logger.warning(f"{name} {training_holdout_label} data has max score = 1, which may indicate numerical instability!") 
+        return best_model # return the trained pytorch model
+
+    def lora_finetune(
+        self,
+        model_to_finetune, # the model to be finetuned
+        lora_rank, # the rank of the LoRA finetuning
+        lora_alpha, # the alpha parameter for scaling the LoRA updates
+        number_of_epochs, 
+        batch_size,
+        learning_rate, 
+        scalerType, 
+        calibration=False,
+        type_of_calibration="isotonic", 
+        num_bins_cal = 40, 
+        callback = True, 
+        callback_patience=30, 
+        callback_factor=0.01,
+        activation='swish', 
+        verbose=2, 
+        rnd_seed=None,
+        ensemble_index=None, 
+        validation_split=0.1, 
+        holdout_split=0.3, 
+        plot_scaled_features=False, 
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+    ):
+        """
+        Train a density-ratio neural network.
+
+        This is the core training routine called internally by :meth:`train_ensemble`. It can also be called directly when no ensemble averaging is required. After training, the model is exported to ONNX format and reloaded for inference so that subsequent calls to :meth:`predict_with_model` are backend-agnostic.
+
+        Parameters
+        ----------
+        model_to_finetune : torch.nn.Module
+            A PyTorch model instance to be finetuned with LoRA.
+        
+        lora_rank : int
+            The rank of the LoRA finetuning.
+
+        lora_alpha : int
+            The alpha parameter for scaling the LoRA updates.
+
+        number_of_epochs : int
+            Maximum number of training epochs.
+
+        batch_size : int
+            Mini-batch size for gradient optimisation.
+
+        learning_rate : float
+            Initial learning rate for the Adam optimiser.
+
+        scalerType : str
+            Feature scaling method. See :meth:`train_ensemble` for accepted values.
+
+        calibration : bool, optional
+            Apply post-hoc probability calibration. Default ``False``.
+
+        type_of_calibration : str, optional
+            Calibration algorithm. One of ``'isotonic'`` or ``'histogram'``. Default ``'isotonic'``.
+
+        num_bins_cal : int, optional
+            Bins for histogram calibration. Default ``40``.
+
+        callback : bool, optional
+            Enable early stopping and learning-rate monitoring callbacks. Default ``True``.
+
+        callback_patience : int, optional
+            Early stopping patience in epochs. Default ``30``.
+
+        callback_factor : float, optional
+            Learning-rate reduction factor at plateau. Default ``0.01``.
+
+        activation : str, optional
+            Hidden-layer activation function. Default ``'swish'``.
+
+        verbose : int, optional
+            Logging verbosity (0=warnings, 1=info, 2=debug). Default ``2``.
+
+        rnd_seed : int or None, optional
+            Random seed for the train/holdout split. If ``None`` (default), a random seed is drawn from a uniform integer distribution and saved to disk alongside the model so the same split can be recovered when ``load_trained_models=True``.
+
+        ensemble_index : int or None, optional
+            Integer suffix appended to saved model, scaler, calibrator and metadata filenames (e.g. ``model0.onnx``, ``model_scaler0.bin``). Pass the ensemble index here to avoid filename collisions when multiple members are trained in parallel. When ``None``, no suffix is appended (files saved as ``model.onnx`` etc.).
+
+        validation_split : float, optional
+            Fraction of training data used for validation loss. Default ``0.1``.
+
+        holdout_split : float, optional
+            Fraction of total data reserved for holdout diagnostics. Default ``0.3``.
+
+        plot_scaled_features : bool, optional
+            Plot feature distributions after scaling. Default ``False``.
+
+        load_trained_models : bool, optional
+            Load a previously saved model instead of training. Default ``False``.
+
+        recalibrate_output : bool, optional
+            Force recalibration even when a saved calibrator exists. Default ``False``.
+
+        num_workers : int, optional
+            DataLoader worker processes. Default ``0``.
+
+        Raises
+        ------
+        Exception
+            If ``type_of_calibration`` is not ``'isotonic'`` or ``'histogram'``.
+
+        Warns
+        -----
+        UserWarning
+            Logs a warning if the minimum predicted score for any class equals ``0`` or the maximum equals ``1``, which may indicate numerical saturation and unreliable ratio estimates.
+
+        Notes
+        -----
+        * The holdout set is stratified by ``training_labels`` to ensure class balance is preserved.
+        * When ``load_trained_models=True``, the ``holdout_num`` and ``rnd_seed`` are recovered from a saved ``.npy`` file so that the same holdout split is used, guaranteeing consistency between the saved model and any subsequent diagnostic plots.
+        * A loss-vs-epoch plot is automatically saved to ``path_to_figures`` after each successful training run.
+        """
+        # Setup the LoRA finetuning model
+        model = nsbi_common_utils.lightning_tools.LoRADensityRatioLightning(
+            model=model_to_finetune,
+            lora_rank=lora_rank,
+            lora_alpha=lora_alpha,
+            learning_rate=learning_rate,
+            use_log_loss=self.use_log_loss,
+            callback_factor=callback_factor,
+            callback_patience=callback_patience
+        )
+
+        return self._train(
+            model=model,
+            number_of_epochs=number_of_epochs, 
+            batch_size=batch_size,
+            scalerType=scalerType, 
+            calibration=calibration,
+            type_of_calibration=type_of_calibration, 
+            num_bins_cal=num_bins_cal, 
+            callback=callback, 
+            callback_patience=callback_patience, 
+            verbose=verbose, 
+            rnd_seed=rnd_seed,
+            ensemble_index=ensemble_index, 
+            validation_split=validation_split, 
+            holdout_split=holdout_split, 
+            plot_scaled_features=plot_scaled_features, 
+            load_trained_models=load_trained_models,
+            recalibrate_output=recalibrate_output,
+            num_workers=num_workers,
+        )
+
+    def train(
+        self, 
+        hidden_layers, 
+        neurons, 
+        number_of_epochs, 
+        batch_size,
+        learning_rate, 
+        scalerType, 
+        calibration=False,
+        type_of_calibration="isotonic", 
+        num_bins_cal = 40, 
+        callback = True, 
+        callback_patience=30, 
+        callback_factor=0.01,
+        activation='swish', 
+        verbose=2, 
+        rnd_seed=None,
+        ensemble_index=None, 
+        validation_split=0.1, 
+        holdout_split=0.3, 
+        plot_scaled_features=False, 
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+    ):
+        """
+        Train a density-ratio neural network.
+
+        This is the core training routine called internally by :meth:`train_ensemble`. It can also be called directly when no ensemble averaging is required. After training, the model is exported to ONNX format and reloaded for inference so that subsequent calls to :meth:`predict_with_model` are backend-agnostic.
+
+        Parameters
+        ----------
+        hidden_layers : int
+            Number of hidden layers in the neural network.
+
+        neurons : int
+            Number of neurons per hidden layer.
+
+        number_of_epochs : int
+            Maximum number of training epochs.
+
+        batch_size : int
+            Mini-batch size for gradient optimisation.
+
+        learning_rate : float
+            Initial learning rate for the Adam optimiser.
+
+        scalerType : str
+            Feature scaling method. See :meth:`train_ensemble` for accepted values.
+
+        calibration : bool, optional
+            Apply post-hoc probability calibration. Default ``False``.
+
+        type_of_calibration : str, optional
+            Calibration algorithm. One of ``'isotonic'`` or ``'histogram'``. Default ``'isotonic'``.
+
+        num_bins_cal : int, optional
+            Bins for histogram calibration. Default ``40``.
+
+        callback : bool, optional
+            Enable early stopping and learning-rate monitoring callbacks. Default ``True``.
+
+        callback_patience : int, optional
+            Early stopping patience in epochs. Default ``30``.
+
+        callback_factor : float, optional
+            Learning-rate reduction factor at plateau. Default ``0.01``.
+
+        activation : str, optional
+            Hidden-layer activation function. Default ``'swish'``.
+
+        verbose : int, optional
+            Logging verbosity (0=warnings, 1=info, 2=debug). Default ``2``.
+
+        rnd_seed : int or None, optional
+            Random seed for the train/holdout split. If ``None`` (default), a random seed is drawn from a uniform integer distribution and saved to disk alongside the model so the same split can be recovered when ``load_trained_models=True``.
+
+        ensemble_index : int or None, optional
+            Integer suffix appended to saved model, scaler, calibrator and metadata filenames (e.g. ``model0.onnx``, ``model_scaler0.bin``). Pass the ensemble index here to avoid filename collisions when multiple members are trained in parallel. When ``None``, no suffix is appended (files saved as ``model.onnx`` etc.).
+
+        validation_split : float, optional
+            Fraction of training data used for validation loss. Default ``0.1``.
+
+        holdout_split : float, optional
+            Fraction of total data reserved for holdout diagnostics. Default ``0.3``.
+
+        plot_scaled_features : bool, optional
+            Plot feature distributions after scaling. Default ``False``.
+
+        load_trained_models : bool, optional
+            Load a previously saved model instead of training. Default ``False``.
+
+        recalibrate_output : bool, optional
+            Force recalibration even when a saved calibrator exists. Default ``False``.
+
+        num_workers : int, optional
+            DataLoader worker processes. Default ``0``.
+
+        Raises
+        ------
+        Exception
+            If ``type_of_calibration`` is not ``'isotonic'`` or ``'histogram'``.
+
+        Warns
+        -----
+        UserWarning
+            Logs a warning if the minimum predicted score for any class equals ``0`` or the maximum equals ``1``, which may indicate numerical saturation and unreliable ratio estimates.
+
+        Notes
+        -----
+        * The holdout set is stratified by ``training_labels`` to ensure class balance is preserved.
+        * When ``load_trained_models=True``, the ``holdout_num`` and ``rnd_seed`` are recovered from a saved ``.npy`` file so that the same holdout split is used, guaranteeing consistency between the saved model and any subsequent diagnostic plots.
+        * A loss-vs-epoch plot is automatically saved to ``path_to_figures`` after each successful training run.
+        """
+        model = nsbi_common_utils.lightning_tools.DensityRatioLightning(
+            n_hidden=hidden_layers,
+            n_neurons=neurons,
+            input_dim=len(self.features),
+            learning_rate=learning_rate,
+            use_log_loss=self.use_log_loss,
+            activation=activation,
+            callback_factor=callback_factor,
+            callback_patience=callback_patience
+        )
+
+        return self._train(
+            model=model,
+            number_of_epochs=number_of_epochs, 
+            batch_size=batch_size,
+            scalerType=scalerType, 
+            calibration=calibration,
+            type_of_calibration=type_of_calibration, 
+            num_bins_cal=num_bins_cal, 
+            callback=callback, 
+            callback_patience=callback_patience, 
+            verbose=verbose, 
+            rnd_seed=rnd_seed,
+            ensemble_index=ensemble_index, 
+            validation_split=validation_split, 
+            holdout_split=holdout_split, 
+            plot_scaled_features=plot_scaled_features, 
+            load_trained_models=load_trained_models,
+            recalibrate_output=recalibrate_output,
+            num_workers=num_workers,
+        )
     
     def make_overfit_plots(self, ensemble_index=0):
         '''
