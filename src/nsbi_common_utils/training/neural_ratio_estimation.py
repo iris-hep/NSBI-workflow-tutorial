@@ -223,10 +223,14 @@ class density_ratio_trainer:
         idx_incl = np.arange(len(self.weights))
 
         # Get the indicies
-        self.train_idx, self.holdout_idx = train_test_split(idx_incl, 
-                                                                test_size=holdout_num, 
-                                                                random_state=rnd_seed,                                                        
-                                                                stratify=self.training_labels)
+        if holdout_num > 0:
+            self.train_idx, self.holdout_idx = train_test_split(idx_incl,
+                                                                    test_size=holdout_num,
+                                                                    random_state=rnd_seed,
+                                                                    stratify=self.training_labels)
+        else:
+            self.train_idx = idx_incl
+            self.holdout_idx = np.array([], dtype=idx_incl.dtype)
 
         self.dataset_training   = self.dataset.iloc[self.train_idx].copy()
         self.dataset_holdout   = self.dataset.iloc[self.holdout_idx].copy()
@@ -359,26 +363,38 @@ class density_ratio_trainer:
             self.model_NN = best_model
         
             logger.info("Finished Training")
-                
-            path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
-            path_to_saved_model         = f"{self.path_to_models}model{ensemble_index_label}.onnx"
 
-            nsbi_common_utils.training.utils.save_model(self.model_NN, 
-                        torch.randn((1, len(self.features))), 
-                        path_to_saved_model,
-                        self.scaler, 
-                        path_to_saved_scaler,
-                        softmax_output = False)
-            
-            # Reassign the model to be in ONNX format
-            self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model, 
-                                                                                            path_to_saved_scaler)
+            path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
+
+            if getattr(self, "use_torch_inference", False):
+                dump(self.scaler, str(path_to_saved_scaler), compress=True)
+                logger.info("Saved scaler and keeping PyTorch model for inference")
+            else:
+                path_to_saved_model         = f"{self.path_to_models}model{ensemble_index_label}.onnx"
+
+                nsbi_common_utils.training.utils.save_model(self.model_NN, 
+                            torch.randn((1, len(self.features))), 
+                            path_to_saved_model,
+                            self.scaler, 
+                            path_to_saved_scaler,
+                            softmax_output = False)
+                logger.info("Saved ONNX model and scaler")
+                
+                # Reassign the model to be in ONNX format
+                self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model, 
+                                                                                                path_to_saved_scaler)
+                logger.info("Reloaded ONNX model and scaler")
 
             # Save metadata
             np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy", 
                     np.array([holdout_num, rnd_seed]))
+            logger.info("Saved train/holdout split metadata")
     
-            plot_loss(loss_history, path_to_figures=self.path_to_figures)
+            if getattr(self, "skip_training_loss_plot", False):
+                logger.info("Skipping training loss plot")
+            else:
+                plot_loss(loss_history, path_to_figures=self.path_to_figures)
+                logger.info("Saved training loss plot")
 
         
         # Do a first prediction without calibration layers
@@ -387,6 +403,7 @@ class density_ratio_trainer:
                                                                         model = self.model_NN,
                                                                         calibration_model = None,
                                                                         use_log_loss = self.use_log_loss)
+        logger.info("Computed training-set predictions")
         
         gc.collect()
         torch.cuda.empty_cache()
@@ -451,6 +468,7 @@ class density_ratio_trainer:
                                                                                 model = self.model_NN,
                                                                                 calibration_model = self.histogram_calibrator,
                                                                                 use_log_loss = self.use_log_loss)
+            logger.info("Computed full-dataset predictions with calibration")
 
         # Else, continue evaluating using the base model
         else:
@@ -460,6 +478,7 @@ class density_ratio_trainer:
                                                                                     model = self.model_NN,
                                                                                     calibration_model = None,
                                                                                     use_log_loss = self.use_log_loss)
+            logger.info("Computed full-dataset predictions without calibration")
 
         
         # TRAINING inputs
@@ -476,17 +495,19 @@ class density_ratio_trainer:
 
         # Some diagnostics to ensure numerical stability - min/max must not be exactly 0 or 1
         min_max_values = [
-            (self.sample_name[1], "training", np.amin(self.score_den_training), 
-                                              np.amax(self.score_den_training)),
-            (self.sample_name[0], "training", np.amin(self.score_num_training), 
-                                              np.amax(self.score_num_training)),
-            (self.sample_name[1], "holdout", np.amin(self.score_den_holdout), 
-                                              np.amax(self.score_den_holdout)),
-            (self.sample_name[0], "holdout", np.amin(self.score_num_holdout), 
-                                              np.amax(self.score_num_holdout))
+            (self.sample_name[1], "training", self.score_den_training),
+            (self.sample_name[0], "training", self.score_num_training),
+            (self.sample_name[1], "holdout", self.score_den_holdout),
+            (self.sample_name[0], "holdout", self.score_num_holdout),
         ]
         
-        for name, training_holdout_label, min_val, max_val in min_max_values:
+        for name, training_holdout_label, scores in min_max_values:
+            if len(scores) == 0:
+                logger.info(f"Skipping {name} {training_holdout_label} min/max diagnostic because the split is empty")
+                continue
+
+            min_val = np.amin(scores)
+            max_val = np.amax(scores)
             
             if min_val == 0:
                 logger.warning(f"{name} {training_holdout_label} data has min score = 0, which may indicate numerical instability!")
@@ -510,6 +531,8 @@ class density_ratio_trainer:
         callback = True, 
         callback_patience=30, 
         callback_factor=0.01,
+        lr_scheduler="step",
+        scheduler_patience=None,
         activation='swish', 
         verbose=2, 
         rnd_seed=None,
@@ -567,6 +590,14 @@ class density_ratio_trainer:
         callback_factor : float, optional
             Learning-rate reduction factor at plateau. Default ``0.01``.
 
+        lr_scheduler : str, optional
+            Learning-rate scheduler type. One of ``'step'`` or ``'plateau'``.
+            Default ``'step'``.
+
+        scheduler_patience : int or None, optional
+            Scheduler patience in epochs. When ``None``, reuses
+            ``callback_patience``. Default ``None``.
+
         activation : str, optional
             Hidden-layer activation function. Default ``'swish'``.
 
@@ -620,8 +651,10 @@ class density_ratio_trainer:
             lora_alpha=lora_alpha,
             learning_rate=learning_rate,
             use_log_loss=self.use_log_loss,
+            lr_scheduler=lr_scheduler,
             callback_factor=callback_factor,
-            callback_patience=callback_patience
+            callback_patience=callback_patience,
+            scheduler_patience=scheduler_patience,
         )
 
         return self._train(
@@ -659,6 +692,8 @@ class density_ratio_trainer:
         callback = True, 
         callback_patience=30, 
         callback_factor=0.01,
+        lr_scheduler="step",
+        scheduler_patience=None,
         activation='swish', 
         verbose=2, 
         rnd_seed=None,
@@ -713,6 +748,14 @@ class density_ratio_trainer:
         callback_factor : float, optional
             Learning-rate reduction factor at plateau. Default ``0.01``.
 
+        lr_scheduler : str, optional
+            Learning-rate scheduler type. One of ``'step'`` or ``'plateau'``.
+            Default ``'step'``.
+
+        scheduler_patience : int or None, optional
+            Scheduler patience in epochs. When ``None``, reuses
+            ``callback_patience``. Default ``None``.
+
         activation : str, optional
             Hidden-layer activation function. Default ``'swish'``.
 
@@ -766,8 +809,10 @@ class density_ratio_trainer:
             learning_rate=learning_rate,
             use_log_loss=self.use_log_loss,
             activation=activation,
+            lr_scheduler=lr_scheduler,
             callback_factor=callback_factor,
-            callback_patience=callback_patience
+            callback_patience=callback_patience,
+            scheduler_patience=scheduler_patience,
         )
 
         return self._train(

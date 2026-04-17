@@ -1,7 +1,7 @@
 from functools import partial
 
 import torch
-torch.set_float32_matmul_precision("medium")
+# torch.set_float32_matmul_precision("medium")
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -21,8 +21,10 @@ class DensityRatioLightning(pl.LightningModule):
                 learning_rate   = 0.1,
                 use_log_loss    = False,
                 activation      = "swish", 
+                lr_scheduler    = "step",
                 callback_factor = 0.01, 
-                callback_patience = 30):
+                callback_patience = 30,
+                scheduler_patience = None):
         
         super().__init__()
 
@@ -100,25 +102,38 @@ class DensityRatioLightning(pl.LightningModule):
     def configure_optimizers(self):
 
         optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
+        scheduler_patience = self.hparams.scheduler_patience
+        if scheduler_patience is None:
+            scheduler_patience = self.hparams.callback_patience
 
-        scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=self.hparams.callback_patience,   
-            gamma=self.hparams.callback_factor        
-        )
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        #     optimizer,
-        #     T_max=100,
-        #     eta_min=1e-11
-        # )
+        if self.hparams.lr_scheduler == "plateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode="min",
+                factor=self.hparams.callback_factor,
+                patience=scheduler_patience,
+            )
+            scheduler_config = {
+                "scheduler": scheduler,
+                "monitor": "val_loss",
+                "interval": "epoch",
+                "frequency": 1,
+            }
+        else:
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=scheduler_patience,
+                gamma=self.hparams.callback_factor
+            )
+            scheduler_config = {
+                "scheduler": scheduler,
+                "interval": "epoch",
+                "frequency": 1,
+            }
 
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "interval": "epoch",
-                "frequency": 1
-            }
+            "lr_scheduler": scheduler_config,
         }
     
 
@@ -160,8 +175,10 @@ class LoRADensityRatioLightning(pl.LightningModule):
                 lora_alpha=1.0, # the alpha parameter for scaling the LoRA updates
                 learning_rate   = 0.1,
                 use_log_loss    = False,
+                lr_scheduler    = "step",
                 callback_factor = 0.01, 
-                callback_patience = 30):
+                callback_patience = 30,
+                scheduler_patience = None):
         
         super().__init__()
 
@@ -260,23 +277,36 @@ class LoRADensityRatioLightning(pl.LightningModule):
     def configure_optimizers(self):
 
         optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
+        scheduler_patience = self.hparams.scheduler_patience
+        if scheduler_patience is None:
+            scheduler_patience = self.hparams.callback_patience
 
-        scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=self.hparams.callback_patience,   
-            gamma=self.hparams.callback_factor        
-        )
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        #     optimizer,
-        #     T_max=100,
-        #     eta_min=1e-11
-        # )
+        if self.hparams.lr_scheduler == "plateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode="min",
+                factor=self.hparams.callback_factor,
+                patience=scheduler_patience,
+            )
+            scheduler_config = {
+                "scheduler": scheduler,
+                "monitor": "val_loss",
+                "interval": "epoch",
+                "frequency": 1,
+            }
+        else:
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=scheduler_patience,
+                gamma=self.hparams.callback_factor
+            )
+            scheduler_config = {
+                "scheduler": scheduler,
+                "interval": "epoch",
+                "frequency": 1,
+            }
 
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "interval": "epoch",
-                "frequency": 1
-            }
+            "lr_scheduler": scheduler_config,
         }
