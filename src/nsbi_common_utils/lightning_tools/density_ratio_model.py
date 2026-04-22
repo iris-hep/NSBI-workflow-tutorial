@@ -20,12 +20,12 @@ class DensityRatioLightning(pl.LightningModule):
                 input_dim       = 11,
                 learning_rate   = 0.1,
                 use_log_loss    = False,
-                activation      = "swish", 
+                activation      = "swish",
                 lr_scheduler    = "step",
-                callback_factor = 0.01, 
+                callback_factor = 0.01,
                 callback_patience = 30,
                 scheduler_patience = None):
-        
+
         super().__init__()
 
         self.save_hyperparameters()
@@ -48,7 +48,7 @@ class DensityRatioLightning(pl.LightningModule):
             layers.append(nn.Linear(input_dim_, n_neurons))
             layers.append(activation_choice())
             input_dim_ = n_neurons
-        
+
         self.mlp = nn.Sequential(*layers)
 
         if use_log_loss:
@@ -65,7 +65,7 @@ class DensityRatioLightning(pl.LightningModule):
         if not self.use_log_loss:
             x = torch.sigmoid(x)
         return x
-    
+
     def training_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
@@ -78,11 +78,11 @@ class DensityRatioLightning(pl.LightningModule):
             loss = F.binary_cross_entropy(s_hat, y, reduction="none")
 
         weighted_loss = (loss * w).sum() / w.sum()
-    
+
         self.log("train_loss", weighted_loss, prog_bar=True, on_step=False, on_epoch=True)
         return weighted_loss
-    
-    
+
+
     def validation_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
@@ -135,7 +135,7 @@ class DensityRatioLightning(pl.LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": scheduler_config,
         }
-    
+
 
 
 
@@ -150,7 +150,7 @@ class LoRALayer(nn.Module):
     def forward(self, x):
         x = self.alpha * (x @ self.A @ self.B)
         return x
-    
+
 
 class LinearWithLoRA(nn.Module):
     def __init__(self, linear, rank, alpha):
@@ -176,10 +176,10 @@ class LoRADensityRatioLightning(pl.LightningModule):
                 learning_rate   = 0.1,
                 use_log_loss    = False,
                 lr_scheduler    = "step",
-                callback_factor = 0.01, 
+                callback_factor = 0.01,
                 callback_patience = 30,
                 scheduler_patience = None):
-        
+
         super().__init__()
 
         self.save_hyperparameters()
@@ -190,31 +190,31 @@ class LoRADensityRatioLightning(pl.LightningModule):
 
         # Freeze the original model parameters, only the LoRA layers will be updated during training
         for param in model.parameters():
-            param.requires_grad = False 
+            param.requires_grad = False
 
 
         assign_lora = partial(LinearWithLoRA, rank=lora_rank, alpha=lora_alpha)
 
         # Build architecture - feed forward MLP
         layers = []
-        last_dim = None
+        # last_dim = None
 
         # MLP
         for layer in model.mlp:
             if isinstance(layer, nn.Linear):
                 lora_layer = assign_lora(layer)
                 layers.append(lora_layer)
-                last_dim = layer.out_features
+                # last_dim = layer.out_features
             else:
                 layers.append(layer)
         # Output layer
         if isinstance(model.out, nn.Linear):
             lora_layer = assign_lora(model.out)
             layers.append(lora_layer)
-            last_dim = model.out.out_features
+            # last_dim = model.out.out_features
         else:
             layers.append(model.out)
-            last_dim = model.out.out_features
+            # last_dim = model.out.out_features
 
         self.lora_mlp = torch.compile(nn.Sequential(*layers))
 
@@ -226,21 +226,21 @@ class LoRADensityRatioLightning(pl.LightningModule):
         print(f"Total parameters: {total_params}")
         print(f"Percentage of trainable parameters: {trainable_percentage:.4f}%")
 
-        if use_log_loss:
-            self.out = nn.Linear(last_dim, 1)
-            self.from_logits = True
-        else:
-            self.out = nn.Linear(last_dim, 1)
-            self.from_logits = False
+        # if use_log_loss:
+        #     self.out = nn.Linear(last_dim, 1)
+        #     self.from_logits = True
+        # else:
+        #     self.out = nn.Linear(last_dim, 1)
+        #     self.from_logits = False
 
     def forward(self, x):
 
         x = self.lora_mlp(x)
-        x = self.out(x)
+        # x = self.out(x)
         if not self.use_log_loss:
             x = torch.sigmoid(x)
         return x
-    
+
     def training_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
@@ -253,11 +253,11 @@ class LoRADensityRatioLightning(pl.LightningModule):
             loss = F.binary_cross_entropy(s_hat, y, reduction="none")
 
         weighted_loss = (loss * w).sum() / w.sum()
-    
+
         self.log("train_loss", weighted_loss, prog_bar=True, on_step=False, on_epoch=True)
         return weighted_loss
-    
-    
+
+
     def validation_step(self, batch, batch_idx):
         x, y, w = batch
         y = y.float().view(-1, 1)
