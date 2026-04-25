@@ -210,3 +210,19 @@ data/
 docs/_build/
 
 .snakemake
+
+
+# LoRA stuff
+examples/madminer_dataset/models/
+examples/madminer_dataset/plots/
+examples/madminer_dataset/checkpoints/
+examples/madminer_dataset/artifacts/
+examples/madminer_dataset/.cache_sweep/
+aggregated*.csv
+aggregated*.png
+NegWW*.csv
+NegWW*.png
+WW*.csv
+WW*.png
+.DS_Store
+

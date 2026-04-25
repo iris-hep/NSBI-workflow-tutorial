@@ -137,7 +137,7 @@ def load_trained_model(path_to_saved_model: Union[Path, str],
 
     return scaler, model
 
-def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss=False):
+def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss=False, batch_size=10_000):
     """
     Evaluate the trained density-ratio model on an input dataset.
 
@@ -170,7 +170,23 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
     * To obtain the density ratio :math:`r = p_A / p_B` from the returned score :math:`s`, use :math:`r = s / (1 - s)`.
     """
 
-    pred = predict_with_onnx(data, scaler, model)
+    if isinstance(model, torch.nn.Module):
+        scaled_data = scaler.transform(data)
+        n_samples = len(scaled_data)
+        preds = np.empty(n_samples, dtype=np.float32)
+        device = next(model.parameters()).device
+        model.eval()
+
+        with torch.no_grad():
+            for start in range(0, n_samples, batch_size):
+                end = min(start + batch_size, n_samples)
+                batch = torch.as_tensor(scaled_data[start:end], dtype=torch.float32, device=device)
+                batch_pred = model(batch).detach().cpu().numpy().reshape(-1)
+                preds[start:end] = batch_pred
+
+        pred = preds
+    else:
+        pred = predict_with_onnx(data, scaler, model, batch_size=batch_size)
 
     if use_log_loss:
         pred = convert_logLR_to_score(pred)
@@ -256,7 +272,7 @@ def predict_with_onnx(dataset,
     else:
         output_shape = (n_samples,)
     
-    preds = np.empty(output_shape, dtype=np.float32)
+    preds = np.empty(output_shape, dtype=np.float64)
     preds[:len(first_batch)] = first_pred
     
     # Process remaining batches
@@ -375,4 +391,3 @@ def convert_score_to_ratio(score):
         Density ratio values :math:`p_A / p_B`, unbounded above.
     """
     return score / (1.0 - score)
-

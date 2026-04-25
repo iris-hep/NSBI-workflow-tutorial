@@ -2,9 +2,11 @@
 import os, importlib, sys, shutil, gc
 import numpy as np
 import pandas as pd
-pd.options.mode.chained_assignment = None 
+pd.options.mode.chained_assignment = None
 import math
-import pickle 
+import pickle
+import time
+
 
 import warnings
 try:
@@ -39,13 +41,13 @@ from nsbi_common_utils.plotting import plot_loss, plot_all_features, plot_all_fe
 
 import logging
 _LOG_LEVELS = {
-    0: logging.WARNING,  
-    1: logging.INFO,    
-    2: logging.DEBUG,   
+    0: logging.WARNING,
+    1: logging.INFO,
+    2: logging.DEBUG,
 }
 
 logger = logging.getLogger("Training Logs")
-logger.propagate = True  
+logger.propagate = True
 
 
 def configure_logging(verbose_level: int = 1):
@@ -65,21 +67,21 @@ def configure_logging(verbose_level: int = 1):
         h.setFormatter(fmt)
         logger.addHandler(h)
 
-        
+
 class density_ratio_trainer:
     '''
     A class for training the density ratio neural networks for SBI analysis
     '''
-    def __init__(self, dataset, 
-                      weights, 
-                      training_labels, 
-                      features, 
-                      features_scaling, 
-                      sample_name, 
-                      output_name, 
+    def __init__(self, dataset,
+                      weights,
+                      training_labels,
+                      features,
+                      features_scaling,
+                      sample_name,
+                      output_name,
                       path_to_figures='',
-                      path_to_models='', 
-                      use_log_loss=False, 
+                      path_to_models='',
+                      use_log_loss=False,
                       split_using_fold=False,
                       delete_existing_models=False):
         """
@@ -146,39 +148,575 @@ class density_ratio_trainer:
         if delete_existing_models:
             if os.path.exists(path_to_figures):
                 shutil.rmtree(path_to_figures)
-            
+
             if os.path.exists(path_to_models):
                 shutil.rmtree(path_to_models)
 
         if not os.path.exists(path_to_figures):
                 os.makedirs(path_to_figures)
-        
+
         self.path_to_models = path_to_models
         if not os.path.exists(path_to_models):
                 os.makedirs(path_to_models)
 
-    def train(self, hidden_layers, 
-                    neurons, 
-                    number_of_epochs, 
-                    batch_size,
-                    learning_rate, 
-                    scalerType, 
-                    calibration=False,
-                    type_of_calibration="isotonic", 
-                    num_bins_cal = 40, 
-                    callback = True, 
-                    callback_patience=30, 
-                    callback_factor=0.01,
-                    activation='swish', 
-                    verbose=2, 
-                    rnd_seed=None,
-                    ensemble_index=None, 
-                    validation_split=0.1, 
-                    holdout_split=0.3, 
-                    plot_scaled_features=False, 
-                    load_trained_models = False,
-                    recalibrate_output=False,
-                    num_workers=0):
+
+    def _train(
+        self,
+        model, # the model to be trained
+        number_of_epochs,
+        batch_size,
+        scalerType,
+        calibration=False,
+        type_of_calibration="isotonic",
+        num_bins_cal = 40,
+        callback = True,
+        callback_patience=30,
+        verbose=2,
+        rnd_seed=None,
+        ensemble_index=None,
+        validation_split=0.1,
+        holdout_split=0.3,
+        plot_scaled_features=False,
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+        prefit_scaler=None,
+    ):
+        """
+        Train a density-ratio neural network (internal).
+        """
+        self.calibration = calibration
+        self.calibration_switch = False # Set the switch to false for first evaluation for calibration
+
+        if rnd_seed is None:
+            rnd_seed = np.random.randint(0, 2**32 -1, size=None)
+
+        configure_logging(verbose)
+        self.verbose = verbose
+
+        if ensemble_index is None:
+            ensemble_index_label = ''
+        else:
+            ensemble_index_label=str(ensemble_index)
+
+        if load_trained_models:
+            path_to_saved_scaler = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
+            path_to_saved_model  = f"{self.path_to_models}model{ensemble_index_label}.onnx"
+            path_to_saved_state  = f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy"
+
+            missing = [p for p in [path_to_saved_scaler, path_to_saved_model, path_to_saved_state] if not os.path.exists(p)]
+            if missing:
+                logger.warning(f"load_trained_models=True but the following files were not found, retraining:\n" + "\n".join(missing))
+                load_trained_models = False
+
+        if load_trained_models:
+            # Load the number of holdout events and random state used for train/test split when using saved models
+            holdout_num, rnd_seed = np.load(path_to_saved_state)
+        else:
+            # Get the number of holdout events from the holdout_split fraction
+            holdout_num = math.floor(self.dataset.shape[0] * holdout_split)
+
+
+        # HyperParameters for the NN training
+        validation_split = validation_split
+        self.batch_size = batch_size
+
+        idx_incl = np.arange(len(self.weights))
+
+        # Get the indicies
+        if holdout_num > 0:
+            self.train_idx, self.holdout_idx = train_test_split(idx_incl,
+                                                                    test_size=holdout_num,
+                                                                    random_state=rnd_seed,
+                                                                    stratify=self.training_labels)
+        else:
+            self.train_idx = idx_incl
+            self.holdout_idx = np.array([], dtype=idx_incl.dtype)
+
+        self.dataset_training   = self.dataset.iloc[self.train_idx].copy()
+        self.dataset_holdout   = self.dataset.iloc[self.holdout_idx].copy()
+
+        # split the original dataset into training and holdout
+        label_train, label_holdout = self.training_labels[self.train_idx].copy(), self.training_labels[self.holdout_idx].copy()
+        weight_train, weight_holdout = self.weights[self.train_idx].copy(), self.weights[self.holdout_idx].copy()
+
+        # dataset to be used for training
+        data_train, data_holdout = self.dataset_training[self.features].copy(), self.dataset_holdout[self.features].copy()
+
+        # Load pre-trained models and scaling
+        if load_trained_models:
+
+            logger.info(f"Reading saved models from {self.path_to_models}")
+            self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model, path_to_saved_scaler)
+
+            scaled_data_train = self.scaler.transform(data_train)
+            scaled_data_train = pd.DataFrame(scaled_data_train, columns=self.features)
+
+        # Else setup a new scaler
+        else:
+            if prefit_scaler is not None:
+                self.scaler = prefit_scaler
+                scaled_data_train = self.scaler.transform(data_train)
+            else:
+                if (scalerType == 'MinMax'):
+                    self.scaler = ColumnTransformer([("scaler",MinMaxScaler(feature_range=(-1.5,1.5)), self.features_scaling)],remainder='passthrough')
+
+                if (scalerType == 'StandardScaler'):
+                    self.scaler = ColumnTransformer([("scaler",StandardScaler(), self.features_scaling)],remainder='passthrough')
+
+                if (scalerType == 'PowerTransform_Yeo'):
+                    self.scaler = ColumnTransformer([("scaler",PowerTransformer(method='yeo-johnson', standardize=True), self.features_scaling)],remainder='passthrough')
+
+
+                scaled_data_train = self.scaler.fit_transform(data_train)
+
+            scaled_data_train = pd.DataFrame(scaled_data_train, columns=self.features)
+
+        if plot_scaled_features:
+            plot_all_features(scaled_data_train, weight_train, label_train)
+
+        # Train the model if not loaded
+        if not load_trained_models:
+
+            # Check if the datasets are normalized
+            logger.info(f"Sum of weights of class 0: {np.sum(weight_train[label_train==0])}")
+            logger.info(f"Sum of weights of class 1: {np.sum(weight_train[label_train==1])}")
+
+            train_ds = nsbi_common_utils.lightning_tools.WeightedTensorDataset(
+                scaled_data_train.values,
+                label_train,
+                weight_train
+            )
+
+            val_size = int(len(train_ds) * validation_split)
+            train_size = len(train_ds) - val_size
+
+            train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
+
+            train_loader = DataLoader(train_ds,
+                                        batch_size=batch_size,
+                                        shuffle=True,
+                                        num_workers=num_workers,
+                                        pin_memory=True,
+                                        persistent_workers=False)
+
+            val_loader   = DataLoader(val_ds,
+                                      batch_size=batch_size,
+                                      shuffle=False,
+                                        num_workers=num_workers,
+                                        pin_memory=True,
+                                        persistent_workers=False)
+
+            loss_history = nsbi_common_utils.lightning_tools.LossHistory()
+
+            checkpoint_callback = ModelCheckpoint(
+                                                    monitor="val_loss",
+                                                    dirpath="checkpoints/",
+                                                    filename=f"best-{type(model).__name__}" + "-{epoch:03d}-{val_loss:.6f}"+f"_{self.sample_name[0]}vs{self.sample_name[1]}",
+                                                    save_top_k=1,
+                                                    mode="min",
+                                                    save_last=False,
+                                                )
+
+            if callback:
+                trainer = Trainer(
+                    accelerator="auto",
+                    devices="auto",
+                    max_epochs=number_of_epochs,
+                    callbacks=[
+                        EarlyStopping(monitor="val_loss", patience=callback_patience),
+                        LearningRateMonitor(),
+                        checkpoint_callback,
+                        loss_history,
+                        nsbi_common_utils.lightning_tools.PrintEpochMetrics()
+                    ],
+                    logger=True,
+                    enable_checkpointing=True,
+                    enable_progress_bar=False,
+                )
+            else:
+                trainer = Trainer(
+                    accelerator="auto",
+                    devices="auto",
+                    max_epochs=number_of_epochs,
+                    callbacks=[loss_history, checkpoint_callback],
+                    logger=True,
+                    enable_checkpointing=False,
+                    enable_progress_bar=False
+                )
+
+            start_time = time.time()
+            trainer.fit(model, train_loader, val_loader)
+            end_time = time.time()
+            logger.info(f"Training time: {end_time - start_time:.2f} seconds")
+
+            device = next(model.parameters()).device
+
+            # Memory cleaning
+            trainer = None
+            train_loader = None
+            val_loader = None
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            best_model = type(model).load_from_checkpoint(
+                checkpoint_callback.best_model_path,
+                map_location=device,
+                weights_only=False,
+                )
+
+            self.model_NN = best_model
+
+            logger.info("Finished Training")
+
+            path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
+
+            if getattr(self, "use_torch_inference", False):
+                dump(self.scaler, str(path_to_saved_scaler), compress=True)
+                logger.info("Saved scaler and keeping PyTorch model for inference")
+            else:
+                path_to_saved_model         = f"{self.path_to_models}model{ensemble_index_label}.onnx"
+
+                nsbi_common_utils.training.utils.save_model(self.model_NN,
+                            torch.randn((1, len(self.features))),
+                            path_to_saved_model,
+                            self.scaler,
+                            path_to_saved_scaler,
+                            softmax_output = False)
+                logger.info("Saved ONNX model and scaler")
+
+                # Reassign the model to be in ONNX format
+                self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model,
+                                                                                                path_to_saved_scaler)
+                logger.info("Reloaded ONNX model and scaler")
+
+            # Save metadata
+            np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy",
+                    np.array([holdout_num, rnd_seed]))
+            logger.info("Saved train/holdout split metadata")
+
+            if getattr(self, "skip_training_loss_plot", False):
+                logger.info("Skipping training loss plot")
+            else:
+                plot_loss(loss_history, path_to_figures=self.path_to_figures)
+                logger.info("Saved training loss plot")
+
+
+        # Do a first prediction without calibration layers
+        train_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset_training[self.features],
+                                                                        scaler = self.scaler,
+                                                                        model = self.model_NN,
+                                                                        calibration_model = None,
+                                                                        use_log_loss = self.use_log_loss)
+        logger.info("Computed training-set predictions")
+
+        gc.collect()
+        torch.cuda.empty_cache()
+
+        calibration_method = 'direct'
+
+        # If calibrating, use the train_data_prediction for building histogram
+        if self.calibration:
+
+            self.calibration_switch = True
+            path_to_calibrated_object = f"{self.path_to_models}model_calibrated_hist{ensemble_index_label}.obj"
+
+            if type_of_calibration == "histogram":
+                calibration_data_num = train_data_prediction[label_train==1]
+                calibration_data_den = train_data_prediction[label_train==0]
+
+                w_num = weight_train[label_train==1]
+                w_den = weight_train[label_train==0]
+
+            if not load_trained_models:
+
+                if type_of_calibration == "histogram":
+
+                    self.histogram_calibrator =  HistogramCalibrator(calibration_data_num, calibration_data_den, w_num, w_den,
+                                                                    nbins=num_bins_cal, method=calibration_method, mode='dynamic')
+
+                elif type_of_calibration == "isotonic":
+                    self.histogram_calibrator =  IsotonicCalibrator(train_data_prediction, label_train, weight_train)
+
+                else:
+                    raise Exception(f"Type of calibration not recognized - choose between isotonic and histogram")
+
+                file_calib = open(path_to_calibrated_object, 'wb')
+
+                pickle.dump(self.histogram_calibrator, file_calib)
+
+            else:
+                if not os.path.exists(path_to_calibrated_object) or recalibrate_output:
+
+                    logger.info(f"Calibrating the saved model with {num_bins_cal} bins")
+
+                    if type_of_calibration == "histogram":
+                        self.histogram_calibrator =  HistogramCalibrator(calibration_data_num, calibration_data_den, w_num, w_den,
+                                                                    nbins=num_bins_cal, method=calibration_method, mode='dynamic')
+                    elif type_of_calibration == "isotonic":
+                        self.histogram_calibrator =  IsotonicCalibrator(train_data_prediction, label_train, weight_train)
+
+                    else:
+                        raise Exception(f"Type of calibration not recognized - choose between isotonic and histogram")
+
+                    file_calib = open(path_to_calibrated_object, 'wb')
+
+                    pickle.dump(self.histogram_calibrator, file_calib)
+                else:
+
+                    file_calib = open(path_to_calibrated_object, 'rb')
+                    self.histogram_calibrator = pickle.load(file_calib)
+                    logger.info(f"calibrator object loaded = {self.histogram_calibrator}")
+
+            self.full_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features],
+                                                                                scaler = self.scaler,
+                                                                                model = self.model_NN,
+                                                                                calibration_model = self.histogram_calibrator,
+                                                                                use_log_loss = self.use_log_loss)
+            logger.info("Computed full-dataset predictions with calibration")
+
+        # Else, continue evaluating using the base model
+        else:
+            self.histogram_calibrator = None
+            self.full_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features],
+                                                                                    scaler = self.scaler,
+                                                                                    model = self.model_NN,
+                                                                                    calibration_model = None,
+                                                                                    use_log_loss = self.use_log_loss)
+            logger.info("Computed full-dataset predictions without calibration")
+
+
+        # TRAINING inputs
+        self.score_den_training     = self.full_data_prediction[self.train_idx][self.training_labels[self.train_idx]==0]
+        self.weight_den_training    = self.weights[self.train_idx][self.training_labels[self.train_idx]==0]
+        self.score_num_training     = self.full_data_prediction[self.train_idx][self.training_labels[self.train_idx]==1]
+        self.weight_num_training    = self.weights[self.train_idx][self.training_labels[self.train_idx]==1]
+
+        # HOLDOUT inputs
+        self.score_den_holdout      = self.full_data_prediction[self.holdout_idx][self.training_labels[self.holdout_idx]==0]
+        self.weight_den_holdout     = self.weights[self.holdout_idx][self.training_labels[self.holdout_idx]==0]
+        self.score_num_holdout      = self.full_data_prediction[self.holdout_idx][self.training_labels[self.holdout_idx]==1]
+        self.weight_num_holdout     = self.weights[self.holdout_idx][self.training_labels[self.holdout_idx]==1]
+
+        # Some diagnostics to ensure numerical stability - min/max must not be exactly 0 or 1
+        min_max_values = [
+            (self.sample_name[1], "training", self.score_den_training),
+            (self.sample_name[0], "training", self.score_num_training),
+            (self.sample_name[1], "holdout", self.score_den_holdout),
+            (self.sample_name[0], "holdout", self.score_num_holdout),
+        ]
+
+        for name, training_holdout_label, scores in min_max_values:
+            if len(scores) == 0:
+                logger.info(f"Skipping {name} {training_holdout_label} min/max diagnostic because the split is empty")
+                continue
+
+            min_val = np.amin(scores)
+            max_val = np.amax(scores)
+
+            if min_val == 0:
+                logger.warning(f"{name} {training_holdout_label} data has min score = 0, which may indicate numerical instability!")
+
+            if max_val == 1:
+                logger.warning(f"{name} {training_holdout_label} data has max score = 1, which may indicate numerical instability!")
+        return best_model # return the trained pytorch model
+
+    def lora_finetune(
+        self,
+        model_to_finetune, # the model to be finetuned
+        lora_rank, # the rank of the LoRA finetuning
+        lora_alpha, # the alpha parameter for scaling the LoRA updates
+        number_of_epochs,
+        batch_size,
+        learning_rate,
+        scalerType,
+        calibration=False,
+        type_of_calibration="isotonic",
+        num_bins_cal = 40,
+        callback = True,
+        callback_patience=30,
+        callback_factor=0.01,
+        lr_scheduler="step",
+        scheduler_patience=None,
+        activation='swish',
+        verbose=2,
+        rnd_seed=None,
+        ensemble_index=None,
+        validation_split=0.1,
+        holdout_split=0.3,
+        plot_scaled_features=False,
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+        prefit_scaler=None,
+    ):
+        """
+        Train a density-ratio neural network.
+
+        This is the core training routine called internally by :meth:`train_ensemble`. It can also be called directly when no ensemble averaging is required. After training, the model is exported to ONNX format and reloaded for inference so that subsequent calls to :meth:`predict_with_model` are backend-agnostic.
+
+        Parameters
+        ----------
+        model_to_finetune : torch.nn.Module
+            A PyTorch model instance to be finetuned with LoRA.
+
+        lora_rank : int
+            The rank of the LoRA finetuning.
+
+        lora_alpha : int
+            The alpha parameter for scaling the LoRA updates.
+
+        number_of_epochs : int
+            Maximum number of training epochs.
+
+        batch_size : int
+            Mini-batch size for gradient optimisation.
+
+        learning_rate : float
+            Initial learning rate for the Adam optimiser.
+
+        scalerType : str
+            Feature scaling method. See :meth:`train_ensemble` for accepted values.
+
+        calibration : bool, optional
+            Apply post-hoc probability calibration. Default ``False``.
+
+        type_of_calibration : str, optional
+            Calibration algorithm. One of ``'isotonic'`` or ``'histogram'``. Default ``'isotonic'``.
+
+        num_bins_cal : int, optional
+            Bins for histogram calibration. Default ``40``.
+
+        callback : bool, optional
+            Enable early stopping and learning-rate monitoring callbacks. Default ``True``.
+
+        callback_patience : int, optional
+            Early stopping patience in epochs. Default ``30``.
+
+        callback_factor : float, optional
+            Learning-rate reduction factor at plateau. Default ``0.01``.
+
+        lr_scheduler : str, optional
+            Learning-rate scheduler type. One of ``'step'`` or ``'plateau'``.
+            Default ``'step'``.
+
+        scheduler_patience : int or None, optional
+            Scheduler patience in epochs. When ``None``, reuses
+            ``callback_patience``. Default ``None``.
+
+        activation : str, optional
+            Hidden-layer activation function. Default ``'swish'``.
+
+        verbose : int, optional
+            Logging verbosity (0=warnings, 1=info, 2=debug). Default ``2``.
+
+        rnd_seed : int or None, optional
+            Random seed for the train/holdout split. If ``None`` (default), a random seed is drawn from a uniform integer distribution and saved to disk alongside the model so the same split can be recovered when ``load_trained_models=True``.
+
+        ensemble_index : int or None, optional
+            Integer suffix appended to saved model, scaler, calibrator and metadata filenames (e.g. ``model0.onnx``, ``model_scaler0.bin``). Pass the ensemble index here to avoid filename collisions when multiple members are trained in parallel. When ``None``, no suffix is appended (files saved as ``model.onnx`` etc.).
+
+        validation_split : float, optional
+            Fraction of training data used for validation loss. Default ``0.1``.
+
+        holdout_split : float, optional
+            Fraction of total data reserved for holdout diagnostics. Default ``0.3``.
+
+        plot_scaled_features : bool, optional
+            Plot feature distributions after scaling. Default ``False``.
+
+        load_trained_models : bool, optional
+            Load a previously saved model instead of training. Default ``False``.
+
+        recalibrate_output : bool, optional
+            Force recalibration even when a saved calibrator exists. Default ``False``.
+
+        num_workers : int, optional
+            DataLoader worker processes. Default ``0``.
+
+        prefit_scaler : object, optional
+            Already-fitted feature scaler to reuse for LoRA finetuning. If
+            provided, the scaler is used with ``transform`` instead of fitting a
+            new scaler on the finetuning sample. Default ``None``.
+
+        Raises
+        ------
+        Exception
+            If ``type_of_calibration`` is not ``'isotonic'`` or ``'histogram'``.
+
+        Warns
+        -----
+        UserWarning
+            Logs a warning if the minimum predicted score for any class equals ``0`` or the maximum equals ``1``, which may indicate numerical saturation and unreliable ratio estimates.
+
+        Notes
+        -----
+        * The holdout set is stratified by ``training_labels`` to ensure class balance is preserved.
+        * When ``load_trained_models=True``, the ``holdout_num`` and ``rnd_seed`` are recovered from a saved ``.npy`` file so that the same holdout split is used, guaranteeing consistency between the saved model and any subsequent diagnostic plots.
+        * A loss-vs-epoch plot is automatically saved to ``path_to_figures`` after each successful training run.
+        """
+        # Setup the LoRA finetuning model
+        model = nsbi_common_utils.lightning_tools.LoRADensityRatioLightning(
+            model=model_to_finetune,
+            lora_rank=lora_rank,
+            lora_alpha=lora_alpha,
+            learning_rate=learning_rate,
+            use_log_loss=self.use_log_loss,
+            lr_scheduler=lr_scheduler,
+            callback_factor=callback_factor,
+            callback_patience=callback_patience,
+            scheduler_patience=scheduler_patience,
+        )
+
+        return self._train(
+            model=model,
+            number_of_epochs=number_of_epochs,
+            batch_size=batch_size,
+            scalerType=scalerType,
+            calibration=calibration,
+            type_of_calibration=type_of_calibration,
+            num_bins_cal=num_bins_cal,
+            callback=callback,
+            callback_patience=callback_patience,
+            verbose=verbose,
+            rnd_seed=rnd_seed,
+            ensemble_index=ensemble_index,
+            validation_split=validation_split,
+            holdout_split=holdout_split,
+            plot_scaled_features=plot_scaled_features,
+            load_trained_models=load_trained_models,
+            recalibrate_output=recalibrate_output,
+            num_workers=num_workers,
+            prefit_scaler=prefit_scaler,
+        )
+
+    def train(
+        self,
+        hidden_layers,
+        neurons,
+        number_of_epochs,
+        batch_size,
+        learning_rate,
+        scalerType,
+        calibration=False,
+        type_of_calibration="isotonic",
+        num_bins_cal = 40,
+        callback = True,
+        callback_patience=30,
+        callback_factor=0.01,
+        lr_scheduler="step",
+        scheduler_patience=None,
+        activation='swish',
+        verbose=2,
+        rnd_seed=None,
+        ensemble_index=None,
+        validation_split=0.1,
+        holdout_split=0.3,
+        plot_scaled_features=False,
+        load_trained_models = False,
+        recalibrate_output=False,
+        num_workers=0,
+    ):
         """
         Train a density-ratio neural network.
 
@@ -221,6 +759,14 @@ class density_ratio_trainer:
 
         callback_factor : float, optional
             Learning-rate reduction factor at plateau. Default ``0.01``.
+
+        lr_scheduler : str, optional
+            Learning-rate scheduler type. One of ``'step'`` or ``'plateau'``.
+            Default ``'step'``.
+
+        scheduler_patience : int or None, optional
+            Scheduler patience in epochs. When ``None``, reuses
+            ``callback_patience``. Default ``None``.
 
         activation : str, optional
             Hidden-layer activation function. Default ``'swish'``.
@@ -268,327 +814,40 @@ class density_ratio_trainer:
         * When ``load_trained_models=True``, the ``holdout_num`` and ``rnd_seed`` are recovered from a saved ``.npy`` file so that the same holdout split is used, guaranteeing consistency between the saved model and any subsequent diagnostic plots.
         * A loss-vs-epoch plot is automatically saved to ``path_to_figures`` after each successful training run.
         """
-        self.calibration = calibration
-        self.calibration_switch = False # Set the switch to false for first evaluation for calibration
+        model = nsbi_common_utils.lightning_tools.DensityRatioLightning(
+            n_hidden=hidden_layers,
+            n_neurons=neurons,
+            input_dim=len(self.features),
+            learning_rate=learning_rate,
+            use_log_loss=self.use_log_loss,
+            activation=activation,
+            lr_scheduler=lr_scheduler,
+            callback_factor=callback_factor,
+            callback_patience=callback_patience,
+            scheduler_patience=scheduler_patience,
+        )
 
-        if rnd_seed is None:
-            rnd_seed = np.random.randint(0, 2**32 -1, size=None)
+        return self._train(
+            model=model,
+            number_of_epochs=number_of_epochs,
+            batch_size=batch_size,
+            scalerType=scalerType,
+            calibration=calibration,
+            type_of_calibration=type_of_calibration,
+            num_bins_cal=num_bins_cal,
+            callback=callback,
+            callback_patience=callback_patience,
+            verbose=verbose,
+            rnd_seed=rnd_seed,
+            ensemble_index=ensemble_index,
+            validation_split=validation_split,
+            holdout_split=holdout_split,
+            plot_scaled_features=plot_scaled_features,
+            load_trained_models=load_trained_models,
+            recalibrate_output=recalibrate_output,
+            num_workers=num_workers,
+        )
 
-        configure_logging(verbose)
-        self.verbose = verbose
-
-        if ensemble_index is None:
-            ensemble_index_label = ''
-        else:
-            ensemble_index_label=str(ensemble_index)
-
-        if load_trained_models:
-            path_to_saved_scaler = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
-            path_to_saved_model  = f"{self.path_to_models}model{ensemble_index_label}.onnx"
-            path_to_saved_state  = f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy"
-
-            missing = [p for p in [path_to_saved_scaler, path_to_saved_model, path_to_saved_state] if not os.path.exists(p)]
-            if missing:
-                logger.warning(f"load_trained_models=True but the following files were not found, retraining:\n" + "\n".join(missing))
-                load_trained_models = False
-
-        if load_trained_models:
-            # Load the number of holdout events and random state used for train/test split when using saved models
-            holdout_num, rnd_seed = np.load(path_to_saved_state)
-        else:
-            # Get the number of holdout events from the holdout_split fraction
-            holdout_num = math.floor(self.dataset.shape[0] * holdout_split)
-
-        
-        # HyperParameters for the NN training
-        validation_split = validation_split
-        self.batch_size = batch_size
-
-        idx_incl = np.arange(len(self.weights))
-
-        # Get the indicies
-        self.train_idx, self.holdout_idx = train_test_split(idx_incl, 
-                                                                test_size=holdout_num, 
-                                                                random_state=rnd_seed,                                                        
-                                                                stratify=self.training_labels)
-
-        self.dataset_training   = self.dataset.iloc[self.train_idx].copy()
-        self.dataset_holdout   = self.dataset.iloc[self.holdout_idx].copy()
-
-        # split the original dataset into training and holdout
-        label_train, label_holdout = self.training_labels[self.train_idx].copy(), self.training_labels[self.holdout_idx].copy()
-        weight_train, weight_holdout = self.weights[self.train_idx].copy(), self.weights[self.holdout_idx].copy()
-
-        # dataset to be used for training
-        data_train, data_holdout = self.dataset_training[self.features].copy(), self.dataset_holdout[self.features].copy()
-
-        # Load pre-trained models and scaling
-        if load_trained_models:
-
-            logger.info(f"Reading saved models from {self.path_to_models}")
-            self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model, path_to_saved_scaler)
-            
-            scaled_data_train = self.scaler.transform(data_train)    
-            scaled_data_train = pd.DataFrame(scaled_data_train, columns=self.features)
-
-        # Else setup a new scaler
-        else:
-
-            if (scalerType == 'MinMax'):
-                self.scaler = ColumnTransformer([("scaler",MinMaxScaler(feature_range=(-1.5,1.5)), self.features_scaling)],remainder='passthrough')
-                
-            if (scalerType == 'StandardScaler'):
-                self.scaler = ColumnTransformer([("scaler",StandardScaler(), self.features_scaling)],remainder='passthrough')
-                
-            if (scalerType == 'PowerTransform_Yeo'):
-                self.scaler = ColumnTransformer([("scaler",PowerTransformer(method='yeo-johnson', standardize=True), self.features_scaling)],remainder='passthrough')
-
-
-            scaled_data_train = self.scaler.fit_transform(data_train)    
-            scaled_data_train = pd.DataFrame(scaled_data_train, columns=self.features)
-
-        if plot_scaled_features:
-            plot_all_features(scaled_data_train, weight_train, label_train)
-
-        # Train the model if not loaded
-        if not load_trained_models:
-
-            # Check if the datasets are normalized
-            logger.info(f"Sum of weights of class 0: {np.sum(weight_train[label_train==0])}")
-            logger.info(f"Sum of weights of class 1: {np.sum(weight_train[label_train==1])}")
-    
-            logger.info(f"Using {activation} activation function")
-
-            train_ds = nsbi_common_utils.lightning_tools.WeightedTensorDataset(
-                scaled_data_train.values,
-                label_train,
-                weight_train
-            )
-
-            val_size = int(len(train_ds) * validation_split)
-            train_size = len(train_ds) - val_size
-
-            train_ds, val_ds = torch.utils.data.random_split(train_ds, [train_size, val_size])
-
-            train_loader = DataLoader(train_ds, 
-                                        batch_size=batch_size, 
-                                        shuffle=True,
-                                        num_workers=num_workers,  
-                                        pin_memory=True,  
-                                        persistent_workers=False)
-            
-            val_loader   = DataLoader(val_ds, 
-                                      batch_size=batch_size, 
-                                      shuffle=False,
-                                        num_workers=num_workers,  
-                                        pin_memory=True,  
-                                        persistent_workers=False)
-
-            # Example use of training API
-            model = nsbi_common_utils.lightning_tools.DensityRatioLightning(
-                n_hidden=hidden_layers,
-                n_neurons=neurons,
-                input_dim=len(self.features),
-                learning_rate=learning_rate,
-                use_log_loss=self.use_log_loss,
-                activation=activation,
-                callback_factor=callback_factor,
-                callback_patience=callback_patience
-            )
-
-            loss_history = nsbi_common_utils.lightning_tools.LossHistory()
-
-            checkpoint_callback = ModelCheckpoint(
-                                                    monitor="val_loss",          
-                                                    dirpath="checkpoints/",      
-                                                    filename="best-{epoch:03d}-{val_loss:.6f}"+f"_{self.sample_name[0]}vs{self.sample_name[1]}",
-                                                    save_top_k=1,                
-                                                    mode="min",                  
-                                                    save_last=False,             
-                                                )
-
-            if callback:
-                trainer = Trainer(
-                    accelerator="auto",
-                    devices="auto",
-                    max_epochs=number_of_epochs,
-                    callbacks=[
-                        EarlyStopping(monitor="val_loss", patience=callback_patience),
-                        LearningRateMonitor(),
-                        checkpoint_callback,
-                        loss_history,
-                        nsbi_common_utils.lightning_tools.PrintEpochMetrics()
-                    ],
-                    logger=True,
-                    enable_checkpointing=True,
-                    enable_progress_bar=False,
-                )
-            else:
-                trainer = Trainer(
-                    accelerator="auto",
-                    devices="auto",
-                    max_epochs=number_of_epochs,
-                    callbacks=[loss_history, checkpoint_callback],
-                    logger=True,
-                    enable_checkpointing=False,
-                    enable_progress_bar=False
-                )
-
-            trainer.fit(model, train_loader, val_loader)
-
-            device = next(model.parameters()).device
-
-            # Memory cleaning
-            trainer = None
-            train_loader = None
-            val_loader = None
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            best_model = nsbi_common_utils.lightning_tools.DensityRatioLightning.load_from_checkpoint(
-                checkpoint_callback.best_model_path,
-                map_location=device
-                )
-
-            self.model_NN = best_model
-        
-            logger.info("Finished Training")
-                
-            path_to_saved_scaler        = f"{self.path_to_models}model_scaler{ensemble_index_label}.bin"
-            path_to_saved_model         = f"{self.path_to_models}model{ensemble_index_label}.onnx"
-
-            nsbi_common_utils.training.utils.save_model(self.model_NN, 
-                        torch.randn((1, len(self.features))), 
-                        path_to_saved_model,
-                        self.scaler, 
-                        path_to_saved_scaler,
-                        softmax_output = False)
-            
-            # Reassign the model to be in ONNX format
-            self.scaler, self.model_NN = nsbi_common_utils.training.utils.load_trained_model(path_to_saved_model, 
-                                                                                            path_to_saved_scaler)
-
-            # Save metadata
-            np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy", 
-                    np.array([holdout_num, rnd_seed]))
-    
-            plot_loss(loss_history, path_to_figures=self.path_to_figures)
-
-        
-        # Do a first prediction without calibration layers
-        train_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset_training[self.features], 
-                                                                        scaler = self.scaler, 
-                                                                        model = self.model_NN,
-                                                                        calibration_model = None,
-                                                                        use_log_loss = self.use_log_loss)
-        
-        gc.collect()
-        torch.cuda.empty_cache()
-
-        calibration_method = 'direct'
-        
-        # If calibrating, use the train_data_prediction for building histogram
-        if self.calibration:
-
-            self.calibration_switch = True
-            path_to_calibrated_object = f"{self.path_to_models}model_calibrated_hist{ensemble_index_label}.obj"
-
-            if type_of_calibration == "histogram":
-                calibration_data_num = train_data_prediction[label_train==1]
-                calibration_data_den = train_data_prediction[label_train==0]
-
-                w_num = weight_train[label_train==1]
-                w_den = weight_train[label_train==0]
-
-            if not load_trained_models:
-
-                if type_of_calibration == "histogram":
-            
-                    self.histogram_calibrator =  HistogramCalibrator(calibration_data_num, calibration_data_den, w_num, w_den, 
-                                                                    nbins=num_bins_cal, method=calibration_method, mode='dynamic')
-                
-                elif type_of_calibration == "isotonic":
-                    self.histogram_calibrator =  IsotonicCalibrator(train_data_prediction, label_train, weight_train)
-                
-                else:
-                    raise Exception(f"Type of calibration not recognized - choose between isotonic and histogram")
-                
-                file_calib = open(path_to_calibrated_object, 'wb') 
-    
-                pickle.dump(self.histogram_calibrator, file_calib)
-    
-            else:
-                if not os.path.exists(path_to_calibrated_object) or recalibrate_output:
-                    
-                    logger.info(f"Calibrating the saved model with {num_bins_cal} bins")
-                    
-                    if type_of_calibration == "histogram":
-                        self.histogram_calibrator =  HistogramCalibrator(calibration_data_num, calibration_data_den, w_num, w_den, 
-                                                                    nbins=num_bins_cal, method=calibration_method, mode='dynamic')
-                    elif type_of_calibration == "isotonic":
-                        self.histogram_calibrator =  IsotonicCalibrator(train_data_prediction, label_train, weight_train)
-
-                    else:
-                        raise Exception(f"Type of calibration not recognized - choose between isotonic and histogram")
-                
-                    file_calib = open(path_to_calibrated_object, 'wb') 
-        
-                    pickle.dump(self.histogram_calibrator, file_calib)
-                else:
-                
-                    file_calib = open(path_to_calibrated_object, 'rb') 
-                    self.histogram_calibrator = pickle.load(file_calib)
-                    logger.info(f"calibrator object loaded = {self.histogram_calibrator}")
-            
-            self.full_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features], 
-                                                                                scaler = self.scaler, 
-                                                                                model = self.model_NN,
-                                                                                calibration_model = self.histogram_calibrator,
-                                                                                use_log_loss = self.use_log_loss)
-
-        # Else, continue evaluating using the base model
-        else:
-            self.histogram_calibrator = None
-            self.full_data_prediction = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features], 
-                                                                                    scaler = self.scaler, 
-                                                                                    model = self.model_NN,
-                                                                                    calibration_model = None,
-                                                                                    use_log_loss = self.use_log_loss)
-
-        
-        # TRAINING inputs
-        self.score_den_training     = self.full_data_prediction[self.train_idx][self.training_labels[self.train_idx]==0]
-        self.weight_den_training    = self.weights[self.train_idx][self.training_labels[self.train_idx]==0]
-        self.score_num_training     = self.full_data_prediction[self.train_idx][self.training_labels[self.train_idx]==1]
-        self.weight_num_training    = self.weights[self.train_idx][self.training_labels[self.train_idx]==1]
-
-        # HOLDOUT inputs
-        self.score_den_holdout      = self.full_data_prediction[self.holdout_idx][self.training_labels[self.holdout_idx]==0]
-        self.weight_den_holdout     = self.weights[self.holdout_idx][self.training_labels[self.holdout_idx]==0]
-        self.score_num_holdout      = self.full_data_prediction[self.holdout_idx][self.training_labels[self.holdout_idx]==1]
-        self.weight_num_holdout     = self.weights[self.holdout_idx][self.training_labels[self.holdout_idx]==1]
-
-        # Some diagnostics to ensure numerical stability - min/max must not be exactly 0 or 1
-        min_max_values = [
-            (self.sample_name[1], "training", np.amin(self.score_den_training), 
-                                              np.amax(self.score_den_training)),
-            (self.sample_name[0], "training", np.amin(self.score_num_training), 
-                                              np.amax(self.score_num_training)),
-            (self.sample_name[1], "holdout", np.amin(self.score_den_holdout), 
-                                              np.amax(self.score_den_holdout)),
-            (self.sample_name[0], "holdout", np.amin(self.score_num_holdout), 
-                                              np.amax(self.score_num_holdout))
-        ]
-        
-        for name, training_holdout_label, min_val, max_val in min_max_values:
-            
-            if min_val == 0:
-                logger.warning(f"{name} {training_holdout_label} data has min score = 0, which may indicate numerical instability!")
-            
-            if max_val == 1:
-                logger.warning(f"{name} {training_holdout_label} data has max score = 1, which may indicate numerical instability!")            
-    
-    
     def make_overfit_plots(self, ensemble_index=0):
         '''
         Plot predictions for training and holdout to test compatibility
@@ -615,30 +874,30 @@ class density_ratio_trainer:
 
         if observable=='score':
             # Plot Calibration curves - score function
-            plot_calibration_curve(self.score_den_training, 
-                                   self.weight_den_training, 
-                                   self.score_num_training, 
-                                   self.weight_num_training, 
-                                   self.score_den_holdout, 
-                                   self.weight_den_holdout, 
-                                   self.score_num_holdout, 
-                                   self.weight_num_holdout, 
-                                   self.path_to_figures, 
-                                   nbins=nbins, 
+            plot_calibration_curve(self.score_den_training,
+                                   self.weight_den_training,
+                                   self.score_num_training,
+                                   self.weight_num_training,
+                                   self.score_den_holdout,
+                                   self.weight_den_holdout,
+                                   self.score_num_holdout,
+                                   self.weight_num_holdout,
+                                   self.path_to_figures,
+                                   nbins=nbins,
                                    label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index = ensemble_index)
 
         elif observable=='llr':
             # Plot Calibration curves - nll function
-            plot_calibration_curve_ratio(self.score_den_training, 
-                                        self.weight_den_training, 
-                                        self.score_num_training, 
-                                        self.weight_num_training, 
-                                        self.score_den_holdout, 
-                                        self.weight_den_holdout, 
-                                        self.score_num_holdout, 
-                                        self.weight_num_holdout, 
-                                        self.path_to_figures, 
-                                        nbins=nbins, 
+            plot_calibration_curve_ratio(self.score_den_training,
+                                        self.weight_den_training,
+                                        self.score_num_training,
+                                        self.weight_num_training,
+                                        self.score_den_holdout,
+                                        self.weight_den_holdout,
+                                        self.score_num_holdout,
+                                        self.weight_num_holdout,
+                                        self.path_to_figures,
+                                        nbins=nbins,
                                         label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index=ensemble_index)
 
         else:
@@ -674,8 +933,8 @@ class density_ratio_trainer:
         weight_ref = self.weights[self.training_labels==0].copy()
 
         # Calculate p_A/p_B for B hypothesis events
-        score_rwt = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features], 
-                                                            scaler = self.scaler, 
+        score_rwt = nsbi_common_utils.training.utils.predict_with_model(self.dataset[self.features],
+                                                            scaler = self.scaler,
                                                             model = self.model_NN,
                                                             calibration_model = self.histogram_calibrator,
                                                             use_log_loss = self.use_log_loss)[self.training_labels==0]

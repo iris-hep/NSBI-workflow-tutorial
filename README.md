@@ -13,15 +13,33 @@ The full documtation can be found here: [https://toolkit-for-simulation-based-in
 
 ## Setup
 
-We will use `pixi` to setup the environment for the workflow. The specifications are defined in the `pixi.toml` file. If `pixi` is not installed on your machine follow the instructions in [pixi seutp guide](https://pixi.sh/latest/installation/). Then proceed to install the environment with:
+We will use `pixi` to setup the environment for the workflow. The specifications are defined in the `pixi.toml` file. If `pixi` is not installed on your machine follow the instructions in [pixi setup guide](https://pixi.sh/latest/installation/).
+
+On Linux machines with CUDA-capable GPUs, install the GPU environment with:
 ```
 pixi install -e nsbi-env-gpu
 ```
-Currently the environment can only be built on machines with GPU. 
+The `nsbi-env-gpu` environment is restricted to `linux-64` and will fail on macOS.
 
-A jupyter kernel can then be created by running:
+On macOS, install the CPU environment instead:
+```
+pixi install -e nsbi-env
+```
+
+A jupyter kernel can then be created by running the command for the environment you installed:
+```
+pixi run -e nsbi-env python -m ipykernel install --user --name nsbi-env --display-name "Python (pixi: nsbi-env)"
+```
+
+For the Linux GPU environment:
 ```
 pixi run -e nsbi-env-gpu python -m ipykernel install --user --name nsbi-env-gpu --display-name "Python (pixi: nsbi-env-gpu)"
+```
+
+For cloning this repo you may want to disable auto-replacing the LFS pointer files with the actual files as they're pretty large, use the following git clone command to do so:
+
+```shell
+GIT_LFS_SKIP_SMUDGE=1 git clone git@github.com:iris-hep/NSBI-workflow-tutorial.git --depth=1
 ```
 
 ## Introduction
