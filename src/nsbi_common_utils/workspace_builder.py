@@ -7,6 +7,7 @@ from typing import Union, Dict, Any, List
 import nsbi_common_utils
 from nsbi_common_utils import configuration, datasets
 import logging
+
 logging.basicConfig(filename="workspace.log",
                     encoding="utf-8",
                     filemode="w",
@@ -52,8 +53,51 @@ class WorkspaceBuilder:
             self.ParametersToFit.append(poi)
         elif self.ParametersToFit is None:
             logging.warning('No ParametersToFit specified in config. All parameters will be included in the fitting.')
-        
+            
+    def vandermonde_modifiers(self, region_name: str, sample_name: str) -> list[dict[str, Any]]:
+        """Return normfactor modifiers that affect a given sample in a region.
 
+        Iterates over all ``VandermondeFactors`` in the configuration and keeps only those whose ``Region`` and ``Samples`` lists include the requested region/sample (or are unset, meaning they apply everywhere).
+
+        Parameters
+        ----------
+        region_name : str
+            Name of the region (channel) to filter on.
+        sample_name : str
+            Name of the physics sample to filter on.
+
+        Returns
+        -------
+        list of dict
+            Each dict has keys ``"name"``, ``"data"``, and
+            ``"type": "vandermonde"``.
+        """
+        list_dict_vandermondes = self.config.config.get("VandermondeFactors", [])
+        modifiers = []
+        for vandermonde_dict in list_dict_vandermondes:
+            vandermonde_name = vandermonde_dict["Name"]
+            vandermonde_data = vandermonde_dict.get("Data", None)
+            vandermonde_basis = vandermonde_dict.get("Basis", None)
+            vandermonde_coeffs = compute_vandermonde_coeffs(vandermonde_basis)
+
+            regions_affected = vandermonde_dict.get("Region", None)
+            if regions_affected is not None:
+                if region_name not in regions_affected:
+                    continue
+            samples_affected = vandermonde_dict.get("Samples", None)
+            if samples_affected is not None:
+                if sample_name not in samples_affected:
+                    continue
+                else:
+                    modifiers.append(
+                        {
+                            "name": vandermonde_name,
+                            "data": vandermonde_data,
+                            "coeff": vandermonde_coeffs[sample_name],
+                            "type": "vandermonde",
+                        }
+                    )
+        return modifiers
 
     def normfactor_modifiers(self,
                              region_name: str,
@@ -139,18 +183,18 @@ class WorkspaceBuilder:
         for direction in ["Up", "Dn"]:
 
             key_syst            = syst_name + '_' + direction
-            
+
             weights             = dataset[key_syst][sample_name]["weights"].to_numpy()
-            
+
             feature_var         = np.clip(dataset[key_syst][sample_name][region_variable],
                                                           np.amin(region_binning), np.amax(region_binning))
-            
+
             syst_var_data, _       = np.histogram(feature_var, weights = weights, bins = region_binning)
 
             variation_data[direction] = syst_var_data / nominal_data
 
         if type_of_fit == "binned":
-        
+
             modifiers = [{"name": syst_name,
                           "type": "normplusshape",
                           "data": {"hi_data": list(variation_data["Up"]),
@@ -159,7 +203,6 @@ class WorkspaceBuilder:
 
             idx      = self.config.get_sample_index_unbinned_regions(channel_name, sample_name)
             syst_idx = self.config.get_syst_index_unbinned_regions(channel_name, sample_name, syst_name)
-
             variation_ratio_up         = region["TrainedModels"][idx]["Systematics"][syst_idx].get("RatiosUp", None)
             variation_ratio_dn         = region["TrainedModels"][idx]["Systematics"][syst_idx].get("RatiosDn", None)
             modifiers = [{"name": syst_name,
@@ -227,7 +270,7 @@ class WorkspaceBuilder:
                             "not supporting other systematic types yet"
                         )
         return modifiers
-        
+
 
     def channels(self) -> List[Dict[str, Any]]:
         """Build the ``"channels"`` list for the workspace.
@@ -273,7 +316,7 @@ class WorkspaceBuilder:
             for v in filter_variables:
                 if v not in branches_to_load:
                     branches_to_load.append(v)
-                
+
             samples = []
             for sample_dict in self.config_dict["Samples"]:
 
@@ -281,7 +324,7 @@ class WorkspaceBuilder:
                 
                 sample_name     = sample_dict["Name"]
                 current_sample.update({"name": sample_name})
-                
+
                 sample_path     = sample_dict["SamplePath"]
                 branches_to_load_sample  = branches_to_load.copy()
 
@@ -292,17 +335,17 @@ class WorkspaceBuilder:
                                                                      region = channel_name)
 
                 dataset_nominal_sample = dataset_region_dict["Nominal"][sample_name].copy()
-                
+
                 if region_binning is None:
                     feature_arr_tmp = dataset_nominal_sample[region_variable]
                     region_binning = np.linspace(np.amin(feature_arr_tmp), np.amax(feature_arr_tmp), num=2) # Dummy binning for a single event yield calculation in unbinned region
                     region["Binning"] =  region_binning
-                    
+
                 feature_var         = np.clip(dataset_nominal_sample[region_variable],
                                               np.amin(region_binning), np.amax(region_binning))
-                
+
                 weights = dataset_region_dict["Nominal"][sample_name]["weights"].to_numpy()
-                    
+
                 sample_data, _       = np.histogram(feature_var, weights = weights, bins = region_binning)
 
                 current_sample.update({"data": list(sample_data)})
@@ -310,11 +353,11 @@ class WorkspaceBuilder:
                 if type_of_fit == "unbinned":
 
                     idx = self.config.get_sample_index_unbinned_regions(channel_name, sample_name)
-                    
+
                     nominal_ratios         = region["TrainedModels"][idx]["Nominal"].get("Ratios", None)
                     if nominal_ratios is None:
                         # Load the model and evaluate ratios - TODO
-                        nominal_model         = region["TrainedModels"][idx]["Nominal"].get("Models", None)
+                        nominal_model = region["TrainedModels"][idx]["Nominal"].get("Models", None)
 
                     current_sample.update({"ratios": nominal_ratios})
                     # current_sample.update({"weights": weights})
@@ -327,25 +370,32 @@ class WorkspaceBuilder:
 
                 modifiers += nf_modifier_list
 
+                # check if vandermonde factors affect sample in region, add modifiers as needed
+                vandermonde_modifier_list = self.vandermonde_modifiers(
+                    channel_name, sample_name
+                )
+
+                modifiers += vandermonde_modifier_list
+
                 # check if systematics affect sample in region, add modifiers as needed
                 sys_modifier_list = self.sys_modifiers(dataset_region_dict, region, sample_dict, sample_data, type_of_fit = type_of_fit)
                 modifiers += sys_modifier_list
 
-                current_sample.update({"modifiers": modifiers})  
+                current_sample.update({"modifiers": modifiers})
 
                 samples.append(current_sample)
-                    
-                
+
+
             channel.update({"samples": samples})
             channels.append(channel)
 
-            
+
         return channels
 
     def measurements(self) -> List[Dict[str, Any]]:
         """Build the ``"measurements"`` list for the workspace.
 
-        Extracts parameter initial values and bounds from the ``NormFactors`` and ``Systematics`` sections of the config, filters to the ``ParametersToFit`` subset (if specified), and records the parameter of interest (POI).
+        Extracts parameter initial values and bounds from the ``NormFactors`` ,``VandermondeFactors`` and ``Systematics`` sections of the config, filters to the ``ParametersToFit`` subset (if specified), and records the parameter of interest (POI).
 
         Returns
         -------
@@ -354,11 +404,26 @@ class WorkspaceBuilder:
         """
         measurements = []
         measurement = {}
-        measurement.update({"name": self.config_dict["General"]["Measurement"]['Name']})
+        measurement.update({"name": self.config_dict["General"]["Measurement"]["Name"]})
+        errordef = self.config_dict["General"]["Measurement"].get("ErrorDef", "LIKELIHOOD")
+        measurement.update({"errordef": errordef})
         config_dict = {}
 
         # get the norm factor initial values / bounds / constant setting
         parameters_list = []
+        for lf in self.config_dict.get("VandermondeFactors", []):
+            lf_name = lf["Name"]  # every VandermondeFactors has a name
+            init = lf.get("Nominal", None)
+            bounds = lf.get("Bounds", None)
+
+            parameter = {"name": lf_name}
+            if init is not None:
+                parameter.update({"inits": [init]})
+            if bounds is not None:
+                parameter.update({"bounds": [bounds]})
+
+            parameters_list.append(parameter)
+
         for nf in self.config_dict.get("NormFactors", []):
             nf_name = nf["Name"]  # every NormFactor has a name
             init = nf.get("Nominal", None)
@@ -383,14 +448,19 @@ class WorkspaceBuilder:
             if bounds is not None:
                 parameter.update({"bounds": [bounds]})
             parameters_list.append(parameter)
-        
+
         if self.ParametersToFit:
             parameters_list = [p for p in parameters_list if p["name"] in self.ParametersToFit]
 
-                
+
         parameters = {"parameters": parameters_list}
         config_dict.update(parameters)
-        config_dict.update({"poi": self.config_dict["General"]["Measurement"].get("POI", "")})
+        config_dict.update(
+            {"poi": self.config_dict["General"]["Measurement"].get("POI", "")}
+        )
+        config_dict.update(
+            {"errordef" : self.config_dict["General"]["Measurement"].get("ErrorDef", "LIKELIHOOD")}
+        )
         measurement.update({"config": config_dict})
         measurements.append(measurement)
         return measurements
@@ -416,15 +486,79 @@ class WorkspaceBuilder:
         measurements = self.measurements()
         ws.update({"measurements": measurements})
 
-        # # build observations
-        # observations = self.observations()
-        # ws.update({"observations": observations})
+        # build observations
+        observations = self.observations()
+        ws.update({"observations": observations})
 
         # workspace version
         ws.update({"version": "1.0.0"})
 
         return ws
 
+    def observations(self) -> List[Dict[str, Any]]:
+        """Build the ``"observations"`` list for the workspace.
+
+        Loads observed data from ROOT files as specified in the ``Observations`` section of the config, applies region filters, and histograms to produce observed counts per channel.
+
+        Returns
+        -------
+        list of dict
+            Each dict has keys ``"name"`` and ``"data"`` (list of observed counts per bin).
+        """
+        observations = []
+        for region in self.config_dict["Regions"]:
+            region_name = region["Name"]
+            
+            print(f"Processing observation for region {region_name}...")
+                        
+            region_binning = region.get("Binning", None)
+            region_variable = region.get("Variable", None)
+            region_filters = region["Filter"]
+            filter_variables = [
+                tok
+                for tok in re.split(r"[<>=!&|()\s]+", region_filters)
+                if tok and not tok.replace(".", "", 1).lstrip("-").isdigit()
+            ]
+            branches_to_load = [region_variable]
+            for v in filter_variables:
+                if v not in branches_to_load:
+                    branches_to_load.append(v)
+
+            dataset_obs = nsbi_common_utils.datasets.datasets(
+                self.config_path, branches_to_load=branches_to_load
+            )
+
+            dataframe_obs = dataset_obs.load_observations_from_config()
+            region_filters = dataset_obs.config_helper.get_channel_filters(channel_name=region_name)
+
+            dataset_obs_region = dataframe_obs.query(region_filters).copy()
+            
+            if region_binning is None:
+                feature_arr_tmp = dataset_obs_region[region_variable]
+                region_binning = np.linspace(
+                    np.amin(feature_arr_tmp), np.amax(feature_arr_tmp), num=2
+                )  # Dummy binning for a single event yield calculation in unbinned region
+                region["Binning"] = region_binning
+
+            feature_var = np.clip(
+                dataset_obs_region[region_variable],
+                np.amin(region_binning),
+                np.amax(region_binning),
+            )
+
+            weights = dataset_obs_region["weights"].to_numpy()
+
+            sample_data, _ = np.histogram(
+                feature_var, weights=weights, bins=region_binning
+            )
+
+            observation = {
+                "name": region_name,
+                "data": list(sample_data),
+            }
+            observations.append(observation)
+
+        return observations
 
     def dump_workspace(self, ws: dict, outpath: str = "workspace.json"):
         """
@@ -437,6 +571,7 @@ class WorkspaceBuilder:
         outpath : str, optional
             Output file path. Defaults to ``"workspace.json"``.
         """
+
         class NumpyEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, np.integer):
@@ -467,3 +602,21 @@ class WorkspaceBuilder:
         """
         with open(path) as f:
             return json.load(f)
+
+
+def compute_vandermonde_coeffs(points_dict):
+    stat_coeff = {}
+
+    points = list(points_dict.keys())
+    n_points = len(points)
+    basis_degree = n_points - 1
+
+    # Build Vandermonde matrix: [x^(basis_degree), x^(basis_degree-1), ..., x, 1]
+    A = np.array([[x**(basis_degree - j) for j in range(basis_degree + 1)] for x in points])
+    A_inv = np.linalg.inv(A)
+
+    for i, x in enumerate(points):
+        key = points_dict[x]
+        stat_coeff[key] = [A_inv[j][i] for j in range(basis_degree + 1)]
+
+    return stat_coeff

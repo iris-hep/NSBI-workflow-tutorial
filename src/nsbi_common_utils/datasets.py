@@ -122,6 +122,34 @@ class datasets:
 
         return dict_datasets
 
+    def load_observations_from_config(self) -> Dict:
+        """
+        Load observation according to the config structure.
+
+        """
+        sample_dict = self.config_helper.config["Observations"]
+
+        # Extract metadata for the "sample" making up the model
+        sample_name = sample_dict["Name"]
+        file_path = sample_dict["SamplePath"]
+        tree_name = sample_dict["Tree"]
+        
+        # Determine which branches to load (include weight branch if specified)
+        weight_branch = sample_dict.get("Weight")
+        branches = self.branches_to_load.copy()
+        if weight_branch and weight_branch not in branches:
+            branches.append(weight_branch)
+
+        df = self._load_dataframe_from_root(file_path, tree_name, branches)
+        
+        df["sample_name"] = str(sample_name)
+        if weight_branch:
+            df = df.rename(columns={weight_branch: "weights"})
+        else:
+            df["weights"] = 1.0
+        
+        return df
+
     def _load_dataframe_from_root(
         self, 
         file_path: str, 

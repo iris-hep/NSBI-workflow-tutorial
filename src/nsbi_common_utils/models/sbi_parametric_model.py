@@ -53,6 +53,7 @@ class sbi_parametric_model:
                 self.measurement_name                   = measurement_name
                 self.poi                                = measurement["config"]["poi"]
                 self.measurement_param_dict             = measurement["config"]["parameters"]
+                self.errordef                           = measurement["config"]["errordef"]
                 break
         self.param_names = [p['name'] for p in self.workspace['measurements'][0]['config']['parameters']]
         
@@ -65,22 +66,29 @@ class sbi_parametric_model:
 
         self.all_samples                                = self._get_samples_list()
         
-        sorting_order                                   = {"normfactor": 0, "normplusshape": 1}
+        sorting_order                                   = {"normfactor": 0, "vandermonde": 1, "normplusshape": 2} 
         self.list_parameters, \
             self.list_parameters_types, \
                 self.num_unconstrained_param            = self._get_parameters(sorting_order)
 
-        self.list_syst_normplusshape                    = self._get_list_syst_for_interp() 
+        self.list_syst_normplusshape                    = self._get_list_syst_for_interp()
+        
         self.list_normfactors, \
             self.norm_sample_map                        = self._get_norm_factors() 
+
+        self.list_vandermonde_coeffs, \
+            self.vandermonde_coeffs_map, \
+                self._max_vandermonde_coeffs               = self._get_vandermonde_coefficients()
 
         self.has_normplusshape                          = len(self.list_syst_normplusshape) > 0
 
         self.initial_parameter_values                   = self._get_param_vec_initial()
 
         self.index_normparam_map                        = self._make_map_index_norm()
+        self.index_vandermondeparam_map                   = self._make_map_index_vandermorde()
 
         self.yield_array_dict, _                        = self._get_nominal_expected_arrays( type_of_fit = "binned" )
+        
         self.unbinned_total_dict, \
             self.ratios_array_dict                      = self._get_nominal_expected_arrays( type_of_fit = "unbinned" )
 
@@ -94,6 +102,7 @@ class sbi_parametric_model:
         
         self.weight_arrays_unbinned                     = self._get_asimov_weights_array()
 
+        self.observed_array                             = self._get_observed_arrays()
         self._finalize_to_device()
 
         self.expected_hist                              = self._get_expected_hist(param_vec = self.initial_parameter_values)
@@ -121,7 +130,7 @@ class sbi_parametric_model:
     def _get_expected_hist(self, param_vec):
         """
         Optimized function for NLL computations
-        """
+        """                
         param_vec_interpolation = param_vec[ self.num_unconstrained_param : ]
         norm_modifiers          = {}
         hist_vars_binned        = {}
@@ -171,6 +180,16 @@ class sbi_parametric_model:
             dict_index_normfactor[normfactor] = index
         return dict_index_normfactor
 
+    def _make_map_index_vandermorde(self):
+        """
+        Maps the index of parameter in the parameter vector to norm factor
+        """
+        dict_index_vandermondefactor = {}
+        for vandermondefactor in self.list_vandermonde_coeffs:
+            index = self.list_parameters.index( vandermondefactor )
+            dict_index_vandermondefactor[vandermondefactor] = index
+        return dict_index_vandermondefactor
+
     def _get_param_vec_initial(self):
         initial_values_vec                     = np.ones((len(self.list_parameters),)) 
         for count, parameter in enumerate(self.list_parameters):
@@ -198,6 +217,32 @@ class sbi_parametric_model:
                                 }
 
         return list_all_norm_factors, dict_sample_normfactors
+
+    def _get_vandermonde_coefficients(self) -> Dict[str, list[float]]:
+        """Assume same vandermonde coefficients across channels for now 
+        """
+        dict_sample_vandermonde_factors        = {sample_name: {} for sample_name in self.all_samples}
+        list_all_vandermonde_factors           = []
+        max_vandermonde_coeffs                 = 0
+        for channel in self.all_channels[:1]:
+            channel_index = self._index_of_region(channel_name=channel)
+            for sample in self.all_samples:
+                sample_index = self._index_of_sample(channel_name=channel, sample_name=sample)
+                modifier_list = self.workspace["channels"][channel_index]["samples"][sample_index]["modifiers"]
+                for modifier in modifier_list:
+                    if modifier["type"] == "vandermonde":
+                        modifier_name = modifier["name"]
+                        modiefier_coeffs = modifier.get("coeff", [1,0]) # Default to linear variation if no coefficients provided
+                        max_vandermonde_coeffs = max(max_vandermonde_coeffs, len(modiefier_coeffs))
+                        if modifier_name not in list_all_vandermonde_factors               : list_all_vandermonde_factors.append(modifier_name)
+                        if modifier_name not in dict_sample_vandermonde_factors[sample]     : dict_sample_vandermonde_factors[sample][modifier_name] = modiefier_coeffs
+
+        list_all_vandermonde_factors = [p for p in list_all_vandermonde_factors if p in self.param_names]
+        dict_sample_vandermonde_factors = {key: val for key, val in dict_sample_vandermonde_factors.items()
+                                    if any(p in self.param_names for p in val)
+                                }
+ 
+        return list_all_vandermonde_factors, dict_sample_vandermonde_factors, max_vandermonde_coeffs
 
     def _get_parameters_to_fit(self) -> tuple[list[str], dict[str, float]]:
         """
@@ -284,7 +329,7 @@ class sbi_parametric_model:
 
         num_unconstrained_params = 0
         for poi_type_ in list_param_types:
-            if poi_type_ != "normfactor":
+            if poi_type_ != "normfactor" and poi_type_ != "vandermonde":
                 break
             num_unconstrained_params += 1
 
@@ -381,14 +426,41 @@ class sbi_parametric_model:
                 ratio_expected[sample_name] =   np.append(ratio_expected[sample_name], sample_ratio)
 
         return data_expected, ratio_expected
-    
+
+    def _get_observed_arrays(self):
+        """
+        Get an array of observed event yields
+        """
+        data_list = []
+
+        for channel_name in self.channels_binned:
+            channel_index = self._index_of_region(channel_name=channel_name)
+            channel_data = np.array(self.workspace["observations"][channel_index]["data"])
+            
+            data_list.append(channel_data)
+            combined_length = sum(len(arr) for arr in data_list)
+
+        if data_list:
+            data_observed = np.concatenate(data_list)
+        else:
+            data_observed = np.array([])
+        
+        return data_observed
+
     def _calculate_norm_variations(self, param_vec):
         norm_var = {sample_name: 1.0 for sample_name in self.all_samples}
         for sample, params_sample in self.norm_sample_map.items():  
             # params_sample: list[str]
             for param in params_sample:
                 index_param             = self.index_normparam_map[param]
-                norm_var[sample]        *= param_vec[index_param]
+                norm_var[sample]       *= param_vec[index_param]
+        
+        for sample , params_sample in self.vandermonde_coeffs_map.items():
+            # params_sample is a dict of param name to list of vandermonde coefficients
+            for param, coeffs in params_sample.items():
+                index_param             = self.index_vandermondeparam_map[param]
+                norm_var[sample]       *= np.polyval(coeffs, param_vec[index_param])
+                
         return norm_var
     
     def _get_systematic_data(self, type_of_fit: str) -> Dict[str, jnp.ndarray]:
@@ -508,13 +580,27 @@ class sbi_parametric_model:
         n_samples = len(samples)
         n_params  = len(self.list_parameters)
         norm_matrix = np.zeros((n_samples, n_params), dtype=bool)
+        coeffs_matrix = np.zeros((n_samples, n_params, self._max_vandermonde_coeffs), dtype=float) 
+        if self._max_vandermonde_coeffs > 0:
+            coeffs_matrix[:, :, -1] = 1.0
+                
         for i, sample in enumerate(samples):
             if sample in self.norm_sample_map:
                 for nf_name in self.norm_sample_map[sample]:
                     j = self.index_normparam_map[nf_name]
                     norm_matrix[i, j] = True
 
-        # Bundle everything into a dict pytree passed as a *dynamic* argument to the JIT-compiled NLL so that arrays are traced as abstract inputs (no constant-folding / memory blow-up).
+            if sample in self.vandermonde_coeffs_map:
+                for lf_name, coeffs in self.vandermonde_coeffs_map[sample].items():
+                    j = self.index_vandermondeparam_map[lf_name]
+                    
+                    c_len = len(coeffs)
+                    coeffs_matrix[i, j, -c_len:] = coeffs
+
+        # Bundle everything into a dict pytree passed as a *dynamic* argument
+        # to the JIT-compiled NLL so that arrays are traced as abstract inputs
+        # (no constant-folding / memory blow-up).
+              
         self._model_data = {
             'yield':            yield_stacked,
             'unbinned_total':   unbinned_total_stacked,
@@ -526,8 +612,9 @@ class sbi_parametric_model:
             'tot_up_unbinned':  tot_up_unbinned_stacked,
             'tot_dn_unbinned':  tot_dn_unbinned_stacked,
             'norm_matrix':      jnp.array(norm_matrix),
-            'expected_hist':    self.expected_hist,
-            'expected_rate':    self.expected_rate_unbinned,
+            'coeffs_matrix':    jnp.array(coeffs_matrix),
+            'observed_hist':    self.observed_array,
+            'observed_rate':    jnp.sum(self.weight_arrays_unbinned),
             'weights':          self.weight_arrays_unbinned,
         }
 
@@ -537,16 +624,39 @@ class sbi_parametric_model:
         """
         num_unc  = self.num_unconstrained_param
         has_syst = self.has_normplusshape
+        if self.errordef == "LIKELIHOOD":
+            scale = 1
+        else :
+            scale = 2
 
         _batched_var = jax.vmap(_calculate_combined_var, in_axes=(None, 0, 0))
-
+        
+        
         def _nll_pure(param_vec, data):
             param_syst = param_vec[num_unc:]
+            
+            # jax.debug.print("param_vec is {y}", y=param_vec)
 
             norm_mods = jnp.prod(
                 jnp.where(data['norm_matrix'], param_vec[None, :], 1.0), axis=1
             )
+            
+            if self._max_vandermonde_coeffs > 0:
+            
+                def compute_norm_mods(coeffs_sample, param_vec):
+                    
+                    # 1. Map polyval across each parameter's coefficient row
+                    poly_vals = jax.vmap(jnp.polyval)(coeffs_sample, param_vec)
+                    
+                    # 2. Multiply the results of all polynomials for this sample
+                    return jnp.prod(poly_vals)
 
+                # Apply across all samples
+                final_norm_mods = jax.vmap(compute_norm_mods, in_axes=(0, None))(data['coeffs_matrix'], param_vec)
+                
+                norm_mods = norm_mods * final_norm_mods
+            
+            # --- Systematic variations (one vmapped call per category) ---
             if has_syst:
                 hist_vars_binned = _batched_var(param_syst,
                                            data['var_up_binned'],
@@ -564,16 +674,17 @@ class sbi_parametric_model:
 
             nu_binned  = jnp.sum(norm_mods[:, None] * data['yield'] * hist_vars_binned,
                                  axis=0)
-            llr_binned = -2.0 * jnp.sum(
-                data['expected_hist'] * jnp.log(nu_binned) - nu_binned
+                        
+            llr_binned = -scale * jnp.sum(
+                data['observed_hist'] * jnp.log(nu_binned) - nu_binned
             )
 
             nu_unbinned = jnp.sum(
                 norm_mods[:, None] * data['unbinned_total'] * hist_vars_unbinned,
                 axis=0
             )
-            llr_rate = -2.0 * jnp.sum(
-                data['expected_rate'] * jnp.log(nu_unbinned) - nu_unbinned
+            llr_rate = -scale * jnp.sum(
+                data['observed_rate'] * jnp.log(nu_unbinned) - nu_unbinned
             )
 
             dnu_dx = jnp.sum(
@@ -587,11 +698,20 @@ class sbi_parametric_model:
             llr_pe = jnp.log(dnu_dx) - jnp.log(nu_unbinned)
 
             llr_constraints = jnp.sum(param_syst ** 2)
+            
+            llr_unbinned = - scale * jnp.sum(data['weights'] * llr_pe, axis=0)
+            
+            llr_total = llr_binned + llr_rate + llr_unbinned + llr_constraints
 
-            return (llr_binned
-                    + llr_rate
-                    - 2.0 * jnp.sum(data['weights'] * llr_pe, axis=0)
-                    + llr_constraints)
+            # jax.debug.print("nu_binned is {y}", y=nu_binned)
+            # jax.debug.print("observed_hist is {y}", y=data['observed_hist'])            
+            # jax.debug.print("llr_binned is {y}", y=llr_binned)
+            # jax.debug.print("llr_rate is {y}", y=llr_rate)
+            # jax.debug.print("llr_unbinned is {y}", y=llr_unbinned)
+            # jax.debug.print("llr_constraints is {y}", y=llr_constraints)
+            # jax.debug.print("llr_total is {y}", y=llr_total)
+            
+            return (llr_total)
 
         jit_nll          = jax.jit(_nll_pure)
         jit_val_and_grad = jax.jit(jax.value_and_grad(_nll_pure, argnums=0))

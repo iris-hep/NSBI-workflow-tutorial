@@ -237,7 +237,7 @@ class inference:
         self.pulls_global_fit = np.array(m.values)
 
         # Displays results of the global fit
-        print(f'fit: \n {mg}')
+        print(f'fit: \n{mg}')
     
     def perform_profile_scan(self, 
                       parameter_name: str = '', 
