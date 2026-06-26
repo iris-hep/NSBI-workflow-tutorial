@@ -1,0 +1,413 @@
+import os
+import yaml
+
+configfile: "examples/FAIR_universe_Higgs_tautau/config.pipeline.yaml"
+
+EXAMPLE_DIR = "FAIR_universe_Higgs_tautau"
+WORK_DIR    = f"examples/{EXAMPLE_DIR}"
+CONFIG_FILE = "config.pipeline.yaml"
+
+# Sentinel files (`.done_*`) used to drive the DAG live on shared FS, not inside the repo. The plugin's `htcondor-shared-fs-prefixes` covers /projects, so the EP-side snakemake writes touch() directly to this path and the AP reads it without HTCondor transfer — no clutter inside the working tree.
+SENTINEL_DIR = "/projects/Physics_Cranmer/sentinels_FAIR_higgs"
+
+_syst_cfg        = config["systematic_uncertainty"]
+BASIS_PROCESSES  = config["neural_likelihood_ratio_estimation"]["basis_processes_to_train"]
+N_ENSEMBLE       = config["neural_likelihood_ratio_estimation"]["num_ensemble_members_training"]
+ENSEMBLE_INDICES = list(range(N_ENSEMBLE))
+
+N_ENSEMBLE_SYST  = _syst_cfg.get("num_ensemble_members_training", 1)
+SYST_ENSEMBLE_INDICES = list(range(N_ENSEMBLE_SYST))
+
+# K-fold cross-validation: num_folds (set to 1 to disable). 
+NUM_FOLDS    = int(config.get("data_preprocessing", {}).get("num_folds", 1))
+FOLD_INDICES = list(range(NUM_FOLDS))
+USE_KFOLD    = NUM_FOLDS > 1
+
+_nsbi_fit_config_path = os.path.join(WORK_DIR, _syst_cfg["nsbi_fit_config"])
+with open(_nsbi_fit_config_path) as _fh:
+    _nsbi_fit_config = yaml.safe_load(_fh)
+
+SYST_COMBOS = [] 
+for _dict_syst in _nsbi_fit_config.get("Systematics", []) or []:
+    if _dict_syst.get("Type") != "NormPlusShape":
+        continue
+    _syst_name = _dict_syst["Name"]
+    for _process in BASIS_PROCESSES:
+        if _process not in _dict_syst.get("Samples", []):
+            continue
+        for _direction in ["Up", "Dn"]:
+            SYST_COMBOS.append((_process, _syst_name, _direction))
+
+wildcard_constraints:
+    process      = r"[A-Za-z][A-Za-z0-9]*",
+    syst         = r"[A-Za-z][A-Za-z0-9]*",
+    direction    = r"Up|Dn",
+    fold         = r"\d+",
+    ensemble_idx = r"\d+",
+
+
+_BASE_GPU_EXCLUDES = [
+    "vetsigian0001.chtc.wisc.edu",
+    "vetsigian0000.chtc.wisc.edu",
+    "gpulab2003.chtc.wisc.edu",
+]
+
+
+def base_requirements(extra_excludes=()):
+    """HasCHTCStaging + base machine excludes. Use for rules that don't request a GPU (or don't care about driver version). The machine excludes still apply because some EPs in the pool (vetsigian*, gpulab2003) don't expose /home in a way snakemake-on-EP can write to, which causes apptainer-prefix mkdir failures."""
+    excludes = _BASE_GPU_EXCLUDES + list(extra_excludes)
+    excl_clause = " && ".join(f'(Machine != "{m}")' for m in excludes)
+    return f'(Target.HasCHTCStaging == true) && {excl_clause}'
+
+
+def gpu_requirements(driver_version="12.4", extra_excludes=()):
+    """Build a HTCondor requirements expression for a GPU job: driver-version floor + HasCHTCStaging + machine excludes (base + per-rule extras)."""
+    excludes = _BASE_GPU_EXCLUDES + list(extra_excludes)
+    excl_clause = " && ".join(f'(Machine != "{m}")' for m in excludes)
+    return f'(GPUs_DriverVersion >= {driver_version}) && (Target.HasCHTCStaging == true) && {excl_clause}'
+
+
+def _r(v):
+    """Wrap a literal in a zero-arg callable so Snakemake's resources-block type check accepts non-int/str values (bools, floats). The htcondor plugin invokes the callable and uses the returned value when emitting the submit description, so we can pass `True`/`False` for `+ClassAd` flags and `7.5` for `gpus_minimum_capability` without tripping the validator."""
+    return lambda *_args, **_kwargs: v
+
+
+# Static files that every rule needs on the EP. 
+COMMON_TRANSFER = ",".join([
+    "src",
+    "pyproject.toml",
+    "README.md",
+    f"{WORK_DIR}/{CONFIG_FILE}",
+    f"{WORK_DIR}/scripts",
+    f"{WORK_DIR}/config_fit_nsbi.yml",
+    f"{WORK_DIR}/config_fit_histogram.yml",
+])
+
+
+def train_sentinels():
+    """All nominal-training sentinel paths, fanned out over (process, fold, ensemble_idx). Fold dimension is collapsed when NUM_FOLDS == 1."""
+    if USE_KFOLD:
+        return expand(
+            f"{SENTINEL_DIR}/.done_train_{{process}}_fold{{fold}}_{{ensemble_idx}}",
+            process=BASIS_PROCESSES, fold=FOLD_INDICES, ensemble_idx=ENSEMBLE_INDICES,
+        )
+    return expand(
+        f"{SENTINEL_DIR}/.done_train_{{process}}_{{ensemble_idx}}",
+        process=BASIS_PROCESSES, ensemble_idx=ENSEMBLE_INDICES,
+    )
+
+
+def syst_sentinels():
+    """All systematic-training sentinel paths, fanned out over (process, syst, direction, fold, ensemble_idx)."""
+    paths = []
+    for process, syst, direction in SYST_COMBOS:
+        for idx in SYST_ENSEMBLE_INDICES:
+            if USE_KFOLD:
+                for fold in FOLD_INDICES:
+                    paths.append(f"{SENTINEL_DIR}/.done_syst_{process}_{syst}_{direction}_fold{fold}_{idx}")
+            else:
+                paths.append(f"{SENTINEL_DIR}/.done_syst_{process}_{syst}_{direction}_{idx}")
+    return paths
+
+
+rule all:
+    input:
+        f"{SENTINEL_DIR}/.done_parameter_fitting"
+
+
+# =============================================================================
+# Stage 1: Data Processing
+# =============================================================================
+
+rule data_loader:
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_loader"),
+    threads: 2
+    resources:
+        request_memory = "100GB",
+        request_disk   = "100GB",
+        requirements   = base_requirements(),
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/data_loader.py --config {CONFIG_FILE}
+        """
+
+
+rule data_preprocessing:
+    input:
+        loader_done = f"{SENTINEL_DIR}/.done_data_loader",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_preprocessing"),
+    threads: 2
+    resources:
+        request_memory = "64GB",
+        request_disk   = "64GB",
+        request_gpus   = 1,
+        requirements   = base_requirements(),
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+        skip     = "--skip" if config.get("skip", False) else "",
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/data_preprocessing.py --config {CONFIG_FILE} \
+            {params.skip}
+        """
+
+
+# =============================================================================
+# Stage 2: Preselection Network
+# =============================================================================
+
+rule preselection_network:
+    input:
+        preprocessing_done = f"{SENTINEL_DIR}/.done_data_preprocessing",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_preselection_network"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.0),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.0"),
+        htcondor_transfer_input_files  = COMMON_TRANSFER,
+        # Plots written by the script land at `./output/plots/preselection_network/` (per `preselection_network.output.plots_dir` in config.pipeline.yaml). Declare the dir so HTCondor ships it back to the AP.
+        htcondor_transfer_output_files = f"{WORK_DIR}/output/plots/preselection_network",
+    params:
+        work_dir = WORK_DIR,
+        skip     = "--skip" if config.get("skip", False) else "",
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/preselection_network.py --config {CONFIG_FILE} \
+            {params.skip}
+        """
+
+
+# =============================================================================
+# Stage 3a: Density Ratio Training — parallel ensemble fan-out
+# =============================================================================
+
+rule train_ensemble_fold:
+    """K-fold variant: one job per (process, fold, ensemble_idx). Only instantiated when NUM_FOLDS > 1; the fold sentinel pattern can't match anything when there's just one fold."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_train_{{process}}_fold{{fold}}_{{ensemble_idx}}"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.0),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.4", extra_excludes=["gpulab2001.chtc.wisc.edu", "dsigpu4001.chtc.wisc.edu"]),
+        allowed_job_duration    = 90000,
+        max_retries             = 3,
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/neural_likelihood_ratio_estimation.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --fold_index {wildcards.fold}
+        """
+
+
+rule train_ensemble_nofold:
+    """Single-fold variant: one job per (process, ensemble_idx). The script omits the `_fold{N}` suffix from model paths when `--fold_index` is not passed, matching the htcondor non-kfold case."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_train_{{process}}_{{ensemble_idx}}"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.0),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.4", extra_excludes=["gpulab2001.chtc.wisc.edu", "dsigpu4001.chtc.wisc.edu"]),
+        allowed_job_duration    = 9000,
+        max_retries             = 3,
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/neural_likelihood_ratio_estimation.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --ensemble_index {wildcards.ensemble_idx}
+        """
+
+
+# =============================================================================
+# Stage 3b: Systematic Uncertainty Training
+# =============================================================================
+
+rule systematic_uncertainty_training_fold:
+    """K-fold variant of the systematics training job."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_syst_{{process}}_{{syst}}_{{direction}}_fold{{fold}}_{{ensemble_idx}}"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.5),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.4", extra_excludes=["gpulab2001.chtc.wisc.edu"]),
+        allowed_job_duration    = 9000,
+        max_retries             = 3,
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/systematic_uncertainty_training.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --systematic {wildcards.syst} \
+            --direction {wildcards.direction} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --fold_index {wildcards.fold} \
+            --train
+        """
+
+
+rule systematic_uncertainty_training_nofold:
+    """Single-fold variant of the systematics training job."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_syst_{{process}}_{{syst}}_{{direction}}_{{ensemble_idx}}"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.5),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.4", extra_excludes=["gpulab2001.chtc.wisc.edu"]),
+        allowed_job_duration    = 9000,
+        max_retries             = 3,
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/systematic_uncertainty_training.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --systematic {wildcards.syst} \
+            --direction {wildcards.direction} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --train
+        """
+
+
+# =============================================================================
+# Stage 4: Density Ratio Evaluation
+# =============================================================================
+
+rule data_nn_eval:
+    input:
+        ensemble_done    = train_sentinels(),
+        systematics_done = syst_sentinels(),
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_nn_eval"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(7.5),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = gpu_requirements(driver_version="12.6", extra_excludes=["gpulab2001.chtc.wisc.edu", "dsigpu4001.chtc.wisc.edu"]),
+        htcondor_transfer_input_files = COMMON_TRANSFER,
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/data_nn_eval.py --config {CONFIG_FILE}
+        """
+
+
+# =============================================================================
+# Stage 5: Parameter Fitting — final inference step.
+# =============================================================================
+
+rule parameter_fitting:
+    input:
+        eval_done = f"{SENTINEL_DIR}/.done_data_nn_eval",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_parameter_fitting"),
+    threads: 2
+    resources:
+        request_memory          = "64GB",
+        request_disk            = "64GB",
+        request_gpus            = 1,
+        gpus_minimum_capability = _r(8.0),
+        classad_WantGPULab      = _r(True),
+        classad_GPUJobLength    = "medium",
+        requirements            = "(GPUs_DriverVersion >= 12.0) && (Target.HasCHTCStaging == true)",
+        htcondor_transfer_input_files  = COMMON_TRANSFER,
+        htcondor_transfer_output_files = f"{WORK_DIR}/output/plots/parameter_fitting",
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0
+        python -m pip install --no-deps --user -e .
+        cd {params.work_dir}
+        python -u scripts/parameter_fitting.py --config {CONFIG_FILE}
+        """

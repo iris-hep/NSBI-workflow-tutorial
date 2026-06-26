@@ -42,6 +42,29 @@ class datasets:
             if branch not in self.branches_all:
                 self.branches_all.append(branch)
 
+    def _extract_data_from_sampledict(self, sample_dict: Dict) -> pd.DataFrame:
+        
+        # Extract metadata for the "sample" making up the model
+        sample_name = sample_dict.get("Name") or sample_dict.get("SampleName")
+        file_path = sample_dict.get("Path") or sample_dict.get("SamplePath")
+        tree_name = sample_dict.get("Tree")
+
+        # Determine which branches to load (include weight branch if specified)
+        weight_branch = sample_dict.get("Weight")
+        branches = self.branches_to_load.copy()
+        if weight_branch and weight_branch not in branches:
+            branches.append(weight_branch)
+
+        df = self._load_dataframe_from_root(file_path, tree_name, branches)
+        
+        df["sample_name"] = str(sample_name)
+        if weight_branch:
+            df = df.rename(columns={weight_branch: "weights"})
+        else:
+            df["weights"] = 1.0   
+        
+        return df  
+
     def load_datasets_from_config(self, load_systematics: bool = False) -> Dict:
         """
         Load datasets according to the config structure.
@@ -62,23 +85,8 @@ class datasets:
 
             # Extract metadata for the "sample" making up the model
             sample_name = sample_dict["Name"]
-            file_path = sample_dict["SamplePath"]
-            tree_name = sample_dict["Tree"]
-            
-            # Determine which branches to load (include weight branch if specified)
-            weight_branch = sample_dict.get("Weight")
-            branches = self.branches_to_load.copy()
-            if weight_branch and weight_branch not in branches:
-                branches.append(weight_branch)
 
-            df = self._load_dataframe_from_root(file_path, tree_name, branches)
-            
-            df["sample_name"] = str(sample_name)
-            if weight_branch:
-                df = df.rename(columns={weight_branch: "weights"})
-            else:
-                df["weights"] = 1.0
-            
+            df = self._extract_data_from_sampledict(sample_dict) 
             dict_datasets["Nominal"][sample_name] = df
 
         # 2. Load systematic variations for constrained systematics (if load_systematics=True)
@@ -99,25 +107,8 @@ class datasets:
 
                         for sample_dict in syst_dict.get(direction, []):
 
-                            # Extract sample metadata
                             sample_name = sample_dict["SampleName"]
-                            file_path = sample_dict["Path"]
-                            tree_name = sample_dict["Tree"]
-                            
-                            # Include weight branch if specified
-                            weight_branch = sample_dict.get("Weight")
-                            branches = self.branches_to_load.copy()
-                            if weight_branch and weight_branch not in branches:
-                                branches.append(weight_branch)
-
-                            df = self._load_dataframe_from_root(file_path, tree_name, branches)
-                            
-                            df["sample_name"] = str(sample_name)
-                            if weight_branch:
-                                df = df.rename(columns={weight_branch: "weights"})
-                            else:
-                                df["weights"] = 1.0
-                            
+                            df = self._extract_data_from_sampledict(sample_dict)
                             dict_datasets[region_key][sample_name] = df
 
         return dict_datasets
@@ -409,30 +400,142 @@ class datasets:
 
         return dataset
     
-    def prepare_basis_training_dataset(self, 
-                                       dataset_numerator, 
-                                       processes_numerator, 
-                                       dataset_denominator, 
-                                       processes_denominator, 
-                                       denominatorisreferencehypothesis = False):
+    @staticmethod
+    def split_by_fold(dataset_dict, fold_index, num_folds, mode="train"):
+        """Split each sample DataFrame by the pre-assigned ``fold_index`` column.
 
-        ref_train_label_sample_dict = {**{ref: 0 for ref in processes_denominator}}
+        Parameters
+        ----------
+        dataset_dict : dict[str, DataFrame]
+            Sample-name to DataFrame mapping (e.g. the ``"Nominal"`` dict).
+        fold_index : int
+            Which fold to hold out for evaluation.
+        num_folds : int
+            Total number of folds (must match the value used during preprocessing).
+        mode : ``"train"`` or ``"eval"``
+            ``"train"`` returns events **not** in ``fold_index``;
+            ``"eval"`` returns only events in ``fold_index``.
 
-        dataset_ref     = self.merge_dataframe_dict_for_training(dataset_denominator, 
-                                                                  ref_train_label_sample_dict, 
-                                                                  samples_to_merge = processes_denominator,
-                                                                  isreferencehypothesis = denominatorisreferencehypothesis)
-        
+        Returns
+        -------
+        dict[str, DataFrame]
+            Same structure with rows filtered according to fold membership.
+        """
+        out = {}
+        for sample_name, df in dataset_dict.items():
+            if "fold_index" not in df.columns:
+                raise KeyError(
+                    f"Column 'fold_index' not found in sample '{sample_name}'. "
+                    "Run data_preprocessing with num_folds > 1 first."
+                )
+            if mode == "train":
+                out[sample_name] = df[df["fold_index"] != fold_index].copy()
+            else:
+                out[sample_name] = df[df["fold_index"] == fold_index].copy()
+        return out
+
+    def prepare_basis_training_dataset(self,
+                                       dataset_numerator,
+                                       processes_numerator,
+                                       dataset_denominator,
+                                       processes_denominator,
+                                       denominatorisreferencehypothesis = False,
+                                       reference_priors = None):
+        """
+        Build the binary-classification training set for density-ratio estimation. Numerator class (label 1) is the merger of ``processes_numerator`` from ``dataset_numerator``. Denominator class (label 0) is a reference mixture; how that mixture is constructed depends on ``reference_priors``:
+
+        * ``reference_priors=None`` (default, backwards-compatible): the reference is built from ``processes_denominator`` with each sample weighted by its physical event-weight yield. Legacy behaviour.
+
+        * ``reference_priors={sample_name: spec, ...}``: the reference is the unified mixture over the listed samples (``processes_denominator`` is ignored). The fraction of class-0 weight assigned to sample ``c`` is ``T_c / sum(T_d)``, and the corresponding cap on the per-event density ratio is ``M_c = sum(T_d) / T_c`` in regions where ``c`` is the sole support.
+
+        Each ``spec`` may be:
+
+        * ``None`` — use the sample's physical event-weight yield (``sum(dataset['weights'])``). Picks up the same value the legacy yield-weighting would have used, so leaving htautau/ttbar as ``None`` preserves their relative weighting exactly.
+        * a positive number — used directly as the relative prior weight (any unit; only ratios matter).
+        * ``{'cap': M}`` — auto-solve the prior so the resulting max ratio for this sample is ``M``. The natural intent "bound this process's ratio at M" rather than "give it this much weight".
+
+        Resolution order: ``None``/numeric specs are resolved first (their sum = ``T_fixed``), then cap specs are filled in via ``T_c = T_fixed / (M_c · (1 - sum_d 1/M_d))``. Sum of ``1/M_d`` over all cap entries must be ``< 1``. At least one non-cap entry with positive weight must be present to anchor caps.
+        """
+        if reference_priors is None:
+            ref_train_label_sample_dict = {**{ref: 0 for ref in processes_denominator}}
+
+            dataset_ref     = self.merge_dataframe_dict_for_training(dataset_denominator,
+                                                                      ref_train_label_sample_dict,
+                                                                      samples_to_merge = processes_denominator,
+                                                                      isreferencehypothesis = denominatorisreferencehypothesis)
+        else:
+            resolved = self._resolve_reference_priors(reference_priors, dataset_denominator)
+            total = sum(resolved.values())
+            if total <= 0:
+                raise ValueError("Resolved reference priors sum to a non-positive total; check the values.")
+
+            ref_frames = []
+            for sample_name, prior_weight in resolved.items():
+                df = dataset_denominator[sample_name].copy()
+                w = df["weights"].to_numpy().astype(float)
+                w_sum = w.sum()
+                if w_sum <= 0:
+                    raise ValueError(f"Sample '{sample_name}' has non-positive total physical weight; cannot use in reference.")
+                df["weights_normed"] = w / w_sum * (prior_weight / total)
+                df["train_labels"] = 0
+                ref_frames.append(df)
+            dataset_ref = pd.concat(ref_frames, ignore_index=True)
+
         numerator_train_label_sample_dict = {**{numerator: 1 for numerator in processes_numerator}}
-        
-        dataset_num = self.merge_dataframe_dict_for_training(dataset_numerator, 
-                                                            numerator_train_label_sample_dict, 
+
+        dataset_num = self.merge_dataframe_dict_for_training(dataset_numerator,
+                                                            numerator_train_label_sample_dict,
                                                             samples_to_merge = processes_numerator,
                                                             isreferencehypothesis = False)
-        
+
         dataset_mix_model = pd.concat([dataset_num, dataset_ref])
 
         return dataset_mix_model
+
+    @staticmethod
+    def _resolve_reference_priors(reference_priors, dataset_denominator):
+        """Resolve the mixed-spec ``reference_priors`` dict into a concrete ``{sample_name: prior_weight}`` mapping. See :meth:`prepare_basis_training_dataset` for the accepted spec types."""
+        fixed_values = {}
+        caps = {}
+
+        for sample_name, spec in reference_priors.items():
+            if sample_name not in dataset_denominator:
+                raise KeyError(f"reference_priors lists '{sample_name}' but it is not present in dataset_denominator.")
+            if spec is None:
+                yield_v = float(dataset_denominator[sample_name]["weights"].to_numpy().sum())
+                if yield_v <= 0:
+                    raise ValueError(f"Sample '{sample_name}': physical yield (sum of weights) is non-positive; cannot use as a 'None' (auto-yield) prior.")
+                fixed_values[sample_name] = yield_v
+            elif isinstance(spec, bool):
+                raise ValueError(f"reference_priors['{sample_name}'] = {spec}; booleans are not a valid spec.")
+            elif isinstance(spec, (int, float)):
+                if spec <= 0:
+                    raise ValueError(f"reference_priors['{sample_name}'] = {spec}; must be a positive number.")
+                fixed_values[sample_name] = float(spec)
+            elif isinstance(spec, dict) and "cap" in spec:
+                M = float(spec["cap"])
+                if M <= 1:
+                    raise ValueError(f"reference_priors['{sample_name}'].cap = {M}; must be > 1 to be a meaningful ratio bound.")
+                caps[sample_name] = M
+            else:
+                raise ValueError(f"reference_priors['{sample_name}']: unrecognized spec {spec!r}. Expected None, a positive number, or a dict with key 'cap'.")
+
+        if not caps:
+            return fixed_values
+
+        cap_fraction_sum = sum(1.0 / M for M in caps.values())
+        if cap_fraction_sum >= 1.0:
+            raise ValueError(f"Sum of 1/M over cap entries = {cap_fraction_sum:.4f}; must be < 1 (else the non-cap entries get squeezed to zero or negative weight).")
+
+        fixed_total = sum(fixed_values.values())
+        if fixed_total <= 0:
+            raise ValueError("At least one non-cap (None or numeric) entry with positive weight is required to anchor the cap-mode entries.")
+
+        T_total = fixed_total / (1.0 - cap_fraction_sum)
+        for sample_name, M in caps.items():
+            fixed_values[sample_name] = T_total / M
+
+        return fixed_values
 
 
 

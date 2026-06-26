@@ -10,23 +10,29 @@ General:
               POI  : mu_htautau
 
 Samples:
+    - Name              : obs
+      Tree              : tree_obs
+      SamplePath        : /projects/Physics_Cranmer/saved_datasets/dataset_with_obs.root
+      Weight            : weights
+      Data              : True
+      
     - Name              : ztautau
       Tree              : tree_ztautau
-      SamplePath        : ./saved_datasets/dataset_nominal.root
+      SamplePath        : /projects/Physics_Cranmer/saved_datasets/dataset_nominal.root
       Weight            : weights
       UseAsReference    : False
       UseAsBasis        : True
 
     - Name              : ttbar
       Tree              : tree_ttbar
-      SamplePath        : ./saved_datasets/dataset_nominal.root
+      SamplePath        : /projects/Physics_Cranmer/saved_datasets/dataset_nominal.root
       Weight            : weights
       UseAsReference    : True
       UseAsBasis        : True
 
     - Name              : htautau
       Tree              : tree_htautau
-      SamplePath        : ./saved_datasets/dataset_nominal.root
+      SamplePath        : /projects/Physics_Cranmer/saved_datasets/dataset_nominal.root
       Weight            : weights
       UseAsReference    : True
       UseAsBasis        : True
@@ -55,28 +61,28 @@ Systematics:
               - ttbar
         Up                  : 
             -   SampleName        : htautau
-                Path              : ./saved_datasets/dataset_JES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_up.root
                 Tree              : tree_htautau
                 Weight            : weights
             -   SampleName        : ztautau
-                Path              : ./saved_datasets/dataset_JES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_up.root
                 Tree              : tree_ztautau
                 Weight            : weights
             -   SampleName        : ttbar
-                Path              : ./saved_datasets/dataset_JES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_up.root
                 Tree              : tree_ttbar
                 Weight            : weights
         Dn                  :
             -   SampleName        : htautau
-                Path              : ./saved_datasets/dataset_JES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_dn.root
                 Tree              : tree_htautau
                 Weight            : weights
             -   SampleName        : ztautau
-                Path              : ./saved_datasets/dataset_JES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_dn.root
                 Tree              : tree_ztautau
                 Weight            : weights
             -   SampleName        : ttbar
-                Path              : ./saved_datasets/dataset_JES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_JES_dn.root
                 Tree              : tree_ttbar
                 Weight            : weights
     -   Name                : TES
@@ -88,28 +94,28 @@ Systematics:
               - ttbar
         Up                  :
             -   SampleName        : htautau
-                Path              : ./saved_datasets/dataset_TES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_up.root
                 Tree              : tree_htautau
                 Weight            : weights
             -   SampleName        : ztautau
-                Path              : ./saved_datasets/dataset_TES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_up.root
                 Tree              : tree_ztautau
                 Weight            : weights
             -   SampleName        : ttbar
-                Path              : ./saved_datasets/dataset_TES_up.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_up.root
                 Tree              : tree_ttbar
                 Weight            : weights
         Dn                  :
             -   SampleName        : htautau
-                Path              : ./saved_datasets/dataset_TES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_dn.root
                 Tree              : tree_htautau
                 Weight            : weights
             -   SampleName        : ztautau
-                Path              : ./saved_datasets/dataset_TES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_dn.root
                 Tree              : tree_ztautau
                 Weight            : weights
             -   SampleName        : ttbar
-                Path              : ./saved_datasets/dataset_TES_dn.root
+                Path              : /projects/Physics_Cranmer/saved_datasets/dataset_TES_dn.root
                 Tree              : tree_ttbar
                 Weight            : weights
 
@@ -156,54 +162,60 @@ Regions:
     Type            : unbinned
     Variable        : null
     Binning         : null
-    AsimovWeights   : ./saved_datasets/asimov_weights.npy
-    TrainedModels:
-        - SampleName    : htautau
-          Nominal   : 
-               Models  : ./saved_datasets/output_training_nominal/output_model_params_htautau/
-               Ratios  : ./saved_datasets/output_training_nominal/output_ratios_htautau/ratio_htautau.npy
-          Systematics    :
-             - SystName: TES
-               ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_htautau_TES_Up/
-               ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_htautau_TES_Dn/
-               RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_htautau_TES_Up/ratio_htautau.npy
-               RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_htautau_TES_Dn/ratio_htautau.npy
-             - SystName: JES
-               ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_htautau_JES_Up/
-               ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_htautau_JES_Dn/
-               RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_htautau_JES_Up/ratio_htautau.npy
-               RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_htautau_JES_Dn/ratio_htautau.npy
-        - SampleName    : ttbar
-          Nominal       : 
-                Models  : ./saved_datasets/output_training_nominal/output_model_params_ttbar/
-                Ratios  : ./saved_datasets/output_training_nominal/output_ratios_ttbar/ratio_ttbar.npy
-          Systematics    :
-            - SystName: TES
-              ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Up/
-              ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Dn/
-              RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Up/ratio_ttbar.npy
-              RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Dn/ratio_ttbar.npy
-            - SystName: JES
-              ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Up/
-              ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Dn/ 
-              RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Up/ratio_ttbar.npy
-              RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Dn/ratio_ttbar.npy
-        - SampleName    : ztautau
-          Nominal       : 
-                Models  : ./saved_datasets/output_training_nominal/output_model_params_ztautau/
-                Ratios  : ./saved_datasets/output_training_nominal/output_ratios_ztautau/ratio_ztautau.npy
-          Systematics    :
-             - SystName: TES
-               ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Up/
-               ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Dn/
-               RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Up/ratio_ztautau.npy
-               RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Dn/ratio_ztautau.npy
-             - SystName: JES
-               ModelsUp: ./saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Up/
-               ModelsDn: ./saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Dn/
-               RatiosUp: ./saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Up/ratio_ztautau.npy
-               RatiosDn: ./saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Dn/ratio_ztautau.npy
-                           
+
+
+
+TrainedModels:
+  SR:
+    RegionName: SR
+    Weights   : /projects/Physics_Cranmer/saved_datasets/asimov_weights.npy
+    Models    :
+    - Name    : htautau
+      Nominal   : 
+            Models  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_model_params_htautau/
+            Ratios  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_ratios_htautau/ratio_htautau.npy
+      Systematics    :
+          - SystName: TES
+            ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_htautau_TES_Up/
+            ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_htautau_TES_Dn/
+            RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_htautau_TES_Up/ratio_htautau.npy
+            RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_htautau_TES_Dn/ratio_htautau.npy
+          - SystName: JES
+            ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_htautau_JES_Up/
+            ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_htautau_JES_Dn/
+            RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_htautau_JES_Up/ratio_htautau.npy
+            RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_htautau_JES_Dn/ratio_htautau.npy
+    - Name    : ttbar
+      Nominal       : 
+            Models  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_model_params_ttbar/
+            Ratios  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_ratios_ttbar/ratio_ttbar.npy
+      Systematics    :
+        - SystName: TES
+          ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Up/
+          ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ttbar_TES_Dn/
+          RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Up/ratio_ttbar.npy
+          RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ttbar_TES_Dn/ratio_ttbar.npy
+        - SystName: JES
+          ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Up/
+          ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ttbar_JES_Dn/ 
+          RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Up/ratio_ttbar.npy
+          RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ttbar_JES_Dn/ratio_ttbar.npy
+    - Name    : ztautau
+      Nominal       : 
+            Models  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_model_params_ztautau/
+            Ratios  : /projects/Physics_Cranmer/saved_datasets/output_training_nominal/output_ratios_ztautau/ratio_ztautau.npy
+      Systematics    :
+          - SystName: TES
+            ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Up/
+            ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ztautau_TES_Dn/
+            RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Up/ratio_ztautau.npy
+            RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ztautau_TES_Dn/ratio_ztautau.npy
+          - SystName: JES
+            ModelsUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Up/
+            ModelsDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_model_params_ztautau_JES_Dn/
+            RatiosUp: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Up/ratio_ztautau.npy
+            RatiosDn: /projects/Physics_Cranmer/saved_datasets/output_training_systematics/output_ratios_ztautau_JES_Dn/ratio_ztautau.npy
+                        
 
                  
         

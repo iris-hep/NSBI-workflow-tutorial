@@ -2,14 +2,14 @@
 data_loader:
   data:
     url: "https://zenodo.org/records/15131565/files/FAIR_Universe_HiggsML_data.zip"
-    train_size: 0.5
+    train_size: 0.75
     processes:
       - htautau
       - ztautau
       - ttbar
 
   preprocess:
-    seed: 42
+    seed: 54
     selections: >
       DER_mass_transverse_met_lep <= 250.0 and
       DER_mass_vis <= 500.0 and
@@ -30,11 +30,12 @@ data_loader:
       jes: 0.998
 
   output:
-    dir: "./saved_datasets/"
+    dir: "/projects/Physics_Cranmer/saved_datasets/"
 
 # Data processing settings - these are specific to the example
 data_preprocessing:
   fit_config_path: "./config_fit_nsbi.yml"
+  num_folds: 1                # k-fold cross-validation: set to 1 to disable
   features:
       - PRI_lep_pt
       - PRI_lep_eta
@@ -68,13 +69,13 @@ data_preprocessing:
 preselection_network:
   fit_config_path: "./config_fit_nsbi.yml"
   
-  model_path: "./saved_datasets/preselection_model/"
-  force_train: false
+  model_path: "/projects/Physics_Cranmer/saved_datasets/preselection_model/"
+  force_train: true
   load_trained_models: false
   
   training:
     test_size: 0.2
-    random_state: 42
+    random_state: 64
     batch_size: 4096
     epochs: 50
     learning_rate: 0.00001
@@ -100,42 +101,55 @@ preselection_network:
 neural_likelihood_ratio_estimation:
   nsbi_fit_config: "./config_fit_nsbi.yml"
   filter_region: "SR"
-  saved_data_path: "./saved_datasets/"
+  saved_data_path: "/projects/Physics_Cranmer/saved_datasets/"
   output_training_dir: "output_training_nominal"
   
   use_log_loss: false
   delete_existing_models: false
   force_train: false
 
-  basis_processes_to_train: ["ttbar", "ztautau", "htautau"] 
-  num_ensemble_members_evaluation: 50 
+  basis_processes_to_train: ["ttbar", "ztautau", "htautau"]
+  num_ensemble_members_evaluation: 50
   num_ensemble_members_training: 50
 
-  # Some default hyper-parameters -- Quality tested for SBI
+  ensemble_aggregation_type: "mean"
+
+  # The dict's keys define which samples are in the reference; each spec is one of:
+  #   (a) null         -> use the sample's physical event-weight yield as its prior (auto-yield)
+  #   (b) <positive number> -> use as the relative prior weight directly (any unit; only ratios matter)
+  #   (c) {cap: M}     -> auto-solve the prior so this sample's per-event density ratio is bounded at M
+  #   (d) 0  (or false) -> exclude this sample from the reference (handy for toggling without deleting the line)
+  reference_priors:
+    htautau: null       
+    ttbar:   null        
+    ztautau: 0    
+
+  # Some default hyper-parameters - quality tested for SBI
   common_training_params: &common_params
     hidden_layers: 4
     neurons: 1000
     number_of_epochs: 100
-    batch_size: 1024
+    batch_size: 512
     learning_rate: 0.0001
     scalerType: "MinMax"
     
     calibration: false
     recalibrate_output: false
     type_of_calibration: "histogram"
-    num_bins_cal: null
+    num_bins_cal: 20
     
     callback: true
     callback_patience: 30
     callback_factor: 0.01
-    
+
     validation_split: 0.1
     holdout_split: 0.25
 
-    load_trained_models: true  # 'force_train' flag in script overrides this
-    
+    load_trained_models: false  # 'force_train' flag in script overrides this
+
     verbose: 1
     plot_scaled_features: false
+    use_best_checkpoint_model: true
 
     num_workers: 0
 
@@ -155,14 +169,15 @@ neural_likelihood_ratio_estimation:
 # Section for Systematic Uncertainty Estimation
 systematic_uncertainty:
   nsbi_fit_config: "./config_fit_nsbi.yml"
-  saved_data_path: "./saved_datasets/"
+  saved_data_path: "/projects/Physics_Cranmer/saved_datasets/"
   output_training_dir: "output_training_systematics"
   filter_region: "SR"
   force_train: true
 
-  num_ensemble_members_training: 40
-  num_ensemble_members_evaluation: 40
-  ensemble_aggregation_type: "median_score"
+  use_log_loss: false
+  num_ensemble_members_training: 1
+  num_ensemble_members_evaluation: 1
+  ensemble_aggregation_type: "mean"
 
   training_settings:
     hidden_layers: 4
@@ -176,20 +191,20 @@ systematic_uncertainty:
     recalibrate_output: false
     type_of_calibration: "histogram"
     num_bins_cal: 20
-    
+
     callback: true
     callback_patience: 30
     callback_factor: 0.01
-    
+
     validation_split: 0.1
     holdout_split: 0.25
-    
+
     verbose: 0
     plot_scaled_features: false
     load_trained_models: false
+    use_best_checkpoint_model: true
 
     num_workers: 0
-
 
 # Parameter fit settings
 parameter_fitting:
@@ -197,6 +212,8 @@ parameter_fitting:
     histogram: "./config_fit_histogram.yml"   
     nsbi: "./config_fit_nsbi.yml" 
   measurement: "higgs_tautau_signal_strength" 
+  freeze_params: []
+  # freeze_params: ["JES", "TES"]
   output:
     plots_dir: "./output/plots/parameter_fitting"
   scan:

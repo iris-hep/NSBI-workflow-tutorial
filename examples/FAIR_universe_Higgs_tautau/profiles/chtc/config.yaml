@@ -1,0 +1,37 @@
+executor: htcondor
+
+shared-fs-usage: none
+
+# Maximum simultaneously submitted jobs
+jobs: 100
+max-jobs-per-second: 5
+
+# Polling interval (seconds) before checking job status
+latency-wait: 60
+
+# Print shell commands to the log for debugging
+printshellcmds: true
+
+# Where the plugin writes its own per-job $(ClusterId).{out,err,log} files
+htcondor-jobdir: logs
+
+# Paths visible to both AP and EP — skip transferring them as inputs
+htcondor-shared-fs-prefixes: "/staging,/projects"
+
+# Defaults shared across every rule; rule-level `resources:` merge on top.
+# universe + container_image are mandatory: the whole workflow runs inside the same Apptainer image.
+# The five CHTC `classad_*` ClassAds are required for jobs to flock onto campus/OSG pools.
+default-resources:
+  universe:                  "container"
+  container_image:           "file:///staging/jsandesara/nsbi-env-gpu.sif"
+  # Run snakemake from inside the container instead of letting the plugin transfer the AP's pixi-env Python (which isn't relocatable). The wrapper just `exec snakemake "$@"` — snakemake is bundled in the .sif via pixi.
+  job_wrapper: "examples/FAIR_universe_Higgs_tautau/profiles/chtc/job_wrapper.sh"
+  # `1`/`0` instead of `True`/`False`: Snakemake's resources-block validator only accepts int/str/callable, so we use the HTCondor idiom where a non-zero numeric ClassAd value is truthy.
+  classad_WantFlocking:      1
+  classad_is_resumable:      1
+  classad_want_campus_pools: 1
+  classad_want_ospool:       1
+  classad_WantGlidein:       1
+  # Resource floors — rules that need more must override
+  request_memory: "4GB"
+  request_disk:   "4GB"

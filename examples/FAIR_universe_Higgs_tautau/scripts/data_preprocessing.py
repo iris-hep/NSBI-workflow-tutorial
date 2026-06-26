@@ -3,6 +3,8 @@ import sys
 import argparse
 import numpy as np
 import pandas as pd
+import awkward as ak
+import uproot
 import matplotlib.pyplot as plt
 import mplhep as hep
 import yaml
@@ -33,6 +35,36 @@ def parse_args() -> argparse.Namespace:
         help="Path to configuration file."
     )
     return parser.parse_args()
+
+def bootstrap_obs_dataset(fit_config_path: str) -> None:
+    """
+    Create the raw 'observed' dataset (SM Asimov) before any sample is loaded.
+
+    The Data:True sample in the fit config is the sum of the nominal MC
+    processes. We concatenate those process trees (raw branches) into a single
+    tree at the obs path, so that obs is then a normal config sample: the rest
+    of preprocessing decorates it with the engineered branches, and the
+    preselection network later adds 'presel_score' — exactly like the MC.
+    """
+    with open(fit_config_path) as f:
+        samples = yaml.safe_load(f)["Samples"]
+
+    data_sample = next(s for s in samples if s.get("Data", False))
+    mc_samples = [s for s in samples if not s.get("Data", False)]
+
+    trees = []
+    for s in mc_samples:
+        with uproot.open(f"{s['SamplePath']}:{s['Tree']}") as t:
+            trees.append(t.arrays(library="ak"))
+    obs = ak.concatenate(trees)
+
+    with uproot.recreate(data_sample["SamplePath"]) as fout:
+        fout[data_sample["Tree"]] = obs
+    logger.info(
+        f"Bootstrapped {len(obs)} obs events -> "
+        f"{data_sample['SamplePath']}:{data_sample['Tree']}"
+    )
+
 
 def process_data(df: dict, input_features_by_jet: dict, branches: list) -> tuple:
     """
@@ -157,6 +189,9 @@ def main() -> None:
     }
 
     try:
+        logger.info("Creating raw observed dataset before loading...")
+        bootstrap_obs_dataset(config['fit_config_path'])
+
         logger.info("Loading dataset into Pandas DataFrames...")
         datasets_helper = nsbi_common_utils.datasets.datasets(
                                                                 config_path=config['fit_config_path'],
@@ -173,6 +208,21 @@ def main() -> None:
 
         logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
         datasets_helper.add_appended_branches(new_branches)
+
+        # Assign k-fold indices to nominal samples (deterministic, per-sample)
+        num_folds = config.get("num_folds", 1)
+        if num_folds > 1:
+            logger.info(f"Assigning {num_folds}-fold indices to all samples.")
+            for region_key, sample_dict in datasets_all.items():
+                for sample_name, df in sample_dict.items():
+                    # Deterministic: seed on region+sample so each dataset
+                    # gets a consistent assignment across reruns
+                    seed = hash((region_key, sample_name)) % (2**31)
+                    rng = np.random.RandomState(seed)
+                    perm = rng.permutation(len(df))
+                    df["fold_index"] = perm % num_folds
+                    datasets_all[region_key][sample_name] = df
+            datasets_helper.add_appended_branches(["fold_index"])
 
         logger.info("Saving processed datasets...")
         datasets_helper.save_dataset_to_ntuple(datasets_all, save_systematics=True)
