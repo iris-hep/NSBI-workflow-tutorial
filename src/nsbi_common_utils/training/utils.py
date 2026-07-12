@@ -239,7 +239,11 @@ def predict_with_onnx(dataset,
     Notes
     -----
     * The ONNX session is configured with ``intra_op_num_threads=1`` and ``inter_op_num_threads=1``. This is intentional for HTCondor jobs where CPU resources are explicitly requested — unconstrained threading can cause resource contention across concurrent jobs on the same node.
-    * CUDA execution is attempted first; the runtime falls back to CPU automatically if no compatible GPU is available.
+    * CUDA execution is attempted when that provider is available; otherwise
+      the session uses the CPU provider without emitting a provider warning.
+    * Scikit-learn transformers may promote their output to ``float64``. The
+      transformed array is converted to contiguous ``float32`` before ONNX
+      inference, matching the PyTorch models exported by :func:`save_model`.
     """
     import onnxruntime as rt
 
@@ -248,16 +252,25 @@ def predict_with_onnx(dataset,
     sess_opts.inter_op_num_threads = 1
 
     if isinstance(model, onnx.ModelProto):
+        available_providers = rt.get_available_providers()
+        providers = [
+            provider
+            for provider in ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if provider in available_providers
+        ]
         model = rt.InferenceSession(model.SerializeToString(), 
                                     sess_options = sess_opts,
-                                    providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+                                    providers=providers)
     
     elif isinstance(model, rt.InferenceSession):
         model = model
     else:
         raise TypeError(f"Unsupported model type: {type(model)}")
 
-    scaled_dataset  = scaler.transform(dataset)
+    scaled_dataset = scaler.transform(dataset)
+    if hasattr(scaled_dataset, "toarray"):
+        scaled_dataset = scaled_dataset.toarray()
+    scaled_dataset = np.ascontiguousarray(scaled_dataset, dtype=np.float32)
     n_samples       = len(scaled_dataset)
     
     input_name      = model.get_inputs()[0].name
@@ -390,4 +403,3 @@ def convert_score_to_ratio(score):
         Density ratio values :math:`p_A / p_B`, unbounded above.
     """
     return score / (1.0 - score)
-
