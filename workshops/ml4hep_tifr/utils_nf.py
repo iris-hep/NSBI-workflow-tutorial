@@ -450,6 +450,25 @@ def train_flow(
     validation_fraction = float(training_config.get("validation_fraction", 0.2))
     patience = int(training_config.get("patience", n_epochs))
     gradient_clip = float(training_config.get("gradient_clip", 5.0))
+    lr_scheduler_factor = float(
+        training_config.get("lr_scheduler_factor", 0.2)
+    )
+    lr_scheduler_patience = int(
+        training_config.get("lr_scheduler_patience", 2)
+    )
+    min_learning_rate = float(
+        training_config.get("min_learning_rate", learning_rate * 1.0e-3)
+    )
+
+    if not 0.0 < lr_scheduler_factor < 1.0:
+        raise ValueError("lr_scheduler_factor must be strictly between 0 and 1.")
+    if lr_scheduler_patience < 0:
+        raise ValueError("lr_scheduler_patience must be non-negative.")
+    if not 0.0 <= min_learning_rate <= learning_rate:
+        raise ValueError(
+            "min_learning_rate must be non-negative and no larger than "
+            "learning_rate."
+        )
 
     x = _choose_training_array(
         df_train,
@@ -469,6 +488,15 @@ def train_flow(
     flow = build_flow(model_config, device)
     optimizer = torch.optim.AdamW(
         flow.parameters(), lr=learning_rate, weight_decay=weight_decay
+    )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=lr_scheduler_factor,
+        patience=lr_scheduler_patience,
+        threshold=1.0e-4,
+        threshold_mode="abs",
+        min_lr=min_learning_rate,
     )
 
     best_val = np.inf
@@ -502,9 +530,12 @@ def train_flow(
 
         train_loss = float(np.mean(train_losses))
         val_loss = float(np.mean(val_losses))
+        learning_rate_before_step = float(optimizer.param_groups[0]["lr"])
+        scheduler.step(val_loss)
+        current_learning_rate = float(optimizer.param_groups[0]["lr"])
         print(
             f"  epoch {epoch:03d}: train NLL = {train_loss:.4f}, "
-            f"val NLL = {val_loss:.4f}"
+            f"val NLL = {val_loss:.4f}, lr = {current_learning_rate:.3e}"
         )
 
         if val_loss < best_val - 1.0e-4:
@@ -516,9 +547,19 @@ def train_flow(
             stale_epochs = 0
         else:
             stale_epochs += 1
-            if stale_epochs >= patience:
-                print(f"  early stopping after {epoch} epochs")
-                break
+
+        if current_learning_rate < learning_rate_before_step:
+            print(
+                "    reducing learning rate: "
+                f"{learning_rate_before_step:.3e} -> "
+                f"{current_learning_rate:.3e}"
+            )
+            # Give the finer learning rate a fresh opportunity to improve the
+            # validation loss before applying early stopping.
+            stale_epochs = 0
+        elif stale_epochs >= patience:
+            print(f"  early stopping after {epoch} epochs")
+            break
 
     if best_state is not None:
         flow.load_state_dict(best_state)
