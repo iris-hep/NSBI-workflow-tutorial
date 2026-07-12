@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -33,6 +33,443 @@ _FLOW_TYPE_ALIASES = {
     "rational_quadratic_spline": "quadratic_spline",
     "spline": "quadratic_spline",
 }
+
+
+_UINT64_MASK = (1 << 64) - 1
+
+
+def _splitmix64(values: np.ndarray) -> np.ndarray:
+    """Vectorized SplitMix64 hash for deterministic row-level decisions."""
+    values = np.asarray(values, dtype=np.uint64)
+    with np.errstate(over="ignore"):
+        values = values + np.uint64(0x9E3779B97F4A7C15)
+        values = (values ^ (values >> np.uint64(30))) * np.uint64(
+            0xBF58476D1CE4E5B9
+        )
+        values = (values ^ (values >> np.uint64(27))) * np.uint64(
+            0x94D049BB133111EB
+        )
+    return values ^ (values >> np.uint64(31))
+
+
+def _hashed_uniform(row_indices: np.ndarray, seed: int) -> np.ndarray:
+    hashed = _hash_rows(row_indices, seed)
+    return (hashed >> np.uint64(11)).astype(np.float64) * (1.0 / 2**53)
+
+
+def _hash_rows(row_indices: np.ndarray, seed: int) -> np.ndarray:
+    seed_uint64 = np.uint64(int(seed) & _UINT64_MASK)
+    with np.errstate(over="ignore"):
+        seeded_indices = np.asarray(row_indices, dtype=np.uint64) + seed_uint64
+    return _splitmix64(seeded_indices)
+
+
+def _stream_split_masks(
+    row_indices: np.ndarray,
+    *,
+    presel_fraction: float,
+    flow_train_fraction: float,
+    seed: int,
+) -> dict[str, np.ndarray]:
+    """Assign rows reproducibly to PRESEL, flow-train, or evaluation."""
+    if not 0.0 < presel_fraction < 1.0:
+        raise ValueError("presel_fraction must be strictly between 0 and 1.")
+    if not 0.0 < flow_train_fraction < 1.0:
+        raise ValueError("flow_train_fraction must be strictly between 0 and 1.")
+
+    uniform = _hashed_uniform(row_indices, seed)
+    flow_train_boundary = presel_fraction + (
+        (1.0 - presel_fraction) * flow_train_fraction
+    )
+    return {
+        "presel": uniform < presel_fraction,
+        "flow_train": (uniform >= presel_fraction)
+        & (uniform < flow_train_boundary),
+        "eval": uniform >= flow_train_boundary,
+    }
+
+
+def _iter_parquet_batches(
+    parquet_path: str | Path,
+    *,
+    columns: Sequence[str],
+    batch_size: int,
+):
+    """Yield ``(global_row_indices, dataframe)`` without loading the file."""
+    try:
+        import pyarrow.parquet as pq
+    except ImportError as exc:
+        raise ImportError(
+            "Streaming parquet input requires pyarrow. Install it with "
+            "`pip install pyarrow`."
+        ) from exc
+
+    if int(batch_size) < 1:
+        raise ValueError("batch_size must be positive.")
+    columns = list(dict.fromkeys(columns))
+    parquet_file = pq.ParquetFile(parquet_path)
+    missing = [name for name in columns if name not in parquet_file.schema.names]
+    if missing:
+        raise ValueError(f"{parquet_path} is missing columns {missing}.")
+
+    row_offset = 0
+    for record_batch in parquet_file.iter_batches(
+        batch_size=int(batch_size),
+        columns=columns,
+        use_threads=True,
+    ):
+        dataframe = record_batch.to_pandas()
+        n_rows = len(dataframe)
+        row_indices = np.arange(
+            row_offset,
+            row_offset + n_rows,
+            dtype=np.uint64,
+        )
+        row_offset += n_rows
+        yield row_indices, dataframe
+
+
+def _prepare_stream_batch(
+    dataframe: pd.DataFrame,
+    features: Sequence[str],
+) -> pd.DataFrame:
+    # ``RecordBatch.to_pandas`` already returned an independent batch, so it
+    # is safe to cast in place rather than holding a second full batch copy.
+    for feature in features:
+        dataframe[feature] = dataframe[feature].astype(np.float32, copy=False)
+    dataframe["weight"] = dataframe["weight"].astype(np.float64, copy=False)
+    if not np.isfinite(dataframe["weight"]).all():
+        raise ValueError("Event weights must be finite.")
+    if (dataframe["weight"] < 0.0).any():
+        raise ValueError(
+            "Streaming PRESEL yield estimation currently requires "
+            "non-negative event weights."
+        )
+    return dataframe
+
+
+def _update_priority_reservoir(
+    retained: pd.DataFrame | None,
+    candidates: pd.DataFrame,
+    priorities: np.ndarray,
+    max_events: int,
+) -> pd.DataFrame | None:
+    """Keep the rows with the smallest deterministic random priorities."""
+    if len(candidates) == 0:
+        return retained
+    candidates = candidates.copy()
+    candidates["_stream_priority"] = np.asarray(priorities, dtype=np.uint64)
+    if retained is None:
+        combined = candidates
+    else:
+        combined = pd.concat([retained, candidates], ignore_index=True, copy=False)
+
+    if len(combined) > max_events:
+        priority = combined["_stream_priority"].to_numpy(dtype=np.uint64)
+        keep = np.argpartition(priority, max_events - 1)[:max_events]
+        combined = combined.iloc[keep].reset_index(drop=True)
+    return combined
+
+
+def _finish_priority_reservoir(
+    retained: pd.DataFrame | None,
+    columns: Sequence[str],
+) -> pd.DataFrame:
+    if retained is None:
+        return pd.DataFrame(columns=list(columns))
+    retained = retained.sort_values("_stream_priority", kind="stable")
+    return retained.drop(columns="_stream_priority").reset_index(drop=True)
+
+
+def sample_parquet_partition(
+    parquet_path: str | Path,
+    *,
+    features: Sequence[str],
+    partition: str,
+    max_events: int,
+    batch_size: int,
+    presel_fraction: float,
+    flow_train_fraction: float,
+    split_seed: int,
+    reservoir_seed: int,
+) -> tuple[pd.DataFrame, dict[str, float | int]]:
+    """Stream one parquet partition and retain at most ``max_events`` rows."""
+    if partition not in {"presel", "flow_train", "eval"}:
+        raise ValueError("partition must be 'presel', 'flow_train', or 'eval'.")
+    max_events = int(max_events)
+    if max_events < 1:
+        raise ValueError("max_events must be positive.")
+
+    columns = [*features, "weight"]
+    retained = None
+    stats: dict[str, float | int] = {
+        "inclusive_events": 0,
+        "inclusive_weight": 0.0,
+        "partition_events": 0,
+        "partition_weight": 0.0,
+    }
+    for row_indices, batch in _iter_parquet_batches(
+        parquet_path,
+        columns=columns,
+        batch_size=batch_size,
+    ):
+        batch = _prepare_stream_batch(batch, features)
+        masks = _stream_split_masks(
+            row_indices,
+            presel_fraction=presel_fraction,
+            flow_train_fraction=flow_train_fraction,
+            seed=split_seed,
+        )
+        mask = masks[partition]
+        stats["inclusive_events"] += len(batch)
+        stats["inclusive_weight"] += float(batch["weight"].sum())
+        stats["partition_events"] += int(mask.sum())
+        stats["partition_weight"] += float(batch.loc[mask, "weight"].sum())
+
+        selected_indices = row_indices[mask]
+        priority = _hash_rows(selected_indices, reservoir_seed)
+        retained = _update_priority_reservoir(
+            retained,
+            batch.loc[mask, columns],
+            priority,
+            max_events,
+        )
+
+    sample = _finish_priority_reservoir(retained, columns)
+    stats["retained_events"] = len(sample)
+    return sample, stats
+
+
+def accumulate_preselection_histogram(
+    parquet_path: str | Path,
+    *,
+    features: Sequence[str],
+    ratio_predictor: Callable[[pd.DataFrame], np.ndarray],
+    log_ratio_edges: np.ndarray,
+    batch_size: int,
+    presel_fraction: float,
+    flow_train_fraction: float,
+    split_seed: int,
+) -> tuple[np.ndarray, dict[str, float | int]]:
+    """Accumulate a weighted PRESEL-ratio histogram on flow-training rows."""
+    edges = np.asarray(log_ratio_edges, dtype=np.float64)
+    if len(edges) < 2 or not np.all(np.diff(edges) > 0.0):
+        raise ValueError("log_ratio_edges must be a strictly increasing array.")
+
+    columns = [*features, "weight"]
+    histogram = np.zeros(len(edges) - 1, dtype=np.float64)
+    stats: dict[str, float | int] = {
+        "partition_events": 0,
+        "partition_weight": 0.0,
+    }
+    ratio_min = float(np.exp(edges[0]))
+    ratio_max = float(np.exp(edges[-1]))
+
+    for row_indices, batch in _iter_parquet_batches(
+        parquet_path,
+        columns=columns,
+        batch_size=batch_size,
+    ):
+        batch = _prepare_stream_batch(batch, features)
+        mask = _stream_split_masks(
+            row_indices,
+            presel_fraction=presel_fraction,
+            flow_train_fraction=flow_train_fraction,
+            seed=split_seed,
+        )["flow_train"]
+        if not mask.any():
+            continue
+
+        partition_batch = batch.loc[mask, columns]
+        ratio = np.asarray(
+            ratio_predictor(partition_batch[list(features)]),
+            dtype=np.float64,
+        ).reshape(-1)
+        if len(ratio) != len(partition_batch):
+            raise ValueError("ratio_predictor returned the wrong number of rows.")
+        ratio = np.nan_to_num(
+            ratio,
+            nan=0.0,
+            posinf=ratio_max,
+            neginf=0.0,
+        )
+        valid_ratio = ratio > 0.0
+        log_ratio = np.log(
+            np.clip(ratio[valid_ratio], ratio_min, ratio_max)
+        )
+        histogram += np.histogram(
+            log_ratio,
+            bins=edges,
+            weights=partition_batch["weight"].to_numpy(dtype=np.float64)[
+                valid_ratio
+            ],
+        )[0]
+        stats["partition_events"] += len(partition_batch)
+        stats["partition_weight"] += float(partition_batch["weight"].sum())
+
+    return histogram, stats
+
+
+def choose_preselection_ratio_cut(
+    signal_histogram: np.ndarray,
+    background_histogram: np.ndarray,
+    log_ratio_edges: np.ndarray,
+    *,
+    signal_inclusive_yield: float,
+    background_inclusive_yield: float,
+    signal_partition_weight: float,
+    background_partition_weight: float,
+    target_background_to_signal: float,
+) -> tuple[float, dict[str, float]]:
+    """Choose the loosest histogrammed ratio cut reaching the B/S target."""
+    signal_histogram = np.asarray(signal_histogram, dtype=np.float64)
+    background_histogram = np.asarray(background_histogram, dtype=np.float64)
+    edges = np.asarray(log_ratio_edges, dtype=np.float64)
+    if signal_histogram.shape != background_histogram.shape:
+        raise ValueError("Signal and background histograms must have equal shape.")
+    if len(edges) != len(signal_histogram) + 1:
+        raise ValueError("log_ratio_edges does not match the histograms.")
+    if signal_partition_weight <= 0.0 or background_partition_weight <= 0.0:
+        raise ValueError("Flow-training partition weights must be positive.")
+
+    signal_yield = (
+        float(signal_inclusive_yield)
+        * np.cumsum(signal_histogram[::-1])
+        / float(signal_partition_weight)
+    )
+    background_yield = (
+        float(background_inclusive_yield)
+        * np.cumsum(background_histogram[::-1])
+        / float(background_partition_weight)
+    )
+    background_to_signal = np.divide(
+        background_yield,
+        signal_yield,
+        out=np.full_like(background_yield, np.inf),
+        where=signal_yield > 0.0,
+    )
+    valid = np.flatnonzero(
+        (signal_yield > 0.0)
+        & (background_to_signal <= float(target_background_to_signal))
+    )
+    if len(valid) == 0:
+        raise RuntimeError(
+            "The PRESEL classifier cannot reach the requested B/S target. "
+            "Train it longer or relax the target."
+        )
+
+    best = valid[np.argmax(signal_yield[valid])]
+    lower_edges_descending = edges[:-1][::-1]
+    ratio_cut = float(np.exp(lower_edges_descending[best]))
+    diagnostics = {
+        "histogram_signal_yield": float(signal_yield[best]),
+        "histogram_background_yield": float(background_yield[best]),
+        "histogram_background_to_signal": float(background_to_signal[best]),
+    }
+    return ratio_cut, diagnostics
+
+
+def collect_preselected_parquet(
+    parquet_path: str | Path,
+    *,
+    features: Sequence[str],
+    ratio_predictor: Callable[[pd.DataFrame], np.ndarray],
+    ratio_cut: float,
+    max_train_events: int,
+    max_eval_events: int,
+    batch_size: int,
+    presel_fraction: float,
+    flow_train_fraction: float,
+    split_seed: int,
+    reservoir_seed: int,
+) -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, float | int]]]:
+    """Stream, classify, and retain bounded post-selection train/eval samples."""
+    max_events = {
+        "flow_train": int(max_train_events),
+        "eval": int(max_eval_events),
+    }
+    if any(value < 1 for value in max_events.values()):
+        raise ValueError("max_train_events and max_eval_events must be positive.")
+    if ratio_cut < 0.0:
+        raise ValueError("ratio_cut must be non-negative.")
+
+    columns = [*features, "weight"]
+    retained: dict[str, pd.DataFrame | None] = {
+        "flow_train": None,
+        "eval": None,
+    }
+    stats: dict[str, dict[str, float | int]] = {
+        split: {
+            "partition_events": 0,
+            "partition_weight": 0.0,
+            "selected_events": 0,
+            "selected_weight": 0.0,
+        }
+        for split in retained
+    }
+
+    for row_indices, batch in _iter_parquet_batches(
+        parquet_path,
+        columns=columns,
+        batch_size=batch_size,
+    ):
+        batch = _prepare_stream_batch(batch, features)
+        masks = _stream_split_masks(
+            row_indices,
+            presel_fraction=presel_fraction,
+            flow_train_fraction=flow_train_fraction,
+            seed=split_seed,
+        )
+        relevant = masks["flow_train"] | masks["eval"]
+        if not relevant.any():
+            continue
+
+        relevant_positions = np.flatnonzero(relevant)
+        ratio = np.asarray(
+            ratio_predictor(batch.loc[relevant, list(features)]),
+            dtype=np.float64,
+        ).reshape(-1)
+        if len(ratio) != len(relevant_positions):
+            raise ValueError("ratio_predictor returned the wrong number of rows.")
+        passes = np.zeros(len(batch), dtype=bool)
+        passes[relevant_positions] = np.nan_to_num(
+            ratio,
+            nan=-np.inf,
+            posinf=np.inf,
+            neginf=-np.inf,
+        ) >= float(ratio_cut)
+
+        for split_index, split in enumerate(["flow_train", "eval"]):
+            split_mask = masks[split]
+            selected_mask = split_mask & passes
+            stats[split]["partition_events"] += int(split_mask.sum())
+            stats[split]["partition_weight"] += float(
+                batch.loc[split_mask, "weight"].sum()
+            )
+            stats[split]["selected_events"] += int(selected_mask.sum())
+            stats[split]["selected_weight"] += float(
+                batch.loc[selected_mask, "weight"].sum()
+            )
+
+            selected_indices = row_indices[selected_mask]
+            priority = _hash_rows(
+                selected_indices,
+                int(reservoir_seed) + split_index,
+            )
+            retained[split] = _update_priority_reservoir(
+                retained[split],
+                batch.loc[selected_mask, columns],
+                priority,
+                max_events[split],
+            )
+
+    samples = {
+        split: _finish_priority_reservoir(retained[split], columns)
+        for split in retained
+    }
+    for split in samples:
+        stats[split]["retained_events"] = len(samples[split])
+    return samples, stats
 
 
 def _canonical_flow_type(flow_type: str) -> str:
