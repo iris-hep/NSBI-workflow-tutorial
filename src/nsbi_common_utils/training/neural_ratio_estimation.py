@@ -473,7 +473,11 @@ class density_ratio_trainer:
             np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy", 
                     np.array([holdout_num, rnd_seed]))
     
-            plot_loss(loss_history, path_to_figures=self.path_to_figures)
+            plot_loss(
+                loss_history,
+                path_to_figures=self.path_to_figures,
+                ensemble_index=ensemble_index,
+            )
 
         
         # Do a first prediction without calibration layers

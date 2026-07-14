@@ -171,12 +171,14 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
     Returns
     -------
     numpy.ndarray, shape (n_events,)
-        Predicted density ratios :math:`r = p_A / p_B`, unbounded above
-        and non-negative. Values larger than ``1`` indicate hypothesis A
+        Predicted density ratios :math:`r = p_A / p_B`, non-negative and
+        numerically capped only at the saturated-score boundary. Values
+        larger than ``1`` indicate hypothesis A
         (numerator) is more likely; values smaller than ``1`` indicate
-        hypothesis B (denominator) is more likely. When calibration is
-        enabled, the underlying score is clipped to
-        ``[1e-9, 1 - 1e-9]`` before conversion for numerical safety.
+        hypothesis B (denominator) is more likely. Classifier scores at the
+        upper numerical boundary are clipped before conversion so the return
+        value remains finite. A calibration layer may apply additional
+        clipping in score space.
 
     Notes
     -----
@@ -393,13 +395,18 @@ def convert_score_to_ratio(score):
     Parameters
     ----------
     score : numpy.ndarray
-        Probability scores in the range ``(0, 1)``. Values at exactly ``0``
-        or ``1`` will produce ``0`` or ``inf`` respectively — clip inputs
-        to a safe range such as ``[1e-9, 1 - 1e-9]`` if needed.
+        Probability scores in the range ``[0, 1]``. Values at the upper
+        boundary are clipped internally so saturated classifiers still
+        produce a large but finite ratio.
 
     Returns
     -------
     numpy.ndarray
-        Density ratio values :math:`p_A / p_B`, unbounded above.
+        Finite density ratio values :math:`p_A / p_B`.
     """
-    return score / (1.0 - score)
+    # ONNX inference returns float32 classifier scores, for which a saturated
+    # sigmoid can be exactly one.  Convert to float64 before applying the
+    # safety margin; ``1 - 1e-9`` would otherwise round back to one in
+    # float32 and still yield an infinite ratio.
+    score_safe = np.clip(np.asarray(score, dtype=np.float64), 0.0, 1.0 - 1.0e-9)
+    return score_safe / (1.0 - score_safe)
