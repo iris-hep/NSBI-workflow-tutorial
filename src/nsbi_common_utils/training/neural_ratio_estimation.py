@@ -267,6 +267,7 @@ class density_ratio_trainer:
         """
         self.calibration = calibration
         self.calibration_switch = False # Set the switch to false for first evaluation for calibration
+        self.loss_figure = None
 
         if rnd_seed is None:
             rnd_seed = np.random.randint(0, 2**32 -1, size=None)
@@ -473,7 +474,7 @@ class density_ratio_trainer:
             np.save(f"{self.path_to_models}num_events_random_state_train_holdout_split{ensemble_index_label}.npy", 
                     np.array([holdout_num, rnd_seed]))
     
-            plot_loss(
+            self.loss_figure = plot_loss(
                 loss_history,
                 path_to_figures=self.path_to_figures,
                 ensemble_index=ensemble_index,
@@ -628,31 +629,31 @@ class density_ratio_trainer:
 
         if observable=='score':
             # Plot Calibration curves - score function
-            plot_calibration_curve(score_den_training,
-                                   self.weight_den_training,
-                                   score_num_training,
-                                   self.weight_num_training,
-                                   score_den_holdout,
-                                   self.weight_den_holdout,
-                                   score_num_holdout,
-                                   self.weight_num_holdout,
-                                   self.path_to_figures,
-                                   nbins=nbins,
-                                   label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index = ensemble_index)
+            return plot_calibration_curve(score_den_training,
+                                          self.weight_den_training,
+                                          score_num_training,
+                                          self.weight_num_training,
+                                          score_den_holdout,
+                                          self.weight_den_holdout,
+                                          score_num_holdout,
+                                          self.weight_num_holdout,
+                                          self.path_to_figures,
+                                          nbins=nbins,
+                                          label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index = ensemble_index)
 
         elif observable=='llr':
             # Plot Calibration curves - nll function
-            plot_calibration_curve_ratio(self.ratio_den_training,
-                                        self.weight_den_training,
-                                        self.ratio_num_training,
-                                        self.weight_num_training,
-                                        self.ratio_den_holdout,
-                                        self.weight_den_holdout,
-                                        self.ratio_num_holdout,
-                                        self.weight_num_holdout,
-                                        self.path_to_figures,
-                                        nbins=nbins,
-                                        label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index=ensemble_index)
+            return plot_calibration_curve_ratio(self.ratio_den_training,
+                                                self.weight_den_training,
+                                                self.ratio_num_training,
+                                                self.weight_num_training,
+                                                self.ratio_den_holdout,
+                                                self.weight_den_holdout,
+                                                self.ratio_num_holdout,
+                                                self.weight_num_holdout,
+                                                self.path_to_figures,
+                                                nbins=nbins,
+                                                label="Calibration Curve - "+str(self.sample_name[0]), ensemble_index=ensemble_index)
 
         else:
             raise Exception("observable not recognized - choose between score and llr options")
@@ -666,7 +667,7 @@ class density_ratio_trainer:
         num_bins: number of bins in the reweighting diagnostic plot
         '''
 
-        plot_reweighted(
+        return plot_reweighted(
             self.dataset_training, self.ratio_den_training, self.weight_den_training, self.ratio_num_training, self.weight_num_training,
             self.dataset_holdout, self.ratio_den_holdout, self.weight_den_holdout, self.ratio_num_holdout, self.weight_num_holdout,
             variables=variables, num=num_bins, sample_name=self.sample_name,

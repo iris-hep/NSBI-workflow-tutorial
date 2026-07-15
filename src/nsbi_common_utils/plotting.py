@@ -38,14 +38,16 @@ def fill_histograms_wError(data, weights, edges, histrange, normalize=True):
 # Diagnostics for training loss and accuracy 
 def plot_loss(loss_history, path_to_figures="", ensemble_index=0):
 
-    plt.plot(loss_history.train_loss)
-    plt.plot(loss_history.val_loss)
-    plt.title("model loss", size=12)
-    plt.ylabel("loss", size=12)
-    plt.xlabel("epoch", size=12)
-    plt.legend(["train", "validation"], loc="upper left")
-    plt.savefig(f"{path_to_figures}/loss_plot_{ensemble_index}.png", bbox_inches="tight")
-    plt.clf()
+    fig, ax = plt.subplots()
+    ax.plot(loss_history.train_loss, label="train")
+    ax.plot(loss_history.val_loss, label="validation")
+    ax.set_title("model loss", size=12)
+    ax.set_ylabel("loss", size=12)
+    ax.set_xlabel("epoch", size=12)
+    ax.legend(loc="upper left")
+    fig.savefig(f"{path_to_figures}/loss_plot_{ensemble_index}.png", bbox_inches="tight")
+    plt.close(fig)
+    return fig
 
 
 def plot_calibration_curve(data_den, weight_den, data_num, weight_num, 
@@ -124,7 +126,8 @@ def plot_calibration_curve(data_den, weight_den, data_num, weight_num,
     plt.tight_layout()
     plt.savefig(f"{path_to_figures}/calib_plot_{score_range}_{ensemble_index}.png", bbox_inches='tight')
     plt.show()
-    plt.clf()
+    plt.close(fig)
+    return fig
 
 def plot_calibration_curve_ratio(
     ratio_den, weight_den, ratio_num, weight_num,
@@ -213,7 +216,8 @@ def plot_calibration_curve_ratio(
     plt.tight_layout()
     plt.savefig(f"{path_to_figures}/calib_plot_llr_{score_range}_{ensemble_index}.png", bbox_inches='tight')
     plt.show()
-    plt.clf()
+    plt.close(fig)
+    return fig
 
 
 def plot_reweighted(
@@ -226,6 +230,7 @@ def plot_reweighted(
     """
     Draw training (left) and holdout (right) reweighting diagnostic plots side-by-side. Inputs ratio_*_* are density ratios r = p_A/p_B used directly as the per-event reweighting factor.
     """
+    figures = []
 
     # Helper that reproduces original per-panel computations
     def _panel_data(dataset, ratio_den, weight_den, ratio_num, weight_num, variable):
@@ -325,7 +330,10 @@ def plot_reweighted(
         plt.tight_layout()
         plt.savefig(f'{path_to_figures}/reweighted_{str(variable)}_{ensemble_index}.png', bbox_inches='tight')
         plt.show()
-        plt.clf()
+        plt.close(fig)
+        figures.append(fig)
+
+    return figures
 
 
 def plot_overfit_side_by_side(
