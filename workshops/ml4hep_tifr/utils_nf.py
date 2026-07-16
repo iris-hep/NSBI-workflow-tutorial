@@ -259,6 +259,8 @@ def accumulate_preselection_histogram(
     columns = [*features, "weight"]
     histogram = np.zeros(len(edges) - 1, dtype=np.float64)
     stats: dict[str, float | int] = {
+        "inclusive_events": 0,
+        "inclusive_weight": 0.0,
         "partition_events": 0,
         "partition_weight": 0.0,
     }
@@ -271,6 +273,8 @@ def accumulate_preselection_histogram(
         batch_size=batch_size,
     ):
         batch = _prepare_stream_batch(batch, features)
+        stats["inclusive_events"] += len(batch)
+        stats["inclusive_weight"] += float(batch["weight"].sum())
         mask = _stream_split_masks(
             row_indices,
             presel_fraction=presel_fraction,
