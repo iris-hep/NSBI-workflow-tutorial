@@ -6,7 +6,7 @@ This directory contains the APS Physical Review D–style draft
 
 by Rafael Coelho Lopes de Sá and Jay Sandesara.
 
-The note is intentionally a complete conceptual and methodological draft with explicit result placeholders. Do not replace `pending` values or placeholder panels until the corresponding completed Exercise 5 run has been inspected.
+The manuscript includes the reviewed outputs of the successfully executed Exercise 5 and Exercise 6 notebooks: hybrid-density inference, weighted unbinned Asimov closure, pseudo-experiment validation, and the neural importance-sampling efficiency study.
 
 ## Build
 
@@ -24,23 +24,14 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 
 `make clean` removes intermediate TeX files while retaining `main.pdf`.
 
-## Filling the result figures
+## Result figures
 
-Create publication-quality composite PDFs with these exact paths:
+The figures currently used by `main.tex` are stored in `figures/` and documented in `figures/README.md`. They are direct notebook outputs and are intended as scientifically accurate draft figures. They can be restyled for publication using the data-complete standalone scripts exported by Exercise 5 and the saved Exercise 6 plotting outputs.
 
-- `figures/reference_flow_closure.pdf`
-- `figures/hybrid_density_closure.pdf`
-- `figures/inference_asimov_toys.pdf`
+The selected result set covers:
 
-If a file is absent, the manuscript compiles with a labeled placeholder panel. The scripts exported by Exercise 5 to `exercise5_figures_scripts/` are standalone and contain the numerical artist data, so they can be adjusted without rerunning the trained models. The final composites should be assembled from those outputs.
-
-The minimum result set is:
-
-1. reference-flow marginal and joint/correlation closure;
-2. signal/reference and background/reference ratio calibration and reweighting closure;
-3. reconstructed hybrid densities compared with analytic truth;
-4. hybrid and analytic profile-likelihood scans;
-5. the weighted Asimov fit at `mu_A = 1`, including `q_0,A` and `sigma_A`;
-6. toy distributions of `mu_hat` and `q_0` compared with the Asimov/Wald predictions.
-
-After reviewing the full notebook output, replace the `pending` entries in Table I and edit any claims in the abstract, demonstration, and conclusion to match the observed closure.
+1. signal/reference and background/reference reweighting closure;
+2. hybrid and analytic profile-likelihood scans;
+3. the weighted Asimov prediction compared with `mu_hat` and `q_0` toys;
+4. neural proposal and importance-reweighting validation;
+5. equal-size convergence of direct and neural-importance Asimov quadratures.

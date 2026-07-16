@@ -26,6 +26,8 @@
 
 \newcommand{\dd}{\mathop{}\!\mathrm{d}}
 \newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\SE}{\operatorname{SE}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Lcal}{\mathcal{L}}
 \newcommand{\Pois}{\operatorname{Pois}}
@@ -36,9 +38,6 @@
 \newcommand{\phat}{\widehat p}
 \newcommand{\muhat}{\widehat\mu}
 \newcommand{\thetahat}{\widehat{\bm\theta}}
-\newcommand{\placeholder}[2]{%
-  \fbox{\parbox[c][#1][c]{0.92\linewidth}{\centering\small\sffamily #2}}%
-}
 
 \begin{document}
 
@@ -52,9 +51,9 @@
 \date{\today}
 
 \begin{abstract}
-Neural simulation-based inference based on classifier estimates of density ratios has made unbinned, high-dimensional likelihood-ratio inference practical for analyses with many physics processes and nuisance parameters.  Its ratio-only formulation, however, does not provide an explicit normalized event density or a direct generative model.  Consequently, expected-data calculations and frequentist pseudo-experiments must be represented by very large weighted simulated samples, which can dominate the computational cost of profiling, uncertainty decomposition, and Neyman constructions.  Normalizing flows provide normalized densities and efficient sampling, but small absolute-density errors can be consequential when a small signal is inferred in a much larger background.
+Neural simulation-based inference based on classifier estimates of density ratios has made unbinned, high-dimensional likelihood-ratio inference practical for analyses with many physics processes and nuisance parameters.  Its ratio-only formulation, however, does not provide an explicit normalized event density or a direct generative model.  Expected-data calculations and frequentist pseudo-experiments must therefore be represented by large weighted simulated samples, which can dominate the cost of profiling, uncertainty decomposition, and Neyman constructions.  Normalizing flows provide normalized densities and efficient sampling, but small absolute-density errors can be consequential when a small signal is inferred in a much larger background.
 
-We propose \emph{hybrid neural simulation-based inference}.  A normalizing flow is trained on a balanced, physically representative reference distribution.  Events sampled from that learned reference---rather than the finite simulation used to train the flow---form the denominator sample for classifier-based estimates of each process-to-reference density ratio.  A process density is then represented as the product of the tractable reference-flow density and its learned ratio.  This construction preserves the discriminative precision of density-ratio estimation while making every component of the event intensity tractable and sampleable.  The same fixed reference sample supplies normalized importance weights for process generation and a deterministic weighted, unbinned Asimov dataset.  We derive the extended likelihood, the sampling prescription, and the Asimov construction, and demonstrate the method in a five-dimensional Gaussian-mixture measurement with a small signal in a large background.  This proof of concept establishes a route from parametrized density-ratio inference to a generative, likelihood-based analysis without requiring an independently precise absolute-density estimator for every process.
+We propose \emph{hybrid neural simulation-based inference}.  A normalizing flow is trained on a balanced, physically representative reference distribution.  Events sampled from that learned reference---rather than the finite simulation used to train it---form the denominator sample for classifier estimates of each process-to-reference density ratio.  A process density is represented by the tractable reference-flow density multiplied by its learned ratio.  This division of labor preserves the discriminative precision of density-ratio estimation while making every component of the event intensity tractable and sampleable.  The flow supplies arbitrarily large reference quadratures for weighted, unbinned Asimov datasets and for pseudo-experiment generation.  We further introduce a neural importance sampler optimized for the expected likelihood-ratio scan.  In a five-dimensional small-signal demonstration, the finite weighted Asimov sample fits exactly at its generating value, predicts the width and discovery-statistic distribution observed in pseudo-experiments, and neural importance sampling reduces the variance of the discovery statistic by a factor of $2.69$ at fixed sample size.  A flow thus makes unbinned Asimov inference cheap to construct, while neural importance sampling makes the resulting quadrature statistically efficient.
 \end{abstract}
 
 \maketitle
@@ -74,7 +73,9 @@ Normalizing flows address the complementary problem.  They provide both a normal
 
 This paper combines the two representations.  A flow is used to build a normalized, sampleable reference density, while classifiers learn the precision-critical ratios of each process to that exact learned reference.  The reference flow is a proposal distribution, not an uncorrected model of every process.  If the ratio estimators are exact, local reference-flow error cancels algebraically.  What the flow must provide is common support and efficient coverage.  The resulting \emph{hybrid NSBI} construction supplies a tractable likelihood, direct weighted or resampled event generation, and a deterministic unbinned Asimov measure.
 
-The remainder of this paper is organized as follows.  \Cref{sec:parametric} reviews parametrized NSBI and its practical limitations.  \Cref{sec:hybrid} introduces the hybrid construction.  \Cref{sec:sampling} develops weighted sampling and pseudo-experiments, and \Cref{sec:asimov} derives the weighted unbinned Asimov dataset.  \Cref{sec:demonstration} describes a five-dimensional proof-of-concept experiment corresponding to the conference exercise.  We discuss validation requirements and extensions in \Cref{sec:discussion} and conclude in \Cref{sec:conclusion}.
+The same formulation also exposes the Asimov calculation as numerical integration.  Direct samples from the reference flow make this integration inexpensive and remove the resolution limit of a finite MC pool, but ordinary Monte Carlo still converges as $M^{-1/2}$.  We therefore train a second flow as a neural importance proposal for the complete expected test-statistic scan.  This distinction is useful in practice: the reference flow makes an Asimov dataset \emph{cheap}, because more independent quadrature points can be produced on demand; the importance proposal makes it \emph{efficient}, because fewer such points are required for a target precision.
+
+The remainder of this paper is organized as follows.  \Cref{sec:parametric} reviews parametrized NSBI and its practical limitations.  \Cref{sec:hybrid} introduces the hybrid density and sampling construction.  \Cref{sec:asimov} derives the weighted unbinned Asimov likelihood and its finite-sample uncertainty.  \Cref{sec:nis} develops neural importance sampling for expected likelihood scans.  \Cref{sec:demonstration} reports the five-dimensional proof-of-concept experiments, followed by discussion and conclusions.
 
 \section{Parametrized neural simulation-based inference}
 \label{sec:parametric}
@@ -125,7 +126,7 @@ Balanced class weights are important: otherwise the class-prior odds must be inc
 
 Choose a fixed reference density $\pRef(\bm x)$ whose support covers all relevant components, and define
 \begin{equation}
-  r_j(\bm x\mid\bm\theta)
+  r_j^{\mathrm{ref}}(\bm x\mid\bm\theta)
   =\frac{p_j(\bm x\mid\bm\theta)}{\pRef(\bm x)}.
   \label{eq:process-reference-ratio}
 \end{equation}
@@ -133,7 +134,7 @@ The intensity may then be written
 \begin{equation}
   \nu(\bm x\mid\bm\theta)
   =\pRef(\bm x)
-   \sum_j\lambda_j(\bm\theta)r_j(\bm x\mid\bm\theta).
+   \sum_j\lambda_j(\bm\theta)r_j^{\mathrm{ref}}(\bm x\mid\bm\theta).
   \label{eq:ratio-intensity}
 \end{equation}
 Because the reference is parameter independent, $\sum_i\log\pRef(\bm x_i)$ cancels from every likelihood ratio.  Hence the reference need not have a tractable density for the inference in \cref{eq:profile-statistic}; only the component-to-reference ratios are required.
@@ -165,217 +166,296 @@ These are computational and representational limitations, not failures of densit
 \section{Hybrid neural simulation-based inference}
 \label{sec:hybrid}
 
-\subsection{A learned reference as a proposal density}
+\subsection{A tractable reference density}
 
-Let $\qRef(\bm x)$ be a normalized normalizing-flow density trained on a reference sample.  For a signal-plus-background problem, a useful training target is a balanced mixture after the analysis selection,
+Let $\qRef(\bm x)$ be a normalized normalizing-flow density trained on a physically representative reference sample.  For a signal-plus-background analysis, a useful target after the event selection is
 \begin{equation}
   p_{\mathrm{mix}}(\bm x)
-  =\tfrac12 p_S(\bm x)+\tfrac12 p_B(\bm x).
+  =\tfrac12p_S(\bm x)+\tfrac12p_B(\bm x).
   \label{eq:balanced-reference}
 \end{equation}
-The equal mixture is deliberate.  A reference with physical normalization would be nearly identical to the background when $S/B\ll1$ and would spend little capacity in signal-rich regions.  The balanced target instead asks the flow to cover both process phase spaces comparably.
+The equal mixture is deliberate.  A mixture with physical process yields would be almost pure background when $S/B\ll1$ and would allocate little flow capacity to signal-rich regions.  Equal component normalization instead provides comparable coverage of both phase spaces.
 
-After training, a large, dedicated sample is drawn from $\qRef$.  Crucially, this \emph{flow-generated} sample, not the original MC mixture in \cref{eq:balanced-reference}, is used as the denominator class for the density-ratio classifiers.  For every physics component $j$, the classifier therefore estimates
+After training, a dedicated sample is drawn from $\qRef$.  This \emph{flow-generated} sample, rather than the MC sample used to fit the flow, supplies the denominator class for each classifier.  The corresponding process ratio and hybrid density are
 \begin{equation}
-  r_j^{\phi}(\bm x)
-  =\frac{p_j(\bm x)}{\qRef(\bm x)}.
-  \label{eq:flow-reference-ratio}
-\end{equation}
-The hybrid process density is
-\begin{equation}
-  \phat_j(\bm x)
-  =\qRef(\bm x)\rhat_j^{\phi}(\bm x).
+  r_j(\bm x)=\frac{p_j(\bm x)}{\qRef(\bm x)},
+  \qquad
+  \phat_j(\bm x)=\qRef(\bm x)\rhat_j(\bm x).
   \label{eq:hybrid-density}
 \end{equation}
 
-This ordering is the key observation.  Suppose the flow approximates the intended mixture imperfectly, $\qRef\neq p_{\mathrm{mix}}$.  An exact classifier trained against samples from $\qRef$ still learns $p_j/\qRef$, and \cref{eq:hybrid-density} returns $p_j$ exactly.  Local flow error is corrected by the ratio.  The flow is not required to be an independently precise model of $p_S$ or $p_B$; it must be evaluable, sampleable, and nonzero wherever any target density is nonzero.
+This ordering is essential.  Even if $\qRef\neq p_{\mathrm{mix}}$, an exact classifier trained against events from $\qRef$ learns the correction $p_j/\qRef$, so their product recovers $p_j$.  The flow is not required to be an independently precise model of every physics component.  It must be tractable, efficiently sampleable, and nonzero wherever a target component is nonzero.
 
-The support condition is essential.  If $p_j(\bm x)>0$ where $\qRef(\bm x)$ is negligibly small, the ratio becomes large, classifier learning is difficult, and importance sampling has low effective sample size.  A balanced, physics-informed mixture, broad flow tails, and explicit support diagnostics are therefore part of the statistical design rather than optional training refinements.
+The last condition is not merely formal.  If $p_j$ is appreciable where $\qRef$ is extremely small, the learned ratio develops long tails, classifier training becomes difficult, and any subsequent importance sampler has low effective sample size.  Balanced mixture design, broad flow tails, and ratio-tail diagnostics are therefore part of the method.
 
-\subsection{Tractable event intensity and likelihood}
+\subsection{Likelihood and empirical normalization}
 
-With hybrid component densities, the event intensity becomes
+Define
+\begin{equation}
+  H_{\bm\theta}(\bm x)
+  =\sum_j\lambda_j(\bm\theta)
+  \widetilde r_j(\bm x\mid\bm\theta).
+  \label{eq:H-definition}
+\end{equation}
+The hybrid event intensity is
 \begin{equation}
   \widehat\nu(\bm x\mid\bm\theta)
-  =\qRef(\bm x)
-   \sum_j\lambda_j(\bm\theta)
-   \rhat_j^{\phi}(\bm x\mid\bm\theta).
+  =\qRef(\bm x)H_{\bm\theta}(\bm x).
   \label{eq:hybrid-intensity}
 \end{equation}
-Every term is now tractable.  Define
-$h_{\bm\theta}(\bm x)=\sum_j\lambda_j(\bm\theta)
-\rhat_j^{\phi}(\bm x\mid\bm\theta)$.
-For a fixed reference flow, the contribution $\sum_i\log\qRef(\bm x_i)$ remains independent of $\bm\theta$ and cancels from profile likelihood ratios.  Thus inference retains the original ratio-based numerical structure,
+For a fixed reference flow, $\sum_i\log\qRef(\bm x_i)$ is independent of $\bm\theta$ and cancels from profile likelihood ratios.  Thus ordinary inference retains the numerical structure of parametrized NSBI,
 \begin{align}
   -2\log\Lcal(\bm\theta)
   ={}&2\Lambda(\bm\theta)
-  -2\sum_i\log\qRef(\bm x_i) \notag\\
-  &-2\sum_i\log h_{\bm\theta}(\bm x_i)
-  -2\sum_k\log\pi_k,
+  -2\sum_i\log H_{\bm\theta}(\bm x_i) \notag\\
+  &-2\sum_k\log\pi_k(a_k\mid\alpha_k)+\text{constant},
   \label{eq:hybrid-nll}
 \end{align}
-while the explicit $\qRef$ factor is available whenever an absolute density is needed.
+The explicit factor $\qRef$ becomes relevant when an absolute density, integral, or sampler is needed.
 
-The same factorized POI and nuisance-parameter model in \cref{eq:factorized-nsbi} can be used after replacing the implicit reference by $\qRef$.  Consequently, the hybrid proposal is orthogonal to whether the parameter dependence is described by analytic interpolation, a conditional neural network, a Gaussian process, or another nonparametric estimator.  Developments aimed at relaxing the factorization assumptions can be incorporated without changing the reference-density layer~\cite{SBI:2026blueprint,Valsecchi:2026flows}.
-
-\subsection{Finite-sample normalization}
-
-For an exact normalized ratio,
+An exact component ratio satisfies $\E_{\qRef}[r_j]=1$.  Let $\{\bm x_m,\omega_m\}_{m=1}^M$ be a quadrature for expectation under $\qRef$, with $\omega_m\geq0$ and $\sum_m\omega_m=1$.  For direct independent samples from $\qRef$, $\omega_m=1/M$.  We use the empirical normalization
 \begin{equation}
-  \E_{\bm x\sim\qRef}[r_j^{\phi}(\bm x)]=1.
-  \label{eq:ratio-normalization}
-\end{equation}
-Finite classifiers generally violate this equality slightly.  Given a fixed reference sample $\{\bm z_m\}_{m=1}^{M}\sim\qRef$, we impose
-\begin{equation}
-  \widetilde r_j(\bm z_m)
-  =\frac{\rhat_j^{\phi}(\bm z_m)}
-  {M^{-1}\sum_{\ell=1}^{M}\rhat_j^{\phi}(\bm z_\ell)}.
+  \widetilde r_j(\bm x)
+  =\frac{\rhat_j(\bm x)}
+  {\sum_{m=1}^{M}\omega_m\rhat_j(\bm x_m)},
+  \qquad
+  \sum_m\omega_m\widetilde r_j(\bm x_m)=1.
   \label{eq:empirical-ratio-normalization}
 \end{equation}
-This guarantees exact component normalization on the empirical reference quadrature.  It does not repair local ratio bias, so calibration and multidimensional reweighting tests remain necessary.  It does, however, decouple local-shape validation from a trivial normalization offset and is what makes the discrete Asimov stationarity exact in \Cref{sec:asimov}.
+This operation removes a finite-sample normalization offset but does not repair local classifier bias.  Calibration, ensemble stability, multidimensional reweighting, and inference-level closure remain necessary.  The same factorized POI and nuisance-parameter model as in \cref{eq:factorized-nsbi} can be placed inside $H_{\bm\theta}$, so the hybrid reference is compatible with analytic interpolation, conditional estimators, or nonparametric parameter dependence~\cite{SBI:2026blueprint,Valsecchi:2026flows}.
 
-\section{Sampling and Neyman construction}
+\subsection{Sampling and Neyman construction}
 \label{sec:sampling}
 
-The fixed flow reference sample can represent any component by importance weights
+A fixed direct-flow sample represents component $j$ with probabilities
 \begin{equation}
-  w_m^{(j)}=\frac{\widetilde r_j(\bm z_m)}{M},
+  w_m^{(j)}=\frac{\widetilde r_j(\bm x_m)}{M},
   \qquad \sum_{m=1}^{M}w_m^{(j)}=1.
   \label{eq:component-weights}
 \end{equation}
-Weighted histograms or expectations calculated with these weights approximate integrals over $p_j$.  To generate an unweighted component event, one may sample an index $m$ with probability $w_m^{(j)}$.  Alternatively, new proposal points can be drawn from the flow and resampled using freshly evaluated ratios.  Rejection sampling is also possible when a reliable finite upper bound on the ratio is available.
+Weighted expectations then approximate integrals over $p_j$.  An unweighted component sample can be obtained by resampling indices with probabilities $w_m^{(j)}$; a fresh pool can be generated from the flow whenever duplicate rates become excessive.  Rejection sampling is another option when a reliable upper bound on the ratio is available.
 
-For a pseudo-experiment at parameter point $\bm\theta$, one first draws the component counts independently,
+For a pseudo-experiment at $\bm\theta$, component counts are drawn independently,
 \begin{equation}
   n_j\sim\Pois\!\left(\lambda_j(\bm\theta)\right),
 \end{equation}
-and then draws $n_j$ indices according to $w_m^{(j)}$.  Concatenating the selected reference events gives an unweighted pseudo-dataset from the empirical hybrid model.  Repeating the likelihood fit yields the sampling distribution of $t_{\bm\mu}$ needed for a Neyman construction~\cite{Neyman:1937}.
+followed by $n_j$ draws from the corresponding component probabilities.  Concatenating the components gives an unweighted pseudo-dataset from the empirical hybrid model.  Repeated likelihood fits provide the sampling distribution of $t_{\bm\mu}$ for a Neyman construction~\cite{Neyman:1937}.
 
-The quality of this generator can be summarized by the effective sample size
+The component effective sample size,
 \begin{equation}
   M_{\mathrm{eff}}^{(j)}
-  =\frac{(\sum_m \widetilde r_j)^2}
-        {\sum_m \widetilde r_j^2}.
+  =\frac{\left(\sum_m\widetilde r_j\right)^2}
+  {\sum_m\widetilde r_j^2},
   \label{eq:ess}
 \end{equation}
-Large ratio tails reduce $M_{\mathrm{eff}}$ even when $M$ itself is large.  Monitoring the effective sample size, upper ratio quantiles, and duplicate rates in toys provides a direct diagnostic of reference coverage.  Unlike a fixed original MC pool, however, a flow proposal can generate additional independent reference points whenever the quadrature or toy pool must be enlarged.
+and the upper ratio quantiles diagnose proposal coverage.  In contrast with a finite MC reference, the flow is not the resolution limit: additional independent proposal points can be generated on demand.
 
-\section{A weighted unbinned Asimov dataset}
+\section{Weighted unbinned Asimov inference}
 \label{sec:asimov}
 
-\subsection{Expected event measure}
+\subsection{Expected event measure and extended likelihood}
 
-An Asimov dataset is most naturally an expected event \emph{measure}, not a particular random list of unweighted events.  At a generating point $\bm\theta_A$, define
+An unbinned Asimov dataset is most naturally an expected event \emph{measure}, rather than a special random list of unweighted events.  At a generating point $\bm\theta_A$,
 \begin{equation}
   \dd N_A(\bm x)
-  =\widehat\nu(\bm x\mid\bm\theta_A)\dd\bm x.
+  =\widehat\nu(\bm x\mid\bm\theta_A)\dd\bm x
+  =\qRef(\bm x)H_A(\bm x)\dd\bm x,
   \label{eq:asimov-measure}
 \end{equation}
-For any integrable function $f$,
-\begin{align}
-  \int f(\bm x)\dd N_A(\bm x)
-  & =\E_{\qRef}\!\left[
-      f(\bm x)\sum_j\lambda_j(\bm\theta_A)
-      \widetilde r_j(\bm x\mid\bm\theta_A)
-    \right] \notag\\
-  & \simeq\sum_{m=1}^{M}w_m^A f(\bm z_m),
-  \label{eq:asimov-quadrature}
-\end{align}
-with deterministic event weights
+where $H_A\equiv H_{\bm\theta_A}$.  The quadrature $\{\bm x_m,\omega_m\}$ represents this measure with event weights
 \begin{equation}
-  w_m^A=\frac{1}{M}\sum_j
-  \lambda_j(\bm\theta_A)
-  \widetilde r_j(\bm z_m\mid\bm\theta_A).
+  w_m^A=\omega_m H_A(\bm x_m).
   \label{eq:asimov-weights}
 \end{equation}
-The extended part is included automatically:
+For any integrable function $f$,
 \begin{equation}
-  \sum_{m=1}^{M}w_m^A
+  \int f(\bm x)\dd N_A(\bm x)
+  \simeq\sum_mw_m^A f(\bm x_m).
+  \label{eq:asimov-quadrature}
+\end{equation}
+Because the component ratios are normalized on the same quadrature,
+\begin{equation}
+  \sum_mw_m^A
   =\sum_j\lambda_j(\bm\theta_A)
   =\Lambda(\bm\theta_A),
   \label{eq:asimov-total-yield}
 \end{equation}
-where the first equality is exact on the empirical quadrature when every component ratio is normalized as in \cref{eq:empirical-ratio-normalization}.
+so the Asimov sample contains exactly the expected number of weighted events.  This is how the extended part is represented.
 
-The weighted Asimov log likelihood is
+With auxiliary data fixed to their expectation, the finite weighted log likelihood is
 \begin{align}
   \log\Lcal_A(\bm\theta)
   ={}&-\Lambda(\bm\theta)
-   +\sum_{m=1}^{M}w_m^A
-    \log\widehat\nu(\bm z_m\mid\bm\theta) \notag\\
+   +\sum_mw_m^A
+    \log\widehat\nu(\bm x_m\mid\bm\theta) \notag\\
   &+\log\pi(\bm a_A\mid\bm\alpha),
   \label{eq:asimov-loglikelihood}
 \end{align}
-with auxiliary data set to their expectations.  In the continuous limit, the expected score vanishes at $\bm\theta_A$ under standard regularity conditions.  On the finite empirical quadrature, the same property holds exactly for yield-linear components normalized on that quadrature.
+which is the direct unbinned analogue of filling each bin with its expected count.
 
-\subsection{One signal-strength parameter}
+\subsection{Expected test statistic and quadrature uncertainty}
 
-For the demonstration, consider
+The continuous expected log likelihood is, up to parameter-independent terms,
 \begin{equation}
-  \widehat\nu(\bm x\mid\mu)
-  =\qRef(\bm x)
-   \left[\mu\lambda_S\widetilde r_S(\bm x)
-   +\lambda_B\widetilde r_B(\bm x)\right].
+  \ell_A(\bm\theta)
+  =-\Lambda(\bm\theta)
+  +\int\nu_A(\bm x)\log\nu(\bm x\mid\bm\theta)\dd\bm x.
+  \label{eq:expected-loglikelihood}
+\end{equation}
+Assuming it is maximized at $\bm\theta_A$, direct subtraction gives
+\begin{align}
+  t_A(\bm\theta)
+  &=-2\left[\ell_A(\bm\theta)-\ell_A(\bm\theta_A)\right]\notag\\
+  &=2\left\{\Lambda(\bm\theta)-\Lambda(\bm\theta_A)
+  +\int\nu_A(\bm x)
+  \log\frac{\nu_A(\bm x)}{\nu(\bm x\mid\bm\theta)}\dd\bm x\right\}\notag\\
+  &=2\left\{\Lambda(\bm\theta)-\Lambda(\bm\theta_A)
+  +\E_{\qRef}\!\left[
+  H_A(\bm x)\log\frac{H_A(\bm x)}{H_{\bm\theta}(\bm x)}
+  \right]\right\}.
+  \label{eq:expected-test-statistic}
+\end{align}
+The common factor $\qRef$ cancels inside the logarithm.  The first two terms are the extended-rate contribution; the expectation is the shape-and-composition contribution.  The formula also exposes the expected scan as an ordinary expectation under a density that can be sampled without returning to detector simulation.
+
+For direct independent points $\bm x_m\sim\qRef$, define
+\begin{equation}
+  Y_{\bm\theta}(\bm x)
+  =H_A(\bm x)\log\frac{H_A(\bm x)}{H_{\bm\theta}(\bm x)}.
+  \label{eq:Y-definition}
+\end{equation}
+The Monte Carlo estimator is
+\begin{equation}
+  \widehat t_A(\bm\theta)
+  =2\left[\Lambda(\bm\theta)-\Lambda(\bm\theta_A)
+  +\frac1M\sum_{m=1}^{M}Y_{\bm\theta}(\bm x_m)\right].
+  \label{eq:asimov-mc-estimator}
+\end{equation}
+Only the sample mean fluctuates.  Hence
+\begin{equation}
+  \Var\!\left[\widehat t_A(\bm\theta)\right]
+  =\frac{4}{M}\Var_{\qRef}[Y_{\bm\theta}],
+  \qquad
+  \SE[\widehat t_A(\bm\theta)]
+  \simeq\frac{2s_Y(\bm\theta)}{\sqrt M},
+  \label{eq:asimov-standard-error}
+\end{equation}
+where
+\begin{equation}
+  s_Y^2(\bm\theta)=\frac{1}{M-1}
+  \sum_m\left[Y_{\bm\theta}(\bm x_m)-\overline Y_{\bm\theta}\right]^2.
+\end{equation}
+Thus $s_Y$ is the ordinary sample standard deviation, under the reference density, of the event-level contribution to the expected log-likelihood ratio.  It depends on the tested parameter.  Points on a scan are strongly correlated because they use the same events; independent repeats or block estimates are preferable for uncertainty on the complete curve.  If the same finite sample normalizes the learned ratios, the summands are weakly coupled and \cref{eq:asimov-standard-error} is asymptotic; blocks or repeated quadratures capture this additional dependence.
+
+\subsection{Exact stationarity for yield parameters}
+
+For the one-parameter model used below,
+\begin{equation}
+  H_{\mu}(\bm x)
+  =\mu\lambda_S\widetilde r_S(\bm x)
+  +\lambda_B\widetilde r_B(\bm x).
   \label{eq:mu-model}
 \end{equation}
-At $\mu_A$, define
-\begin{equation}
-  Q_m=\frac{\lambda_S\widetilde r_S(\bm z_m)}
-             {\lambda_B\widetilde r_B(\bm z_m)}.
-\end{equation}
-Dropping terms independent of $\mu$, the Asimov negative log likelihood is
-\begin{equation}
-  \widetilde{\mathrm{NLL}}_A(\mu)
-  =2\left[
-    \mu\lambda_S-
-    \sum_m w_m^A\log(1+\mu Q_m)
-  \right].
-  \label{eq:relative-asimov-nll}
-\end{equation}
-Because
-\begin{equation}
-  w_m^A\frac{Q_m}{1+\mu_AQ_m}
-  =\frac{\lambda_S\widetilde r_S(\bm z_m)}{M},
-\end{equation}
-the score at the generating point is
-\begin{equation}
-  \left.\frac{\partial\widetilde{\mathrm{NLL}}_A}{\partial\mu}
+Differentiating \cref{eq:asimov-loglikelihood} at $\mu_A$ gives
+\begin{align}
+  -2\left.\frac{\partial\log\Lcal_A}{\partial\mu}
   \right|_{\mu_A}
-  =2\lambda_S\left[1-\frac{1}{M}
-  \sum_m\widetilde r_S(\bm z_m)\right]=0.
+  &=2\lambda_S\left[
+  1-\sum_m\omega_m\widetilde r_S(\bm x_m)
+  \right]=0.
   \label{eq:asimov-score-zero}
-\end{equation}
-The second derivative is nonnegative.  Thus the empirical weighted Asimov dataset has its global minimum at $\mu_A$ in the physical region, up to numerical optimizer tolerance.
+\end{align}
+The equality is exact because the signal ratio was normalized on this quadrature.  The second derivative is nonnegative, so the finite weighted Asimov likelihood has its minimum at the generating value up to optimizer precision.  The same argument applies to several linearly entering component normalizations: differentiation with respect to each yield multiplier selects the corresponding normalized ratio.  Shape-changing nuisance parameters retain exact expected-score closure in the continuous limit, but a finite quadrature has residual integration error unless its nuisance scores are also balanced.  Auxiliary measurements must, as usual, be fixed to their expectation.
 
 \subsection{Expected uncertainty and toy distributions}
 
-Following Cowan \emph{et al.}~\cite{Cowan:2010js}, evaluate the discovery statistic $q_0$ on an Asimov dataset generated at $\mu_A>0$:
+Following Cowan \emph{et al.}~\cite{Cowan:2010js}, an Asimov sample generated at $\mu_A>0$ predicts the median discovery statistic and local uncertainty,
 \begin{equation}
-  q_{0,A}=-2\log\frac{\Lcal_A(0)}{\Lcal_A(\widehat\mu_A)}.
-\end{equation}
-In the one-parameter Wald approximation,
-\begin{equation}
-  q_{0,A}\simeq\frac{\mu_A^2}{\sigma_A^2},
-  \qquad
-  \sigma_A=\frac{\mu_A}{\sqrt{q_{0,A}}},
-  \qquad
-  Z_A=\sqrt{q_{0,A}}.
+  q_{0,A}=-2\log\frac{\Lcal_A(0)}{\Lcal_A(\widehat\mu_A)},
+  \quad
+  \sigma_A\simeq\frac{\mu_A}{\sqrt{q_{0,A}}},
+  \quad Z_A=\sqrt{q_{0,A}}.
   \label{eq:asimov-sigma}
 \end{equation}
-The pseudo-experiment distribution of $\muhat$ can be compared with the Gaussian prediction of width $\sigma_A$.  For an unconstrained two-sided statistic, $t_0$ approaches a noncentral $\chi^2$ distribution with one degree of freedom and noncentrality $q_{0,A}$.  With the physical constraint $\muhat\geq0$, the discovery statistic is instead represented asymptotically by
+For an unconstrained two-sided statistic, $t_0$ approaches a noncentral $\chi^2$ distribution with one degree of freedom and noncentrality $q_{0,A}$.  With the physical constraint $\muhat\geq0$, the discovery statistic is instead represented asymptotically by
 \begin{equation}
-  q_0=\left[\max(0,Y)\right]^2,
-  \qquad Y\sim\Normal(\sqrt{q_{0,A}},1),
+  q_0=[\max(0,Z)]^2,
+  \qquad Z\sim\Normal(\sqrt{q_{0,A}},1),
   \label{eq:boundary-q0}
 \end{equation}
-which includes a point mass $\Phi(-\sqrt{q_{0,A}})$ at zero.
+including a point mass $\Phi(-\sqrt{q_{0,A}})$ at zero.
 
-For multiple normalization parameters or nuisance parameters, $w_m^A$ is still given by \cref{eq:asimov-weights}.  The symbol differentiated in the score is simply a component of $\bm\theta$.  The expected score vector vanishes at $\bm\theta_A$, and the inverse expected Hessian gives the asymptotic covariance matrix after profiling.  The construction is therefore not restricted to one parameter; the one-dimensional derivation merely makes the cancellation transparent.
+\section{Neural importance sampling for efficient Asimov scans}
+\label{sec:nis}
+
+\subsection{Variance-optimal proposal}
+
+Direct sampling from $\qRef$ solves the availability problem, but it does not guarantee that a small quadrature resolves the regions that dominate \cref{eq:expected-test-statistic}.  Consider $K$ scan points $\{\bm\theta_k\}$ and the integrals
+\begin{equation}
+  I_k=\E_{\qRef}[Y_k(\bm x)],
+  \qquad Y_k\equiv Y_{\bm\theta_k}.
+\end{equation}
+For samples from another normalized proposal $g(\bm x)$ with common support,
+\begin{equation}
+  \widehat I_k=\frac1M\sum_{m=1}^{M}
+  \frac{\qRef(\bm x_m)}{g(\bm x_m)}Y_k(\bm x_m),
+  \qquad \bm x_m\sim g.
+  \label{eq:is-estimator}
+\end{equation}
+The second moment controlling its variance is
+\begin{equation}
+  \E_g\!\left[\left(\frac{\qRef}{g}Y_k\right)^2\right]
+  =\int\frac{\qRef(\bm x)^2Y_k(\bm x)^2}{g(\bm x)}\dd\bm x.
+\end{equation}
+For one integral, variational minimization under $\int g=1$ gives $g^*\propto\qRef|Y_k|$.  For an entire scan, minimizing a weighted sum of the variances gives
+\begin{equation}
+  g^*(\bm x)\propto\qRef(\bm x)A(\bm x),
+  \qquad
+  A(\bm x)=\left[\sum_{k=1}^{K}a_kY_k(\bm x)^2\right]^{1/2},
+  \label{eq:optimal-scan-proposal}
+\end{equation}
+where $a_k$ specifies the relative precision desired at each scan point.  The proposal targets events important to at least one point, rather than concentrating only on $q_{0,A}$.  Overall scales in $Y_k$ may be removed for numerical stability without changing the normalized target.
+
+The density in \cref{eq:optimal-scan-proposal} is known pointwise up to a normalization constant: $\qRef$ is tractable and $A$ is computed from the learned ratios.  A second normalizing flow $g_\psi$ can therefore be trained on a pilot reference sample resampled in proportion to $A$.  This is neural importance sampling~\cite{Muller:2019nis}; related uses in collider inference include the SPINUP unfolding construction~\cite{Butter:2025spinup}.  Residual proposal error does not bias the raw estimator in \cref{eq:is-estimator}, because the exact weight $\qRef/g_\psi$ corrects it.
+
+\subsection{Defensive sampling and finite quadrature}
+
+An approximate proposal should be protected against missed support.  We use the defensive mixture
+\begin{equation}
+  g_\epsilon(\bm x)
+  =(1-\epsilon)g_\psi(\bm x)+\epsilon\qRef(\bm x),
+  \label{eq:defensive-mixture}
+\end{equation}
+which guarantees $\qRef/g_\epsilon\leq1/\epsilon$.  For nodes $\bm x_m\sim g_\epsilon$, either the unbiased weights $(\qRef/g_\epsilon)/M$ or the self-normalized quadrature weights
+\begin{equation}
+  \omega_m=\frac{\rho_m}{\sum_\ell\rho_\ell},
+  \qquad
+  \rho_m=\frac{\qRef(\bm x_m)}{g_\epsilon(\bm x_m)}
+  \label{eq:self-normalized-weights}
+\end{equation}
+can be used.  The latter have an $O(M^{-1})$ ratio-estimator bias but are often more stable.  Normalizing every process ratio with the same $\omega_m$ according to \cref{eq:empirical-ratio-normalization} preserves the exact finite-sample score property in \cref{eq:asimov-score-zero}.  The relevant weight diagnostic is
+\begin{equation}
+  M_{\mathrm{eff}}=\frac{(\sum_m\rho_m)^2}{\sum_m\rho_m^2}.
+\end{equation}
+High effective sample size alone does not demonstrate variance reduction, since a proposal equal to $\qRef$ has $M_{\mathrm{eff}}=M$.  It must be combined with target closure and repeated equal-cost estimates of the statistic of interest.
+
+\subsection{A practical recipe for an LHC analysis}
+
+For a physicist implementing the method, the following sequence separates model validation from integration optimization.
+\begin{enumerate}
+  \item \emph{Freeze the likelihood model.}  Validate $\qRef$ and every process ratio using independent samples.  Choose the Asimov point $\bm\theta_A$, the POI range, and the nuisance-parameter treatment before optimizing the quadrature.
+  \item \emph{Build a pilot target.}  Draw a moderately large pilot sample from $\qRef$, evaluate all ratios, and calculate $Y_k$ on a grid of POI values.  Form $A$ in \cref{eq:optimal-scan-proposal}; clip an extreme upper tail and impose a small positive floor so that the training target remains numerically stable.
+  \item \emph{Train the importance flow.}  Resample pilot points with probabilities proportional to $A$ and fit $g_\psi$ by maximum likelihood.  This step changes only the quadrature, not the physics likelihood.
+  \item \emph{Sample defensively.}  Generate nodes from $g_\epsilon$ with a nonzero reference fraction, evaluate $\log\qRef-\log g_\epsilon$, and construct $\omega_m$.  Normalize all process ratios on this exact weighted quadrature.
+  \item \emph{Validate the integration.}  Check closure of reweighted feature distributions, the weight tails and $M_{\mathrm{eff}}$, the score at $\bm\theta_A$, and repeated independent likelihood scans.  Quote a block or repetition uncertainty on $q_{0,A}$ and on representative scan points.
+  \item \emph{Demonstrate efficiency.}  Compare with direct $\qRef$ sampling at equal numbers of ratio evaluations and, for production, at equal wall time.  The proposal-training cost is worthwhile when the same quadrature is reused for scans, profiling, systematic impacts, or combinations.
+\end{enumerate}
+
+This leads to a concise division of labor.  The reference flow makes an Asimov calculation cheap to instantiate and arbitrarily extensible; neural importance sampling makes it efficient at fixed quadrature size.  The two statements are distinct.  A finite MC reference can also define a correct Asimov quadrature, but it cannot produce new independent phase-space points once generated.  Conversely, a poor neural proposal remains correct after exact reweighting but may offer no efficiency gain.
 
 \section{Five-dimensional demonstration}
 \label{sec:demonstration}
 
-We implement the hybrid construction in Exercise~5 of the ML4HEP 2026 conference tutorial~\cite{HybridNSBI:2026code,Sandesara:2026lectures}.  The present section records the frozen analysis design.  Numerical values and final figures will be inserted after the long training run is complete; placeholders are deliberately retained so that the text does not imply results that have not yet been reviewed.
+We implement the hybrid construction and its neural importance extension in Exercises~5 and 6 of the ML4HEP 2026 conference tutorial~\cite{HybridNSBI:2026code,NISAsimov:2026code,Sandesara:2026lectures}.  Analytic reconstructed densities are available throughout, so flow, ratio, likelihood, Asimov, and pseudo-experiment closure can be tested independently.
 
 \subsection{Samples and preselection}
 
@@ -386,124 +466,123 @@ The toy measurement contains signal and background events described by five late
   \lambda_S^{\mathrm{incl}}=1.1\times10^3.
 \end{equation}
 
-A classifier preselection is trained with at most $5\times10^5$ events per class using three hidden layers of 256 nodes.  The threshold on its estimate of $p_S/p_B$ is selected so that the expected post-selection ratio is approximately $B/S=250$.  The preselection is not part of the final likelihood; it defines the phase-space region in which all densities are normalized.  Deterministic row hashes produce disjoint preselection-training, model-training, and final-evaluation partitions, and the parquet samples are streamed so the full event sets need not reside in memory.
+A classifier preselection is trained with at most $5\times10^5$ events per class using three hidden layers of 256 nodes.  The threshold on its estimate of $p_S/p_B$ is selected so that the expected post-selection ratio is approximately $B/S=250$.  The chosen cut retains $55.60\%$ of the signal and $15.28\%$ of the background, giving
+\begin{equation}
+  \lambda_S=611.60,
+  \qquad
+  \lambda_B=152822.48.
+\end{equation}
+The preselection is not part of the final likelihood; it defines the phase-space region in which all densities are normalized.  Deterministic row hashes produce disjoint preselection-training, model-training, and final-evaluation partitions, and the parquet samples are streamed so the full event sets need not reside in memory.
 
 \subsection{Reference flow}
 
 After preselection, $5\times10^5$ signal and $5\times10^5$ background events are concatenated with equal component normalization.  A normalizing flow is trained by unweighted maximum likelihood on this balanced sample.  The chosen model has ten quadratic-spline coupling transforms.  Each conditioner has four hidden layers with 1024 features; the splines use 16 bins over the standardized interval $[-5,5]$ and linear tails outside it.  Training uses batches of 2048, an initial learning rate of $10^{-4}$, and at most 70 epochs with early stopping.
 
-Because a smooth flow can place small probability outside the hard preselection boundary, generated events are passed through the same preselection classifier and rejected if they fail.  Five million accepted events are retained as a fixed unweighted reference sample.  The corresponding accepted reference density includes the flow acceptance normalization.  Validation includes one- and two-dimensional closure, correlation closure, the distribution and cumulative distribution of the learned log density, and a direct comparison with the analytic balanced-mixture density.
-
-\begin{figure*}[t]
-  \centering
-  \IfFileExists{figures/reference_flow_closure.pdf}{%
-    \includegraphics[width=0.96\textwidth]{figures/reference_flow_closure.pdf}%
-  }{%
-    \placeholder{5.0cm}{
-      RESULT PLACEHOLDER\\[0.5em]
-      Reference-flow closure after preselection.\\
-      Recommended content: one-dimensional projections and joint/correlation closure,\\
-      accompanied by the learned-log-density CDF comparison.
-    }%
-  }
-  \caption{Closure of the balanced reference flow against an independent post-selection MC sample.  The final figure should demonstrate both marginal and joint-density agreement; matching only one-dimensional projections is insufficient.}
-  \label{fig:reference-closure}
-\end{figure*}
+Because a smooth flow can place small probability outside the hard preselection boundary, generated events are passed through the same preselection classifier and rejected if they fail.  Five million accepted events are retained as a fixed unweighted reference sample; the acceptance is $99.5548\%$, and its normalization is included in the accepted reference density.  Against analytic balanced-mixture truth, the reference-flow log density has correlation $0.9899$, root-mean-square error (RMSE) $0.2123$, and mean residual $-0.0122$.  These absolute-density residuals are precisely why the flow is treated as a proposal and corrected by discriminative ratios.
 
 \subsection{Process-to-reference ratios}
 
 Two classifier ensembles estimate $p_S/\qRef$ and $p_B/\qRef$.  Each class contains five million events: selected target MC in the numerator and flow-generated reference events in the denominator.  Each ensemble has four independently initialized dense networks, each with four hidden layers of 1024 nodes, trained for at most 50 epochs with batches of 4096 and an initial learning rate of $10^{-3}$.  Class weights are normalized separately, and no post-training histogram calibration is applied.  The arithmetic mean of the four density-ratio predictions is used in the likelihood.  The final ratios are normalized on the fixed five-million-event reference sample according to \cref{eq:empirical-ratio-normalization}.
 
-Validation is performed on a common held-out partition.  Score calibration tests the classifier interpretation in \cref{eq:classifier-ratio}; process projections reweighted from the reference test $\qRef\rhat_j$; and the reconstructed log densities are compared with analytic truth.  The last comparison is decisive: a residual error in the reference flow should be corrected by the classifier trained against that exact flow distribution.
+Validation is performed on a common held-out partition.  Score calibration tests the classifier interpretation in \cref{eq:classifier-ratio}; process projections test reweighting from the reference; and reconstructed log densities are compared with analytic truth.  Before empirical normalization, the mean ratios on the reference sample are $0.999149$ for signal and $0.999138$ for background.  After normalization, the component effective sample sizes are $4.78$ and $4.74$ million out of five million, respectively.  The hybrid log-density correlations with truth are $0.9810$ for signal and $0.9848$ for background, with mean residuals $-0.0120$ and $-0.0118$.  The marginal reweighting closure is shown in \cref{fig:hybrid-closure}; inference closure below is the more stringent test for the intended use.
 
 \begin{figure*}[t]
   \centering
-  \IfFileExists{figures/hybrid_density_closure.pdf}{%
-    \includegraphics[width=0.96\textwidth]{figures/hybrid_density_closure.pdf}%
-  }{%
-    \placeholder{5.2cm}{
-      RESULT PLACEHOLDER\\[0.5em]
-      Signal/reference and background/reference calibration and reweighting closure,\\
-      followed by hybrid-density versus analytic-truth comparisons.\\
-      Emphasize whether multiplication by the learned ratio removes local reference-flow bias.
-    }%
-  }
-  \caption{Validation of the classifier ratios and reconstructed hybrid densities.  The process densities are evaluated as $\phat_j=\qRef\widetilde r_j$.  The numerical comparison will be filled from the completed Exercise~5 run.}
+  \includegraphics[width=0.98\textwidth]{figures/hybrid_reweighting_closure.png}
+  \caption{Process-to-reference ratio closure after preselection.  The five reconstructed features of the five-million-event flow reference are reweighted with $\widetilde r_S$ (top) and $\widetilde r_B$ (bottom) and compared with independent selected process samples.  The curves are normalized densities; this test probes the learned ratios independently of the physical $B/S$ normalization.}
   \label{fig:hybrid-closure}
 \end{figure*}
 
 \subsection{Inference, Asimov dataset, and toys}
 
-The post-selection measurement has one POI, the signal strength $\mu$, with intensity given by \cref{eq:mu-model}.  A JAX-differentiable extended negative log likelihood is minimized with Minuit under $\mu\geq0$.  The hybrid profile-likelihood scan is compared with the scan obtained from the analytic post-selection densities on the same weighted evaluation sample.  This controls finite evaluation-sample fluctuations and isolates learned-model bias.
+The post-selection measurement has one POI, the signal strength $\mu$, with intensity given by \cref{eq:mu-model}.  A JAX-differentiable extended negative log likelihood is minimized with Minuit under $\mu\geq0$.  On the same independent, finite weighted validation measure, the hybrid and analytic reconstructed densities give $\muhat=1.2504$ and $1.1910$, respectively.  The shift attributable to the learned model on this measure is therefore $0.0594$, small compared with the expected statistical uncertainty of approximately $0.56$ but still visible in the profile scan in \cref{fig:inference-results}.  Quoting both minima avoids confusing finite validation-quadrature fluctuation with neural-model bias.
 
-Before pseudo-experiments are generated, the fixed reference sample is converted into the weighted Asimov dataset at $\mu_A=1$ using \cref{eq:asimov-weights}.  Its total weight is exactly $\lambda_S+\lambda_B$ on the empirical quadrature, and \cref{eq:asimov-score-zero} predicts a fitted minimum at one.  The value $q_{0,A}$ gives the expected $\sigma_A$ and median significance through \cref{eq:asimov-sigma}.
+Before pseudo-experiments are generated, the five-million-event reference sample is converted into the weighted Asimov dataset at $\mu_A=1$.  Its total weight is $153434.077655$, agreeing with $\lambda_S+\lambda_B$ within $2.0\times10^{-10}$.  The analytic score at the generating point is $6.8\times10^{-13}$ and the fit returns $\widehat\mu_A=1.00000000$.  We obtain $q_{0,A}=3.229623$, $Z_A=1.7971$, and $\sigma_A=0.556447$.  A local-curvature estimate gives $0.558017$, a relative difference of $0.28\%$.
 
-Finally, ensembles of pseudo-experiments are generated at $\mu=0$ and $\mu=1$.  Independent Poisson signal and background counts are drawn, and reference indices are sampled with probabilities proportional to the normalized signal and background ratio weights.  The demonstration currently uses 100 toys per hypothesis.  It compares the distribution of $\muhat$ with the Asimov/Wald prediction, the central $t_{\mu_{\mathrm{true}}}$ distribution with its asymptotic form, and the $q_0$ distribution at $\mu=1$ with both the boundary-aware prediction in \cref{eq:boundary-q0} and the ordinary noncentral $\chi^2$ approximation.
+Finally, $1000$ pseudo-experiments are generated at each of $\mu=0$ and $\mu=1$.  Independent Poisson signal and background counts are drawn, and reference indices are sampled with probabilities proportional to the normalized component ratios.  At $\mu=1$, the mean fitted signal strength is $1.0156$ and its standard deviation is $0.5217$; the mean observed-information estimate predicts $0.5580$.  The physical-boundary probability is $3.1\%$ in toys, compared with the Asimov/Wald prediction of $3.62\%$.  The right panels of \cref{fig:inference-results} show that the Asimov prediction describes both the estimator width and the boundary-aware $q_0$ distribution at the precision of this toy ensemble.
 
 \begin{figure*}[t]
   \centering
-  \IfFileExists{figures/inference_asimov_toys.pdf}{%
-    \includegraphics[width=0.96\textwidth]{figures/inference_asimov_toys.pdf}%
-  }{%
-    \placeholder{6.0cm}{
-      RESULT PLACEHOLDER\\[0.5em]
-      Left: hybrid and analytic profile-likelihood scans, including fitted minima.\\
-      Center: weighted-Asimov fit at $\mu_A=1$ and extraction of $q_{0,A}$ or $\sigma_A$.\\
-      Right: toy $\widehat\mu$ and $q_0$ distributions compared with the Asimov/Wald predictions.
-    }%
-  }
-  \caption{Inference-level validation of hybrid NSBI.  At minimum, the final result should show an unbiased hybrid fit relative to analytic truth, exact closure of the empirical weighted Asimov fit at $\mu_A=1$, and agreement between the Asimov prediction and pseudo-experiment sampling distributions within their expected finite-toy precision.}
+  \includegraphics[width=0.34\textwidth]{figures/hybrid_profile.png}
+  \hfill
+  \includegraphics[width=0.63\textwidth]{figures/asimov_toys.png}
+  \caption{Inference-level validation.  Left: hybrid and analytic profile-likelihood scans on the same finite validation measure.  Center: the fitted signal-strength distribution for $1000$ pseudo-experiments generated at $\mu=1$, compared with the weighted-Asimov/Wald prediction.  Right: the corresponding discovery statistic compared with the boundary-aware Cowan prediction and an ordinary noncentral $\chi^2$ distribution.  The weighted Asimov fit itself closes exactly at $\mu_A=1$.}
   \label{fig:inference-results}
 \end{figure*}
 
 \begin{table}[t]
-  \caption{Results to be filled after the completed Exercise~5 run is reviewed.  The analytic comparison must use the same post-selection yields and evaluation measure as the hybrid fit.}
+  \caption{Principal Exercise~5 results.  Hybrid and analytic validation fits use the same finite weighted evaluation measure.}
   \label{tab:results}
   \centering
   \begin{tabular}{lc}
     \toprule
     Quantity & Value \\
     \midrule
-    Post-selection $\lambda_S$ & \textit{pending} \\
-    Post-selection $\lambda_B$ & \textit{pending} \\
-    Raw $\E_{\qRef}[\rhat_S]$ & \textit{pending} \\
-    Raw $\E_{\qRef}[\rhat_B]$ & \textit{pending} \\
-    Hybrid $\muhat$ on validation measure & \textit{pending} \\
-    Analytic $\muhat$ on validation measure & \textit{pending} \\
-    Weighted-Asimov $\muhat_A$ & \textit{pending} \\
-    $q_{0,A}$ & \textit{pending} \\
-    $\sigma_A=1/\sqrt{q_{0,A}}$ & \textit{pending} \\
-    Toy width or RMS at $\mu=1$ & \textit{pending} \\
+    Post-selection $(\lambda_S,\lambda_B)$ & $(611.60,152822.48)$ \\
+    Raw $(\E_{\qRef}[\rhat_S],\E_{\qRef}[\rhat_B])$ & $(0.999149,0.999138)$ \\
+    Validation $(\muhat_{\mathrm{hybrid}},\muhat_{\mathrm{truth}})$ & $(1.2504,1.1910)$ \\
+    Weighted-Asimov $\widehat\mu_A$ & $1.00000000$ \\
+    $(q_{0,A},Z_A)$ & $(3.229623,1.7971)$ \\
+    Asimov $\sigma_A$ & $0.556447$ \\
+    Toy $\operatorname{std}(\muhat)$ at $\mu=1$ & $0.521740$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+\subsection{Neural importance-sampling experiment}
+
+Exercise~6 freezes and reloads the reference flow and ratio ensembles from Exercise~5.  A pilot sample of $750000$ points is drawn from $\qRef$.  The scan amplitude in \cref{eq:optimal-scan-proposal} is evaluated at 13 equally spaced values over $0\leq\mu\leq3$, using equal $a_k$ and dividing every $Y_k$ by the total Asimov yield.  The amplitude is floored at $10^{-3}$ of its median positive value and clipped at its $99.9$th percentile.  A sample of $500000$ pilot points, resampled in proportion to this amplitude, trains a smaller quadratic-spline flow with eight coupling layers, three hidden layers of 512 nodes, 16 bins, and tail bound five.  The final proposal uses $\epsilon=0.10$ in \cref{eq:defensive-mixture}.
+
+On $200000$ independent reference points, the centered correlation between $\log A$ and $\log(g_\psi/\qRef)$ is $0.645$, with RMSE $0.268$.  This is not perfect proposal learning, so the exact defensive-mixture weights remain important.  After reweighting, all five reference projections close, as shown in \cref{fig:nis-validation}; the defensive-proposal effective sample size is $183263/200000=91.6\%$.  The $99.9$th percentile of $\qRef/g_\epsilon$ is $3.57$, and its observed maximum is bounded by $10$, as required by $\epsilon=0.10$.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.35\textwidth]{figures/nis_proposal.png}
+  \hfill
+  \includegraphics[width=0.62\textwidth]{figures/nis_reweighting.png}
+  \caption{Validation of the neural importance proposal.  Left: the learned density displacement $\log(g_\psi/\qRef)$ compared with the scan-amplitude target $\log A$, after subtracting their respective means.  Right: direct reference-flow projections compared with samples from the defensive proposal reweighted by $\qRef/g_\epsilon$.  Exact reweighting restores the reference distribution despite imperfect proposal learning.}
+  \label{fig:nis-validation}
+\end{figure*}
+
+A direct-flow sample of one million events defines a high-statistics benchmark, $q_{0,A}=3.227081\pm0.002568$ from ten blocks and $\sigma_A=0.556666$.  Direct and neural-importance quadratures are then compared at seven sizes from 512 to 32768, using 24 independent repetitions at every size and a 61-point scan over $0\leq\mu\leq3$.  Every quadrature empirically normalizes the signal and background ratios, so the maximum absolute score at $\mu_A$ is $1.8\times10^{-12}$ even for the smallest samples.
+
+At the representative size $M=2048$, the RMSE of $q_{0,A}$ decreases from $0.05954$ for direct flow sampling to $0.03658$ for neural importance sampling.  The corresponding variance ratio is $2.69$, which can be interpreted as the approximate direct-sampling event factor needed to reach the same precision.  The RMS error over the complete likelihood scan decreases from $0.08548$ to $0.05218$.  The gain is largest at intermediate sample sizes and approaches unity when the residual benchmark and repetition precision become limiting, as visible in \cref{fig:nis-performance}.  This experiment demonstrates variance reduction at equal numbers of likelihood-model evaluations; production studies should additionally account for proposal-training and sampling wall time.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/nis_convergence.png}
+  \caption{Equal-size Asimov quadrature comparison over 24 repetitions.  Left: RMSE of the discovery statistic relative to the million-event benchmark.  Center: RMS error of the complete expected likelihood-ratio scan.  Right: ratio of the direct-reference variance to the neural-importance variance.  At $M=2048$, the variance reduction is $2.69$ and the complete-scan RMSE is reduced by $39\%$.}
+  \label{fig:nis-performance}
+\end{figure*}
+
 \section{Discussion and outlook}
 \label{sec:discussion}
 
-Hybrid NSBI changes the role of absolute density estimation.  Training an independent flow for every process asks each model to be accurate enough that the ratio of two imperfect densities supports a precision measurement.  The hybrid approach asks one flow to cover a reference phase space and then learns every precision-critical correction discriminatively.  Because the denominator examples are drawn from the trained flow, classifier ratios can correct the flow's local density distortions.  At the same time, the explicit $\qRef$ factor turns the original ratio representation into a normalized density model.
+Hybrid NSBI changes the role of absolute density estimation.  Training an independent flow for every process asks each model to be accurate enough that the ratio of two imperfect densities supports a precision measurement.  The hybrid approach asks one flow to cover a reference phase space and learns every precision-critical correction discriminatively.  Because the denominator examples are drawn from that trained flow, classifier ratios correct its local density distortions in the population limit.  At the same time, the explicit $\qRef$ factor turns the ratio representation into a normalized density model.
 
-This construction addresses the two operational limitations discussed in \Cref{sec:ratio-limitations}.  The flow can generate arbitrarily many independent reference points, so numerical quadrature for profiles, impacts, and Asimov calculations is not capped by the size of the original reference MC.  The normalized ratio weights turn the same proposal into process-specific samplers, enabling pseudo-experiments and Neyman constructions without a new generative model for every parameter point.  The original parametrized nuisance model can be retained, while more flexible nonparametric parameter dependence can be added at the ratio layer.
+This construction addresses the two operational limitations discussed in \Cref{sec:ratio-limitations}.  The flow can generate arbitrarily many independent reference points, so numerical quadrature for profiles, impacts, and Asimov calculations is not capped by the original MC.  The normalized ratios turn the same proposal into process-specific samplers, enabling pseudo-experiments and Neyman constructions without a generative model for every parameter point.  Neural importance sampling adds a separate efficiency layer: it concentrates the Asimov quadrature where the expected scan receives its largest event-level contributions, while exact weights retain the original hybrid model.
 
 Several limitations remain and should be treated as part of the method definition.
 \begin{itemize}
   \item \emph{Support and importance-weight variance.}  A flow that misses a relevant region creates extreme ratios and low effective sample size.  Balanced-mixture design, tail modeling, ratio-tail monitoring, and process-wise effective sample sizes are mandatory diagnostics.
   \item \emph{Classifier misspecification.}  Empirical normalization fixes only the integral.  Calibration, reweighting, ensemble stability, and inference-level closure against independent samples remain necessary.  Neyman construction is especially valuable when residual neural bias could invalidate simple asymptotic assumptions.
-  \item \emph{Finite reference quadrature.}  The weighted Asimov dataset is exactly stationary for the empirical hybrid model, not automatically for the unknown data-generating process.  Reference-sample enlargement and repeated-flow or repeated-ratio studies can separate quadrature, flow, and classifier uncertainties.
+  \item \emph{Finite reference quadrature.}  Yield normalization guarantees stationarity at the generating point but not an exact expected scan away from it.  Block errors, repeated quadratures, and direct-versus-importance comparisons are needed to quantify numerical integration uncertainty separately from flow and classifier bias.
   \item \emph{Negative-weight and interference components.}  Individual signed contributions are not probability densities and cannot be sampled directly.  A practical implementation must use positive physical combinations as sampling channels, while retaining analytic signed coefficients in the intensity, as is already done in parametrized NSBI.
   \item \emph{Nuisance-parameter coverage.}  A nominal reference must cover the support of all relevant systematic variations.  Very large shape changes may require a broader mixture or a conditional reference flow.
 \end{itemize}
 
-The reference distribution can itself be optimized.  Equal process normalization is a robust first choice, but the objective could incorporate worst-case effective sample size over components and parameter points.  Mixtures of flows, heavier-tailed bases, or conditional proposals may be preferable in high dimensions.  These choices affect computational efficiency, not the algebraic validity of \cref{eq:hybrid-density}, provided support is maintained and ratios are trained against the proposal actually used.
+The reference and integration proposals serve different objectives.  Equal process normalization is a robust choice for $\qRef$ because it supports classifier training and generation for every process.  The neural importance flow is instead optimized for a chosen statistical task and can be retrained without changing the likelihood model.  A single NIS target may cover a POI scan, several nuisance-profile trajectories, or a set of impact calculations through the weights $a_k$.  For very high-dimensional problems, mixtures of flows, heavier-tailed bases, or iterative proposals may be preferable.
+
+The flow map also permits randomized quasi-Monte Carlo points to be transported from the latent base distribution, which can reduce integration error when the transformed integrand is sufficiently regular~\cite{Andral:2024qmc,Klebanov:2023transport}.  This strategy is complementary to neural importance sampling: the latter reshapes the sampling density, whereas quasi-Monte Carlo improves space filling within that density.  Their combination is a natural next step, provided uncertainty is assessed with independent scramblings rather than with an i.i.d. standard-error formula.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have introduced hybrid neural simulation-based inference, a construction that combines a tractable normalizing-flow reference with high-precision classifier estimates of process-to-reference density ratios.  Sampling the denominator class from the learned flow is essential: it makes the ratio the correction to that specific tractable proposal, so local flow error cancels in the ideal classifier limit.  The resulting process densities can be evaluated, integrated, and sampled while inference retains the ratio structure of parametrized NSBI.
+We have introduced hybrid neural simulation-based inference, a construction that combines a tractable normalizing-flow reference with classifier estimates of process-to-reference density ratios.  Sampling the denominator class from the learned flow makes the ratio a correction to that specific tractable proposal, so local flow error cancels in the ideal classifier limit.  The resulting process densities can be evaluated, integrated, and sampled while inference retains the ratio structure of parametrized NSBI.
 
-The hybrid representation supplies two statistical objects that are cumbersome in a ratio-only analysis: a deterministic weighted unbinned Asimov measure and an efficient process sampler for pseudo-experiments.  The extended part of the Asimov likelihood is enforced by matching the total event weight to the expected yield, and ratio normalization on the same reference quadrature guarantees the fitted generating value for the one-parameter demonstration.  The Asimov value of $q_0$ then predicts the estimator width and the noncentral toy distribution in the usual Wald regime.
+The hybrid representation supplies two statistical objects that are cumbersome in a ratio-only analysis: a weighted unbinned Asimov measure and a process sampler for pseudo-experiments.  Matching the total Asimov weight to the expected yield supplies the extended term, and component normalization on the same quadrature guarantees exact finite-sample stationarity for yield parameters.  In the demonstration, the Asimov fit closes at $\mu_A=1$, and its $q_{0,A}$ predicts the estimator width and boundary-aware toy distribution observed in 1000 pseudo-experiments.
 
-The five-dimensional conference exercise is designed as an inference-level proof of concept, with analytic truth available for closure.  Once its long training run is complete, the final manuscript will report the reference and hybrid-density diagnostics, the comparison of hybrid and analytic likelihood scans, the exact empirical Asimov closure, and the agreement between Asimov predictions and pseudo-experiment distributions.  These tests will determine whether the proposed division of labor---generative coverage from a flow and precision corrections from ratios---delivers the expected practical advantage.
+Finally, we formulated the expected test-statistic scan as a set of integrals and trained a second flow toward their variance-optimal proposal.  At 2048 quadrature points, this neural importance sampler reduces the $q_{0,A}$ variance by a factor of $2.69$ and the full-scan RMSE by $39\%$.  The reference flow therefore makes an Asimov calculation cheap and renewable; neural importance sampling makes it efficient.  Together they preserve the central advantage of parametrized NSBI---precision corrections learned as density ratios---while adding the tractable integration and generation needed for standard LHC statistical workflows.
 
 \begin{acknowledgments}
 This work grew out of the simulation-based inference lectures and exercises presented at the 2026 ML4HEP School at the Tata Institute of Fundamental Research.  We thank the school organizers and participants for discussions.  This draft uses the public tutorial implementation in Ref.~\cite{HybridNSBI:2026code}.  Additional acknowledgments and funding information will be added before submission.
