@@ -1,12 +1,9 @@
 # Result figures
 
-These PNG files were extracted without modification from the successfully executed Exercise 5 and Exercise 6 notebooks committed on the `ml4hep_school_tutorial` branch:
+The manuscript automatically includes the following composite PDFs when they are present:
 
-- `hybrid_reweighting_closure.png`
-- `hybrid_profile.png`
-- `asimov_toys.png`
-- `nis_proposal.png`
-- `nis_reweighting.png`
-- `nis_convergence.png`
+- `reference_flow_closure.pdf`
+- `hybrid_density_closure.pdf`
+- `inference_asimov_toys.pdf`
 
-Exercise 5 also exports data-complete standalone plotting scripts to `exercise5_figures_scripts/`. Those scripts can be used to restyle the first three results without access to notebook state or trained models. Exercise 6 writes the last three source figures to `plots_asimov_nis_scan_v1/` in the configured output directory.
+Until then, labeled placeholder panels are rendered. Build the composites from the standalone scripts exported by Exercise 5 in `exercise5_figures_scripts/`; those scripts embed their plotting data and can be fine-tuned without access to the notebook state or trained models.
