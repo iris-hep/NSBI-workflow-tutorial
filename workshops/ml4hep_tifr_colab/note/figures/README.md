@@ -1,9 +1,12 @@
 # Result figures
 
-The manuscript automatically includes the following composite PDFs when they are present:
+The manuscript includes the following composites from the completed Exercise 5 and Exercise 6 runs:
 
-- `reference_flow_closure.pdf`
-- `hybrid_density_closure.pdf`
-- `inference_asimov_toys.pdf`
+- `hybrid_reweighting_closure.png`: signal and background process-to-reference closure;
+- `hybrid_profile.png`: hybrid and analytic likelihood scans;
+- `asimov_toys.png`: fitted signal strengths and discovery statistics from toys;
+- `nis_proposal.png`: learned NIS proposal against the variance target;
+- `nis_reweighting.png`: defensive-proposal reweighting closure; and
+- `nis_convergence.png`: equal-size direct and NIS Asimov convergence.
 
-Until then, labeled placeholder panels are rendered. Build the composites from the standalone scripts exported by Exercise 5 in `exercise5_figures_scripts/`; those scripts embed their plotting data and can be fine-tuned without access to the notebook state or trained models.
+The Exercise 5 standalone plotting scripts embed the numerical plotting data and can be fine-tuned without access to the notebook state or trained models. Exercise 6 stores the NIS plot outputs with its saved scan products.
