@@ -123,6 +123,37 @@ def _same_transform(left, right):
         return False
 
 
+def _weighted_correlation(values, weights=None):
+    """Return a feature correlation matrix with optional event weights."""
+    values = np.asarray(values, dtype=np.float64)
+    if weights is None:
+        return np.corrcoef(values, rowvar=False)
+
+    weights = np.asarray(weights, dtype=np.float64).reshape(-1)
+    if len(weights) != len(values):
+        raise ValueError("Correlation weights must match the event array.")
+    if not np.isfinite(weights).all() or np.any(weights < 0.0):
+        raise ValueError("Correlation weights must be finite and non-negative.")
+    weight_sum = float(weights.sum())
+    if weight_sum <= 0.0:
+        raise ValueError("Correlation weights must have positive total weight.")
+
+    normalized = weights / weight_sum
+    mean = np.sum(normalized[:, None] * values, axis=0)
+    centered = values - mean
+    covariance = (centered * normalized[:, None]).T @ centered
+    scale = np.sqrt(np.maximum(np.diag(covariance), 0.0))
+    denominator = np.outer(scale, scale)
+    correlation = np.divide(
+        covariance,
+        denominator,
+        out=np.full_like(covariance, np.nan),
+        where=denominator > 0.0,
+    )
+    np.fill_diagonal(correlation, 1.0)
+    return correlation
+
+
 def export_standalone_figure_script(
     fig,
     script_name,
@@ -713,8 +744,14 @@ def plot_flow_pair_closure(
     n_bins_2d=35,
     contour_smoothing=1.0,
     quantile_range=(0.005, 0.995),
+    mc_weights=None,
+    generated_weights=None,
+    mc_label="held-out MC",
+    generated_label="flow sample",
+    generated_color="C1",
+    correlation_names=("MC", "flow"),
 ):
-    """Pair plot of prepared held-out and flow-generated event arrays."""
+    """Pair plot of two event arrays, optionally with event weights."""
     mc = np.asarray(mc)
     generated = np.asarray(generated)
     feature_names = list(feature_names)
@@ -722,6 +759,21 @@ def plot_flow_pair_closure(
         raise ValueError("mc and generated must be 2D arrays with matching columns.")
     if mc.shape[1] != len(feature_names):
         raise ValueError("feature_names must match the number of array columns.")
+    if len(correlation_names) != 2:
+        raise ValueError("correlation_names must contain exactly two labels.")
+
+    if mc_weights is not None:
+        mc_weights = np.asarray(mc_weights, dtype=np.float64).reshape(-1)
+        if len(mc_weights) != len(mc):
+            raise ValueError("mc_weights must match the held-out event array.")
+    if generated_weights is not None:
+        generated_weights = np.asarray(
+            generated_weights, dtype=np.float64
+        ).reshape(-1)
+        if len(generated_weights) != len(generated):
+            raise ValueError(
+                "generated_weights must match the generated event array."
+            )
 
     q_low, q_high = quantile_range
     if not 0.0 <= q_low < q_high <= 1.0:
@@ -740,8 +792,8 @@ def plot_flow_pair_closure(
         )
         limits.append((low, high))
 
-    corr_mc = np.corrcoef(mc, rowvar=False)
-    corr_generated = np.corrcoef(generated, rowvar=False)
+    corr_mc = _weighted_correlation(mc, mc_weights)
+    corr_generated = _weighted_correlation(generated, generated_weights)
     fig, axes = plt.subplots(
         n_features,
         n_features,
@@ -759,21 +811,23 @@ def plot_flow_pair_closure(
                 ax.hist(
                     mc[:, column],
                     bins=bins,
+                    weights=mc_weights,
                     density=True,
                     histtype="step",
                     color="black",
                     lw=1.8,
-                    label="held-out MC",
+                    label=mc_label,
                 )
                 ax.hist(
                     generated[:, column],
                     bins=bins,
+                    weights=generated_weights,
                     density=True,
                     histtype="step",
-                    color="C1",
+                    color=generated_color,
                     lw=1.8,
                     ls="--",
-                    label="flow sample",
+                    label=generated_label,
                 )
                 ax.set_xlim(x_low, x_high)
                 if row == 0:
@@ -787,10 +841,16 @@ def plot_flow_pair_closure(
                 y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
 
                 hist_mc, _, _ = np.histogram2d(
-                    mc[:, column], mc[:, row], bins=(x_edges, y_edges)
+                    mc[:, column],
+                    mc[:, row],
+                    bins=(x_edges, y_edges),
+                    weights=mc_weights,
                 )
                 hist_generated, _, _ = np.histogram2d(
-                    generated[:, column], generated[:, row], bins=(x_edges, y_edges)
+                    generated[:, column],
+                    generated[:, row],
+                    bins=(x_edges, y_edges),
+                    weights=generated_weights,
                 )
                 if contour_smoothing > 0.0:
                     hist_mc = gaussian_filter(hist_mc, sigma=contour_smoothing)
@@ -815,7 +875,7 @@ def plot_flow_pair_closure(
                         y_centers,
                         hist_generated.T,
                         levels=levels_generated,
-                        colors="C1",
+                        colors=generated_color,
                         linestyles="--",
                         linewidths=1.5,
                     )
@@ -830,7 +890,7 @@ def plot_flow_pair_closure(
                 ax.text(
                     0.5,
                     0.62,
-                    rf"$\rho_{{\rm MC}}={rho_mc:+.3f}$",
+                    rf"$\rho_{{\rm {correlation_names[0]}}}={rho_mc:+.3f}$",
                     ha="center",
                     va="center",
                     transform=ax.transAxes,
@@ -839,12 +899,12 @@ def plot_flow_pair_closure(
                 ax.text(
                     0.5,
                     0.44,
-                    rf"$\rho_{{\rm flow}}={rho_generated:+.3f}$",
+                    rf"$\rho_{{\rm {correlation_names[1]}}}={rho_generated:+.3f}$",
                     ha="center",
                     va="center",
                     transform=ax.transAxes,
                     fontsize=10,
-                    color="C1",
+                    color=generated_color,
                 )
                 ax.text(
                     0.5,
