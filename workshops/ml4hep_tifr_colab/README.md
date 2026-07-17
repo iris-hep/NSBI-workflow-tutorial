@@ -1,8 +1,9 @@
 # ML4HEP-TIFR NSBI tutorial — Google Colab edition
 
-These are **Colab-ready copies** of the notebooks in
-[`../ml4hep_tifr/`](../ml4hep_tifr/). They are identical to the originals except
-for two cells added at the top of each notebook:
+These are the **Colab-ready tutorial notebooks**. Exercises 1--4 mirror the
+local versions in [`../ml4hep_tifr/`](../ml4hep_tifr/), while Exercises 5--7
+extend the tutorial with hybrid neural ratio estimation, efficient Asimov
+sampling, and a study of model misspecification.
 
 1. an **"Open in Colab"** badge, and
 2. a **setup cell** that installs the dependencies, pulls the
@@ -27,9 +28,10 @@ browser.
 | Exercise 4 — Normalizing flows | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iris-hep/nsbi-lhc-toolkit/blob/ml4hep_school_tutorial/workshops/ml4hep_tifr_colab/Exercise_4_normalizing_flows_density_estimation_direct_likelihood.ipynb) |
 | Exercise 5 — Hybrid flow and density ratios | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rafaellopesdesa/nsbi-lhc-toolkit/blob/ml4hep_school_tutorial/workshops/ml4hep_tifr_colab/Exercise_5_Hybrid_NormalizingFlow_DensityRatio.ipynb) |
 | Exercise 6 — Neural importance-sampled Asimov data | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rafaellopesdesa/nsbi-lhc-toolkit/blob/ml4hep_school_tutorial/workshops/ml4hep_tifr_colab/Exercise_6_NeuralImportanceSampling_Asimov.ipynb) |
+| Exercise 7 — Asimov closure and misspecification | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rafaellopesdesa/nsbi-lhc-toolkit/blob/ml4hep_school_tutorial/workshops/ml4hep_tifr_colab/Exercise_7_Asimov_Misspecification_Coverage.ipynb) |
 
-> The badge/clone URLs point at the `livaage/nsbi-lhc-toolkit` fork on the
-> `ml4hep-tifr-colab` branch so the notebooks work **before** this PR is merged.
+> The Exercise 5--7 badge URLs point at the `rafaellopesdesa/nsbi-lhc-toolkit`
+> repository on the `ml4hep_school_tutorial` branch used for these extensions.
 > Once merged, update `livaage` → `iris-hep` and the branch in the setup cell.
 
 # Notes for running on Colab
@@ -46,3 +48,6 @@ browser.
   each Colab notebook is a fresh runtime, either run 2.2a and 2.2b in the same
   runtime first, or set `USE_DRIVE = True` in the setup cell of all three so the
   trained `models_*/` folders persist to your Google Drive.
+- Exercises 6 and 7 load the expensive PRESEL, reference-flow, and ratio
+  checkpoints produced by Exercise 5. Run Exercise 5 first and keep
+  `USE_DRIVE = True` in all three notebooks so those checkpoints persist.

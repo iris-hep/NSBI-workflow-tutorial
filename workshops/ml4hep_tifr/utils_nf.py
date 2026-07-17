@@ -494,10 +494,31 @@ class Standardizer:
     std: np.ndarray
 
     @classmethod
-    def fit(cls, x: np.ndarray) -> "Standardizer":
+    def fit(
+        cls,
+        x: np.ndarray,
+        sample_weights: np.ndarray | None = None,
+    ) -> "Standardizer":
         x = np.asarray(x, dtype=np.float32)
-        mean = x.mean(axis=0).astype(np.float32)
-        std = x.std(axis=0).astype(np.float32)
+        if sample_weights is None:
+            mean = x.mean(axis=0).astype(np.float32)
+            std = x.std(axis=0).astype(np.float32)
+        else:
+            weights = np.asarray(sample_weights, dtype=np.float64).reshape(-1)
+            if len(weights) != len(x):
+                raise ValueError("sample_weights must match the training sample.")
+            if not np.isfinite(weights).all() or np.any(weights < 0.0):
+                raise ValueError("sample_weights must be finite and non-negative.")
+            if not float(weights.sum()) > 0.0:
+                raise ValueError("sample_weights must have positive total weight.")
+            weights = weights / weights.sum()
+            mean64 = np.sum(weights[:, None] * x.astype(np.float64), axis=0)
+            variance64 = np.sum(
+                weights[:, None] * (x.astype(np.float64) - mean64) ** 2,
+                axis=0,
+            )
+            mean = mean64.astype(np.float32)
+            std = np.sqrt(np.maximum(variance64, 0.0)).astype(np.float32)
         std = np.where(std > 1.0e-6, std, 1.0).astype(np.float32)
         return cls(mean=mean, std=std)
 
@@ -814,6 +835,7 @@ def _choose_training_array(
 def _make_loaders(
     x_scaled: np.ndarray,
     *,
+    sample_weights: np.ndarray | None = None,
     validation_fraction: float,
     batch_size: int,
     seed: int,
@@ -824,14 +846,36 @@ def _make_loaders(
         raise ValueError("validation_fraction must be strictly between 0 and 1.")
 
     x_tensor = torch.tensor(x_scaled, dtype=torch.float32)
+    weight_tensor = None
+    if sample_weights is not None:
+        weights = np.asarray(sample_weights, dtype=np.float64).reshape(-1)
+        if len(weights) != len(x_scaled):
+            raise ValueError("sample_weights must match x_scaled.")
+        if not np.isfinite(weights).all() or np.any(weights < 0.0):
+            raise ValueError("sample_weights must be finite and non-negative.")
+        if not float(weights.sum()) > 0.0:
+            raise ValueError("sample_weights must have positive total weight.")
+        # Unit mean keeps the numerical loss scale comparable to unweighted MLE.
+        weights = weights * (len(weights) / weights.sum())
+        weight_tensor = torch.tensor(weights, dtype=torch.float32)
     n_total = len(x_tensor)
     n_val = min(n_total - 1, max(1, int(round(validation_fraction * n_total))))
     n_train = n_total - n_val
 
     generator = torch.Generator().manual_seed(seed)
     permutation = torch.randperm(n_total, generator=generator)
-    train_ds = TensorDataset(x_tensor[permutation[:n_train]])
-    val_ds = TensorDataset(x_tensor[permutation[n_train:]])
+    if weight_tensor is None:
+        train_ds = TensorDataset(x_tensor[permutation[:n_train]])
+        val_ds = TensorDataset(x_tensor[permutation[n_train:]])
+    else:
+        train_ds = TensorDataset(
+            x_tensor[permutation[:n_train]],
+            weight_tensor[permutation[:n_train]],
+        )
+        val_ds = TensorDataset(
+            x_tensor[permutation[n_train:]],
+            weight_tensor[permutation[n_train:]],
+        )
 
     train_loader = DataLoader(
         train_ds,
@@ -858,6 +902,7 @@ def train_flow(
     model_config: Mapping[str, Any],
     training_config: Mapping[str, Any],
     device: torch.device,
+    sample_weights: np.ndarray | None = None,
     max_train_events: int | None = None,
     load_if_available: bool = True,
     seed: int = 0,
@@ -911,16 +956,34 @@ def train_flow(
             "learning_rate."
         )
 
-    x = _choose_training_array(
-        df_train,
-        features=features,
-        max_train_events=max_train_events,
-        seed=seed,
-    )
-    scaler = Standardizer.fit(x)
+    selected_weights = None
+    if sample_weights is None:
+        x = _choose_training_array(
+            df_train,
+            features=features,
+            max_train_events=max_train_events,
+            seed=seed,
+        )
+    else:
+        selected_weights = np.asarray(sample_weights, dtype=np.float64).reshape(-1)
+        if len(selected_weights) != len(df_train):
+            raise ValueError("sample_weights must match df_train.")
+        if max_train_events is not None and len(df_train) > max_train_events:
+            rng = np.random.default_rng(seed)
+            selected_indices = rng.choice(
+                len(df_train), size=int(max_train_events), replace=False
+            )
+            x = df_train.iloc[selected_indices][list(features)].to_numpy(
+                dtype=np.float32
+            )
+            selected_weights = selected_weights[selected_indices]
+        else:
+            x = df_train[list(features)].to_numpy(dtype=np.float32)
+    scaler = Standardizer.fit(x, sample_weights=selected_weights)
     x_scaled = scaler.transform(x)
     train_loader, val_loader = _make_loaders(
         x_scaled,
+        sample_weights=selected_weights,
         validation_fraction=validation_fraction,
         batch_size=batch_size,
         seed=seed,
@@ -950,9 +1013,16 @@ def train_flow(
     for epoch in range(1, n_epochs + 1):
         flow.train()
         train_losses = []
-        for (batch,) in train_loader:
-            batch = batch.to(device)
-            loss = -flow.log_prob(batch).mean()
+        for packed_batch in train_loader:
+            batch = packed_batch[0].to(device)
+            event_nll = -flow.log_prob(batch)
+            if len(packed_batch) == 1:
+                loss = event_nll.mean()
+            else:
+                batch_weights = packed_batch[1].to(device)
+                loss = torch.sum(batch_weights * event_nll) / torch.sum(
+                    batch_weights
+                )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(
@@ -964,9 +1034,16 @@ def train_flow(
         flow.eval()
         val_losses = []
         with torch.no_grad():
-            for (batch,) in val_loader:
-                batch = batch.to(device)
-                val_loss = -flow.log_prob(batch).mean()
+            for packed_batch in val_loader:
+                batch = packed_batch[0].to(device)
+                event_nll = -flow.log_prob(batch)
+                if len(packed_batch) == 1:
+                    val_loss = event_nll.mean()
+                else:
+                    batch_weights = packed_batch[1].to(device)
+                    val_loss = torch.sum(batch_weights * event_nll) / torch.sum(
+                        batch_weights
+                    )
                 val_losses.append(float(val_loss.detach().cpu()))
 
         train_loss = float(np.mean(train_losses))
