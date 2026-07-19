@@ -1,0 +1,1919 @@
+JOB syst_ztautau_JES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_0 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_0 3
+
+JOB syst_ztautau_JES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_1 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_1 3
+
+JOB syst_ztautau_JES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_2 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_2 3
+
+JOB syst_ztautau_JES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_3 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_3 3
+
+JOB syst_ztautau_JES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_4 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_4 3
+
+JOB syst_ztautau_JES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_5 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_5 3
+
+JOB syst_ztautau_JES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_6 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_6 3
+
+JOB syst_ztautau_JES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_7 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_7 3
+
+JOB syst_ztautau_JES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_8 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_8 3
+
+JOB syst_ztautau_JES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_9 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_9 3
+
+JOB syst_ztautau_JES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_10 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_10 3
+
+JOB syst_ztautau_JES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_11 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_11 3
+
+JOB syst_ztautau_JES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_12 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_12 3
+
+JOB syst_ztautau_JES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_13 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_13 3
+
+JOB syst_ztautau_JES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_14 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_14 3
+
+JOB syst_ztautau_JES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_15 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_15 3
+
+JOB syst_ztautau_JES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_16 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_16 3
+
+JOB syst_ztautau_JES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_17 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_17 3
+
+JOB syst_ztautau_JES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_18 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_18 3
+
+JOB syst_ztautau_JES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_19 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_19 3
+
+JOB syst_ztautau_JES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_20 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_20 3
+
+JOB syst_ztautau_JES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_21 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_21 3
+
+JOB syst_ztautau_JES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_22 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_22 3
+
+JOB syst_ztautau_JES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_23 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_23 3
+
+JOB syst_ztautau_JES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_24 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_24 3
+
+JOB syst_ztautau_JES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_25 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_25 3
+
+JOB syst_ztautau_JES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_26 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_26 3
+
+JOB syst_ztautau_JES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_27 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_27 3
+
+JOB syst_ztautau_JES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_28 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_28 3
+
+JOB syst_ztautau_JES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_29 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_29 3
+
+JOB syst_ztautau_JES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_30 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_30 3
+
+JOB syst_ztautau_JES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_31 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_31 3
+
+JOB syst_ztautau_JES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_32 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_32 3
+
+JOB syst_ztautau_JES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_33 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_33 3
+
+JOB syst_ztautau_JES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_34 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_34 3
+
+JOB syst_ztautau_JES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_35 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_35 3
+
+JOB syst_ztautau_JES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_36 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_36 3
+
+JOB syst_ztautau_JES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_37 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_37 3
+
+JOB syst_ztautau_JES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_38 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_38 3
+
+JOB syst_ztautau_JES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Up_39 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Up_39 3
+
+JOB syst_ztautau_JES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_0 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_0 3
+
+JOB syst_ztautau_JES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_1 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_1 3
+
+JOB syst_ztautau_JES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_2 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_2 3
+
+JOB syst_ztautau_JES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_3 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_3 3
+
+JOB syst_ztautau_JES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_4 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_4 3
+
+JOB syst_ztautau_JES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_5 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_5 3
+
+JOB syst_ztautau_JES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_6 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_6 3
+
+JOB syst_ztautau_JES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_7 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_7 3
+
+JOB syst_ztautau_JES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_8 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_8 3
+
+JOB syst_ztautau_JES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_9 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_9 3
+
+JOB syst_ztautau_JES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_10 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_10 3
+
+JOB syst_ztautau_JES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_11 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_11 3
+
+JOB syst_ztautau_JES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_12 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_12 3
+
+JOB syst_ztautau_JES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_13 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_13 3
+
+JOB syst_ztautau_JES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_14 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_14 3
+
+JOB syst_ztautau_JES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_15 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_15 3
+
+JOB syst_ztautau_JES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_16 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_16 3
+
+JOB syst_ztautau_JES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_17 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_17 3
+
+JOB syst_ztautau_JES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_18 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_18 3
+
+JOB syst_ztautau_JES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_19 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_19 3
+
+JOB syst_ztautau_JES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_20 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_20 3
+
+JOB syst_ztautau_JES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_21 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_21 3
+
+JOB syst_ztautau_JES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_22 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_22 3
+
+JOB syst_ztautau_JES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_23 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_23 3
+
+JOB syst_ztautau_JES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_24 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_24 3
+
+JOB syst_ztautau_JES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_25 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_25 3
+
+JOB syst_ztautau_JES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_26 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_26 3
+
+JOB syst_ztautau_JES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_27 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_27 3
+
+JOB syst_ztautau_JES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_28 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_28 3
+
+JOB syst_ztautau_JES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_29 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_29 3
+
+JOB syst_ztautau_JES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_30 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_30 3
+
+JOB syst_ztautau_JES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_31 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_31 3
+
+JOB syst_ztautau_JES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_32 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_32 3
+
+JOB syst_ztautau_JES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_33 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_33 3
+
+JOB syst_ztautau_JES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_34 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_34 3
+
+JOB syst_ztautau_JES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_35 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_35 3
+
+JOB syst_ztautau_JES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_36 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_36 3
+
+JOB syst_ztautau_JES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_37 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_37 3
+
+JOB syst_ztautau_JES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_38 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_38 3
+
+JOB syst_ztautau_JES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_JES_Dn_39 PROCESS="ztautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_JES_Dn_39 3
+
+JOB syst_ttbar_JES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_0 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_0 3
+
+JOB syst_ttbar_JES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_1 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_1 3
+
+JOB syst_ttbar_JES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_2 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_2 3
+
+JOB syst_ttbar_JES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_3 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_3 3
+
+JOB syst_ttbar_JES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_4 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_4 3
+
+JOB syst_ttbar_JES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_5 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_5 3
+
+JOB syst_ttbar_JES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_6 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_6 3
+
+JOB syst_ttbar_JES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_7 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_7 3
+
+JOB syst_ttbar_JES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_8 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_8 3
+
+JOB syst_ttbar_JES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_9 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_9 3
+
+JOB syst_ttbar_JES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_10 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_10 3
+
+JOB syst_ttbar_JES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_11 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_11 3
+
+JOB syst_ttbar_JES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_12 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_12 3
+
+JOB syst_ttbar_JES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_13 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_13 3
+
+JOB syst_ttbar_JES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_14 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_14 3
+
+JOB syst_ttbar_JES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_15 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_15 3
+
+JOB syst_ttbar_JES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_16 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_16 3
+
+JOB syst_ttbar_JES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_17 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_17 3
+
+JOB syst_ttbar_JES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_18 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_18 3
+
+JOB syst_ttbar_JES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_19 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_19 3
+
+JOB syst_ttbar_JES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_20 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_20 3
+
+JOB syst_ttbar_JES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_21 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_21 3
+
+JOB syst_ttbar_JES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_22 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_22 3
+
+JOB syst_ttbar_JES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_23 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_23 3
+
+JOB syst_ttbar_JES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_24 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_24 3
+
+JOB syst_ttbar_JES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_25 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_25 3
+
+JOB syst_ttbar_JES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_26 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_26 3
+
+JOB syst_ttbar_JES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_27 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_27 3
+
+JOB syst_ttbar_JES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_28 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_28 3
+
+JOB syst_ttbar_JES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_29 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_29 3
+
+JOB syst_ttbar_JES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_30 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_30 3
+
+JOB syst_ttbar_JES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_31 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_31 3
+
+JOB syst_ttbar_JES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_32 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_32 3
+
+JOB syst_ttbar_JES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_33 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_33 3
+
+JOB syst_ttbar_JES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_34 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_34 3
+
+JOB syst_ttbar_JES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_35 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_35 3
+
+JOB syst_ttbar_JES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_36 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_36 3
+
+JOB syst_ttbar_JES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_37 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_37 3
+
+JOB syst_ttbar_JES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_38 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_38 3
+
+JOB syst_ttbar_JES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Up_39 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Up_39 3
+
+JOB syst_ttbar_JES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_0 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_0 3
+
+JOB syst_ttbar_JES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_1 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_1 3
+
+JOB syst_ttbar_JES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_2 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_2 3
+
+JOB syst_ttbar_JES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_3 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_3 3
+
+JOB syst_ttbar_JES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_4 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_4 3
+
+JOB syst_ttbar_JES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_5 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_5 3
+
+JOB syst_ttbar_JES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_6 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_6 3
+
+JOB syst_ttbar_JES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_7 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_7 3
+
+JOB syst_ttbar_JES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_8 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_8 3
+
+JOB syst_ttbar_JES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_9 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_9 3
+
+JOB syst_ttbar_JES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_10 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_10 3
+
+JOB syst_ttbar_JES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_11 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_11 3
+
+JOB syst_ttbar_JES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_12 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_12 3
+
+JOB syst_ttbar_JES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_13 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_13 3
+
+JOB syst_ttbar_JES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_14 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_14 3
+
+JOB syst_ttbar_JES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_15 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_15 3
+
+JOB syst_ttbar_JES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_16 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_16 3
+
+JOB syst_ttbar_JES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_17 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_17 3
+
+JOB syst_ttbar_JES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_18 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_18 3
+
+JOB syst_ttbar_JES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_19 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_19 3
+
+JOB syst_ttbar_JES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_20 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_20 3
+
+JOB syst_ttbar_JES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_21 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_21 3
+
+JOB syst_ttbar_JES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_22 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_22 3
+
+JOB syst_ttbar_JES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_23 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_23 3
+
+JOB syst_ttbar_JES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_24 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_24 3
+
+JOB syst_ttbar_JES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_25 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_25 3
+
+JOB syst_ttbar_JES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_26 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_26 3
+
+JOB syst_ttbar_JES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_27 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_27 3
+
+JOB syst_ttbar_JES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_28 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_28 3
+
+JOB syst_ttbar_JES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_29 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_29 3
+
+JOB syst_ttbar_JES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_30 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_30 3
+
+JOB syst_ttbar_JES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_31 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_31 3
+
+JOB syst_ttbar_JES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_32 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_32 3
+
+JOB syst_ttbar_JES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_33 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_33 3
+
+JOB syst_ttbar_JES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_34 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_34 3
+
+JOB syst_ttbar_JES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_35 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_35 3
+
+JOB syst_ttbar_JES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_36 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_36 3
+
+JOB syst_ttbar_JES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_37 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_37 3
+
+JOB syst_ttbar_JES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_38 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_38 3
+
+JOB syst_ttbar_JES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_JES_Dn_39 PROCESS="ttbar" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_JES_Dn_39 3
+
+JOB syst_htautau_JES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_0 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_0 3
+
+JOB syst_htautau_JES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_1 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_1 3
+
+JOB syst_htautau_JES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_2 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_2 3
+
+JOB syst_htautau_JES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_3 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_3 3
+
+JOB syst_htautau_JES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_4 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_4 3
+
+JOB syst_htautau_JES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_5 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_5 3
+
+JOB syst_htautau_JES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_6 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_6 3
+
+JOB syst_htautau_JES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_7 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_7 3
+
+JOB syst_htautau_JES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_8 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_8 3
+
+JOB syst_htautau_JES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_9 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_9 3
+
+JOB syst_htautau_JES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_10 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_10 3
+
+JOB syst_htautau_JES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_11 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_11 3
+
+JOB syst_htautau_JES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_12 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_12 3
+
+JOB syst_htautau_JES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_13 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_13 3
+
+JOB syst_htautau_JES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_14 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_14 3
+
+JOB syst_htautau_JES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_15 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_15 3
+
+JOB syst_htautau_JES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_16 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_16 3
+
+JOB syst_htautau_JES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_17 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_17 3
+
+JOB syst_htautau_JES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_18 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_18 3
+
+JOB syst_htautau_JES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_19 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_19 3
+
+JOB syst_htautau_JES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_20 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_20 3
+
+JOB syst_htautau_JES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_21 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_21 3
+
+JOB syst_htautau_JES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_22 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_22 3
+
+JOB syst_htautau_JES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_23 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_23 3
+
+JOB syst_htautau_JES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_24 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_24 3
+
+JOB syst_htautau_JES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_25 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_25 3
+
+JOB syst_htautau_JES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_26 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_26 3
+
+JOB syst_htautau_JES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_27 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_27 3
+
+JOB syst_htautau_JES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_28 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_28 3
+
+JOB syst_htautau_JES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_29 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_29 3
+
+JOB syst_htautau_JES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_30 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_30 3
+
+JOB syst_htautau_JES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_31 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_31 3
+
+JOB syst_htautau_JES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_32 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_32 3
+
+JOB syst_htautau_JES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_33 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_33 3
+
+JOB syst_htautau_JES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_34 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_34 3
+
+JOB syst_htautau_JES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_35 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_35 3
+
+JOB syst_htautau_JES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_36 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_36 3
+
+JOB syst_htautau_JES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_37 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_37 3
+
+JOB syst_htautau_JES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_38 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_38 3
+
+JOB syst_htautau_JES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Up_39 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Up_39 3
+
+JOB syst_htautau_JES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_0 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_0 3
+
+JOB syst_htautau_JES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_1 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_1 3
+
+JOB syst_htautau_JES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_2 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_2 3
+
+JOB syst_htautau_JES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_3 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_3 3
+
+JOB syst_htautau_JES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_4 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_4 3
+
+JOB syst_htautau_JES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_5 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_5 3
+
+JOB syst_htautau_JES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_6 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_6 3
+
+JOB syst_htautau_JES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_7 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_7 3
+
+JOB syst_htautau_JES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_8 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_8 3
+
+JOB syst_htautau_JES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_9 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_9 3
+
+JOB syst_htautau_JES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_10 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_10 3
+
+JOB syst_htautau_JES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_11 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_11 3
+
+JOB syst_htautau_JES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_12 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_12 3
+
+JOB syst_htautau_JES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_13 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_13 3
+
+JOB syst_htautau_JES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_14 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_14 3
+
+JOB syst_htautau_JES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_15 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_15 3
+
+JOB syst_htautau_JES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_16 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_16 3
+
+JOB syst_htautau_JES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_17 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_17 3
+
+JOB syst_htautau_JES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_18 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_18 3
+
+JOB syst_htautau_JES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_19 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_19 3
+
+JOB syst_htautau_JES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_20 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_20 3
+
+JOB syst_htautau_JES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_21 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_21 3
+
+JOB syst_htautau_JES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_22 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_22 3
+
+JOB syst_htautau_JES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_23 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_23 3
+
+JOB syst_htautau_JES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_24 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_24 3
+
+JOB syst_htautau_JES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_25 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_25 3
+
+JOB syst_htautau_JES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_26 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_26 3
+
+JOB syst_htautau_JES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_27 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_27 3
+
+JOB syst_htautau_JES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_28 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_28 3
+
+JOB syst_htautau_JES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_29 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_29 3
+
+JOB syst_htautau_JES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_30 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_30 3
+
+JOB syst_htautau_JES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_31 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_31 3
+
+JOB syst_htautau_JES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_32 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_32 3
+
+JOB syst_htautau_JES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_33 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_33 3
+
+JOB syst_htautau_JES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_34 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_34 3
+
+JOB syst_htautau_JES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_35 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_35 3
+
+JOB syst_htautau_JES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_36 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_36 3
+
+JOB syst_htautau_JES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_37 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_37 3
+
+JOB syst_htautau_JES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_38 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_38 3
+
+JOB syst_htautau_JES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_JES_Dn_39 PROCESS="htautau" SYSTEMATIC="JES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_JES_Dn_39 3
+
+JOB syst_ztautau_TES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_0 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_0 3
+
+JOB syst_ztautau_TES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_1 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_1 3
+
+JOB syst_ztautau_TES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_2 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_2 3
+
+JOB syst_ztautau_TES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_3 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_3 3
+
+JOB syst_ztautau_TES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_4 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_4 3
+
+JOB syst_ztautau_TES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_5 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_5 3
+
+JOB syst_ztautau_TES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_6 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_6 3
+
+JOB syst_ztautau_TES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_7 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_7 3
+
+JOB syst_ztautau_TES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_8 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_8 3
+
+JOB syst_ztautau_TES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_9 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_9 3
+
+JOB syst_ztautau_TES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_10 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_10 3
+
+JOB syst_ztautau_TES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_11 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_11 3
+
+JOB syst_ztautau_TES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_12 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_12 3
+
+JOB syst_ztautau_TES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_13 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_13 3
+
+JOB syst_ztautau_TES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_14 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_14 3
+
+JOB syst_ztautau_TES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_15 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_15 3
+
+JOB syst_ztautau_TES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_16 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_16 3
+
+JOB syst_ztautau_TES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_17 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_17 3
+
+JOB syst_ztautau_TES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_18 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_18 3
+
+JOB syst_ztautau_TES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_19 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_19 3
+
+JOB syst_ztautau_TES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_20 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_20 3
+
+JOB syst_ztautau_TES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_21 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_21 3
+
+JOB syst_ztautau_TES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_22 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_22 3
+
+JOB syst_ztautau_TES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_23 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_23 3
+
+JOB syst_ztautau_TES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_24 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_24 3
+
+JOB syst_ztautau_TES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_25 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_25 3
+
+JOB syst_ztautau_TES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_26 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_26 3
+
+JOB syst_ztautau_TES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_27 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_27 3
+
+JOB syst_ztautau_TES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_28 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_28 3
+
+JOB syst_ztautau_TES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_29 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_29 3
+
+JOB syst_ztautau_TES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_30 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_30 3
+
+JOB syst_ztautau_TES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_31 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_31 3
+
+JOB syst_ztautau_TES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_32 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_32 3
+
+JOB syst_ztautau_TES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_33 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_33 3
+
+JOB syst_ztautau_TES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_34 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_34 3
+
+JOB syst_ztautau_TES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_35 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_35 3
+
+JOB syst_ztautau_TES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_36 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_36 3
+
+JOB syst_ztautau_TES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_37 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_37 3
+
+JOB syst_ztautau_TES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_38 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_38 3
+
+JOB syst_ztautau_TES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Up_39 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Up_39 3
+
+JOB syst_ztautau_TES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_0 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_0 3
+
+JOB syst_ztautau_TES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_1 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_1 3
+
+JOB syst_ztautau_TES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_2 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_2 3
+
+JOB syst_ztautau_TES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_3 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_3 3
+
+JOB syst_ztautau_TES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_4 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_4 3
+
+JOB syst_ztautau_TES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_5 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_5 3
+
+JOB syst_ztautau_TES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_6 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_6 3
+
+JOB syst_ztautau_TES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_7 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_7 3
+
+JOB syst_ztautau_TES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_8 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_8 3
+
+JOB syst_ztautau_TES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_9 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_9 3
+
+JOB syst_ztautau_TES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_10 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_10 3
+
+JOB syst_ztautau_TES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_11 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_11 3
+
+JOB syst_ztautau_TES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_12 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_12 3
+
+JOB syst_ztautau_TES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_13 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_13 3
+
+JOB syst_ztautau_TES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_14 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_14 3
+
+JOB syst_ztautau_TES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_15 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_15 3
+
+JOB syst_ztautau_TES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_16 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_16 3
+
+JOB syst_ztautau_TES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_17 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_17 3
+
+JOB syst_ztautau_TES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_18 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_18 3
+
+JOB syst_ztautau_TES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_19 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_19 3
+
+JOB syst_ztautau_TES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_20 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_20 3
+
+JOB syst_ztautau_TES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_21 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_21 3
+
+JOB syst_ztautau_TES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_22 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_22 3
+
+JOB syst_ztautau_TES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_23 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_23 3
+
+JOB syst_ztautau_TES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_24 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_24 3
+
+JOB syst_ztautau_TES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_25 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_25 3
+
+JOB syst_ztautau_TES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_26 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_26 3
+
+JOB syst_ztautau_TES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_27 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_27 3
+
+JOB syst_ztautau_TES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_28 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_28 3
+
+JOB syst_ztautau_TES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_29 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_29 3
+
+JOB syst_ztautau_TES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_30 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_30 3
+
+JOB syst_ztautau_TES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_31 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_31 3
+
+JOB syst_ztautau_TES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_32 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_32 3
+
+JOB syst_ztautau_TES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_33 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_33 3
+
+JOB syst_ztautau_TES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_34 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_34 3
+
+JOB syst_ztautau_TES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_35 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_35 3
+
+JOB syst_ztautau_TES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_36 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_36 3
+
+JOB syst_ztautau_TES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_37 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_37 3
+
+JOB syst_ztautau_TES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_38 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_38 3
+
+JOB syst_ztautau_TES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ztautau_TES_Dn_39 PROCESS="ztautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ztautau_TES_Dn_39 3
+
+JOB syst_ttbar_TES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_0 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_0 3
+
+JOB syst_ttbar_TES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_1 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_1 3
+
+JOB syst_ttbar_TES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_2 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_2 3
+
+JOB syst_ttbar_TES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_3 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_3 3
+
+JOB syst_ttbar_TES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_4 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_4 3
+
+JOB syst_ttbar_TES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_5 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_5 3
+
+JOB syst_ttbar_TES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_6 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_6 3
+
+JOB syst_ttbar_TES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_7 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_7 3
+
+JOB syst_ttbar_TES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_8 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_8 3
+
+JOB syst_ttbar_TES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_9 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_9 3
+
+JOB syst_ttbar_TES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_10 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_10 3
+
+JOB syst_ttbar_TES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_11 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_11 3
+
+JOB syst_ttbar_TES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_12 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_12 3
+
+JOB syst_ttbar_TES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_13 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_13 3
+
+JOB syst_ttbar_TES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_14 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_14 3
+
+JOB syst_ttbar_TES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_15 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_15 3
+
+JOB syst_ttbar_TES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_16 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_16 3
+
+JOB syst_ttbar_TES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_17 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_17 3
+
+JOB syst_ttbar_TES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_18 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_18 3
+
+JOB syst_ttbar_TES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_19 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_19 3
+
+JOB syst_ttbar_TES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_20 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_20 3
+
+JOB syst_ttbar_TES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_21 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_21 3
+
+JOB syst_ttbar_TES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_22 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_22 3
+
+JOB syst_ttbar_TES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_23 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_23 3
+
+JOB syst_ttbar_TES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_24 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_24 3
+
+JOB syst_ttbar_TES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_25 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_25 3
+
+JOB syst_ttbar_TES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_26 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_26 3
+
+JOB syst_ttbar_TES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_27 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_27 3
+
+JOB syst_ttbar_TES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_28 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_28 3
+
+JOB syst_ttbar_TES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_29 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_29 3
+
+JOB syst_ttbar_TES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_30 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_30 3
+
+JOB syst_ttbar_TES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_31 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_31 3
+
+JOB syst_ttbar_TES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_32 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_32 3
+
+JOB syst_ttbar_TES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_33 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_33 3
+
+JOB syst_ttbar_TES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_34 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_34 3
+
+JOB syst_ttbar_TES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_35 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_35 3
+
+JOB syst_ttbar_TES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_36 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_36 3
+
+JOB syst_ttbar_TES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_37 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_37 3
+
+JOB syst_ttbar_TES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_38 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_38 3
+
+JOB syst_ttbar_TES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Up_39 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Up_39 3
+
+JOB syst_ttbar_TES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_0 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_0 3
+
+JOB syst_ttbar_TES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_1 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_1 3
+
+JOB syst_ttbar_TES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_2 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_2 3
+
+JOB syst_ttbar_TES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_3 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_3 3
+
+JOB syst_ttbar_TES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_4 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_4 3
+
+JOB syst_ttbar_TES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_5 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_5 3
+
+JOB syst_ttbar_TES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_6 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_6 3
+
+JOB syst_ttbar_TES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_7 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_7 3
+
+JOB syst_ttbar_TES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_8 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_8 3
+
+JOB syst_ttbar_TES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_9 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_9 3
+
+JOB syst_ttbar_TES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_10 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_10 3
+
+JOB syst_ttbar_TES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_11 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_11 3
+
+JOB syst_ttbar_TES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_12 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_12 3
+
+JOB syst_ttbar_TES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_13 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_13 3
+
+JOB syst_ttbar_TES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_14 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_14 3
+
+JOB syst_ttbar_TES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_15 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_15 3
+
+JOB syst_ttbar_TES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_16 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_16 3
+
+JOB syst_ttbar_TES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_17 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_17 3
+
+JOB syst_ttbar_TES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_18 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_18 3
+
+JOB syst_ttbar_TES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_19 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_19 3
+
+JOB syst_ttbar_TES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_20 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_20 3
+
+JOB syst_ttbar_TES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_21 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_21 3
+
+JOB syst_ttbar_TES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_22 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_22 3
+
+JOB syst_ttbar_TES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_23 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_23 3
+
+JOB syst_ttbar_TES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_24 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_24 3
+
+JOB syst_ttbar_TES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_25 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_25 3
+
+JOB syst_ttbar_TES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_26 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_26 3
+
+JOB syst_ttbar_TES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_27 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_27 3
+
+JOB syst_ttbar_TES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_28 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_28 3
+
+JOB syst_ttbar_TES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_29 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_29 3
+
+JOB syst_ttbar_TES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_30 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_30 3
+
+JOB syst_ttbar_TES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_31 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_31 3
+
+JOB syst_ttbar_TES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_32 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_32 3
+
+JOB syst_ttbar_TES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_33 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_33 3
+
+JOB syst_ttbar_TES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_34 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_34 3
+
+JOB syst_ttbar_TES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_35 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_35 3
+
+JOB syst_ttbar_TES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_36 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_36 3
+
+JOB syst_ttbar_TES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_37 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_37 3
+
+JOB syst_ttbar_TES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_38 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_38 3
+
+JOB syst_ttbar_TES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_ttbar_TES_Dn_39 PROCESS="ttbar" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_ttbar_TES_Dn_39 3
+
+JOB syst_htautau_TES_Up_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_0 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_0 3
+
+JOB syst_htautau_TES_Up_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_1 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_1 3
+
+JOB syst_htautau_TES_Up_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_2 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_2 3
+
+JOB syst_htautau_TES_Up_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_3 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_3 3
+
+JOB syst_htautau_TES_Up_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_4 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_4 3
+
+JOB syst_htautau_TES_Up_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_5 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_5 3
+
+JOB syst_htautau_TES_Up_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_6 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_6 3
+
+JOB syst_htautau_TES_Up_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_7 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_7 3
+
+JOB syst_htautau_TES_Up_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_8 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_8 3
+
+JOB syst_htautau_TES_Up_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_9 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_9 3
+
+JOB syst_htautau_TES_Up_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_10 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_10 3
+
+JOB syst_htautau_TES_Up_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_11 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_11 3
+
+JOB syst_htautau_TES_Up_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_12 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_12 3
+
+JOB syst_htautau_TES_Up_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_13 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_13 3
+
+JOB syst_htautau_TES_Up_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_14 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_14 3
+
+JOB syst_htautau_TES_Up_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_15 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_15 3
+
+JOB syst_htautau_TES_Up_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_16 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_16 3
+
+JOB syst_htautau_TES_Up_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_17 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_17 3
+
+JOB syst_htautau_TES_Up_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_18 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_18 3
+
+JOB syst_htautau_TES_Up_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_19 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_19 3
+
+JOB syst_htautau_TES_Up_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_20 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_20 3
+
+JOB syst_htautau_TES_Up_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_21 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_21 3
+
+JOB syst_htautau_TES_Up_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_22 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_22 3
+
+JOB syst_htautau_TES_Up_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_23 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_23 3
+
+JOB syst_htautau_TES_Up_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_24 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_24 3
+
+JOB syst_htautau_TES_Up_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_25 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_25 3
+
+JOB syst_htautau_TES_Up_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_26 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_26 3
+
+JOB syst_htautau_TES_Up_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_27 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_27 3
+
+JOB syst_htautau_TES_Up_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_28 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_28 3
+
+JOB syst_htautau_TES_Up_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_29 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_29 3
+
+JOB syst_htautau_TES_Up_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_30 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_30 3
+
+JOB syst_htautau_TES_Up_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_31 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_31 3
+
+JOB syst_htautau_TES_Up_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_32 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_32 3
+
+JOB syst_htautau_TES_Up_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_33 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_33 3
+
+JOB syst_htautau_TES_Up_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_34 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_34 3
+
+JOB syst_htautau_TES_Up_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_35 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_35 3
+
+JOB syst_htautau_TES_Up_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_36 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_36 3
+
+JOB syst_htautau_TES_Up_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_37 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_37 3
+
+JOB syst_htautau_TES_Up_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_38 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_38 3
+
+JOB syst_htautau_TES_Up_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Up_39 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Up" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Up_39 3
+
+JOB syst_htautau_TES_Dn_0 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_0 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="0" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_0 3
+
+JOB syst_htautau_TES_Dn_1 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_1 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="1" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_1 3
+
+JOB syst_htautau_TES_Dn_2 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_2 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="2" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_2 3
+
+JOB syst_htautau_TES_Dn_3 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_3 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="3" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_3 3
+
+JOB syst_htautau_TES_Dn_4 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_4 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="4" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_4 3
+
+JOB syst_htautau_TES_Dn_5 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_5 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="5" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_5 3
+
+JOB syst_htautau_TES_Dn_6 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_6 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="6" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_6 3
+
+JOB syst_htautau_TES_Dn_7 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_7 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="7" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_7 3
+
+JOB syst_htautau_TES_Dn_8 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_8 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="8" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_8 3
+
+JOB syst_htautau_TES_Dn_9 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_9 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="9" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_9 3
+
+JOB syst_htautau_TES_Dn_10 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_10 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="10" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_10 3
+
+JOB syst_htautau_TES_Dn_11 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_11 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="11" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_11 3
+
+JOB syst_htautau_TES_Dn_12 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_12 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="12" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_12 3
+
+JOB syst_htautau_TES_Dn_13 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_13 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="13" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_13 3
+
+JOB syst_htautau_TES_Dn_14 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_14 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="14" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_14 3
+
+JOB syst_htautau_TES_Dn_15 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_15 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="15" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_15 3
+
+JOB syst_htautau_TES_Dn_16 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_16 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="16" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_16 3
+
+JOB syst_htautau_TES_Dn_17 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_17 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="17" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_17 3
+
+JOB syst_htautau_TES_Dn_18 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_18 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="18" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_18 3
+
+JOB syst_htautau_TES_Dn_19 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_19 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="19" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_19 3
+
+JOB syst_htautau_TES_Dn_20 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_20 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="20" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_20 3
+
+JOB syst_htautau_TES_Dn_21 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_21 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="21" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_21 3
+
+JOB syst_htautau_TES_Dn_22 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_22 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="22" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_22 3
+
+JOB syst_htautau_TES_Dn_23 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_23 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="23" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_23 3
+
+JOB syst_htautau_TES_Dn_24 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_24 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="24" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_24 3
+
+JOB syst_htautau_TES_Dn_25 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_25 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="25" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_25 3
+
+JOB syst_htautau_TES_Dn_26 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_26 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="26" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_26 3
+
+JOB syst_htautau_TES_Dn_27 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_27 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="27" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_27 3
+
+JOB syst_htautau_TES_Dn_28 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_28 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="28" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_28 3
+
+JOB syst_htautau_TES_Dn_29 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_29 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="29" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_29 3
+
+JOB syst_htautau_TES_Dn_30 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_30 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="30" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_30 3
+
+JOB syst_htautau_TES_Dn_31 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_31 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="31" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_31 3
+
+JOB syst_htautau_TES_Dn_32 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_32 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="32" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_32 3
+
+JOB syst_htautau_TES_Dn_33 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_33 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="33" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_33 3
+
+JOB syst_htautau_TES_Dn_34 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_34 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="34" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_34 3
+
+JOB syst_htautau_TES_Dn_35 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_35 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="35" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_35 3
+
+JOB syst_htautau_TES_Dn_36 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_36 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="36" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_36 3
+
+JOB syst_htautau_TES_Dn_37 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_37 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="37" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_37 3
+
+JOB syst_htautau_TES_Dn_38 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_38 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="38" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_38 3
+
+JOB syst_htautau_TES_Dn_39 examples/FAIR_universe_Higgs_tautau/htcondor/job_systematics_training.sub
+VARS syst_htautau_TES_Dn_39 PROCESS="htautau" SYSTEMATIC="TES" DIRECTION="Dn" ENSEMBLE_INDEX="39" CONFIG="config.pipeline.yaml" CPUS="8" MEM="16GB" GPUS="1" DISK="32GB"
+RETRY syst_htautau_TES_Dn_39 3

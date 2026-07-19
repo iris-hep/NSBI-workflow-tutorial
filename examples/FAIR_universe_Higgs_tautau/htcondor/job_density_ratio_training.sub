@@ -1,0 +1,57 @@
+universe = container
+container_image = file:///staging/jsandesara/nsbi-env-gpu.sif
+
+EXAMPLE_DIR = FAIR_universe_Higgs_tautau
+WORK_DIR = examples/$(EXAMPLE_DIR)
+
+executable = $(WORK_DIR)/htcondor/run_step.sh
+arguments  = neural_likelihood_ratio_estimation $(CONFIG) --ensemble_index $(ENSEMBLE_INDEX) --process $(PROCESS_TYPE)
+
+log    = logs/density_ratio_training.$(Cluster).log
+output = logs/density_ratio_training.$(Cluster).out
+error  = logs/density_ratio_training.$(Cluster).err
+
+request_cpus   = $(CPUS:1)
+request_memory = $(MEM:64GB)
+request_gpus   = $(GPUS:0)
+request_disk   = $(DISK:64GB)
+
+stream_output = True
+stream_error  = True
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (GPUs_DriverVersion >= 12.4) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu")
+
+gpus_minimum_capability = 7.0
+
++WantGPULab = true
++WantFlocking           = true
++is_resumable           = true
++want_campus_pools      = true
++want_ospool            = true
++WantGlidein            = true
+
++GPUJobLength = "short"
+
+# Hold if running for more than 2.5 hours
+periodic_hold = (JobStatus == 2) && ((CurrentTime - JobStartDate) > 9000)
+periodic_hold_reason = "Job exceeded maximum runtime"
+periodic_release = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 60)
+
+transfer_input_files = pyproject.toml, src, $(WORK_DIR), README.md
+
+MODEL_DIR = output_model_params_$(PROCESS_TYPE)$(ENSEMBLE_INDEX)
+FIGURES_DIR = output_figures_$(PROCESS_TYPE)$(ENSEMBLE_INDEX)
+TRAINING_OUT = $(EXAMPLE_DIR)/saved_datasets/output_training_nominal
+
+transfer_output_files = $(TRAINING_OUT)/$(MODEL_DIR), \
+                        $(TRAINING_OUT)/$(FIGURES_DIR), \
+                        $(EXAMPLE_DIR)/output
+
+transfer_output_remaps = "$(MODEL_DIR)   = ./$(WORK_DIR)/saved_datasets/output_training_nominal/$(MODEL_DIR); \
+                          $(FIGURES_DIR) = ./$(WORK_DIR)/saved_datasets/output_training_nominal/$(FIGURES_DIR); \
+                          output         = ./$(WORK_DIR)/output"
+
+queue

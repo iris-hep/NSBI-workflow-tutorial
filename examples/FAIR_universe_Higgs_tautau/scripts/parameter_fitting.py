@@ -74,7 +74,6 @@ def main():
     args = parse_args()
     config_workflow = load_config(args.config)["parameter_fitting"]
     
-    freeze_params = config_workflow.get("freeze_params", [])
     plots_dir = config_workflow["output"]["plots_dir"]
     
     logger.info("Starting Inference Pipeline")
@@ -124,6 +123,8 @@ def main():
 
         logger.info("\nPerforming Fits (Tables logged to file)")
 
+        # freeze_params = ["JES", "TES"]
+        freeze_params = []
         if len(freeze_params)>0:
             print(f"Freezing params {freeze_params} to nominal values, they will not be floated for fits.")
         

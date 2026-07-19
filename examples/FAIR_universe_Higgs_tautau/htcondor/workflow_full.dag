@@ -1,0 +1,11 @@
+SPLICE data_processing examples/FAIR_universe_Higgs_tautau/htcondor/stage_data_processing.dag
+SPLICE preselection_network examples/FAIR_universe_Higgs_tautau/htcondor/stage_preselection_network.dag
+SPLICE density_ratio_training examples/FAIR_universe_Higgs_tautau/htcondor/stage_density_ratio_training.dag
+SPLICE parameter_fitting examples/FAIR_universe_Higgs_tautau/htcondor/stage_parameter_fitting.dag
+
+PARENT data_processing CHILD preselection_network
+
+PARENT preselection_network CHILD density_ratio_training
+
+PARENT density_ratio_training CHILD parameter_fitting
+

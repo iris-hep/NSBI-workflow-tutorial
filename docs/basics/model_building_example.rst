@@ -13,6 +13,10 @@ You need four ingredients, all of which are included in the example directory (v
 3. **Asimov weights** (or real-data weights) for the unbinned region.
 4. **ROOT files** containing the MC samples used by binned channels.
 
+.. note::
+
+   The ``saved_datasets/`` directory uses **symlinks** into the parent ``FAIR_universe_Higgs_tautau/saved_datasets/`` directory to avoid duplicating large files. After a fresh ``git clone``, make sure to run ``git lfs pull`` so that the LFS-tracked ROOT and NumPy files are downloaded, not just pointer stubs.
+
 Directory layout
 ----------------
 

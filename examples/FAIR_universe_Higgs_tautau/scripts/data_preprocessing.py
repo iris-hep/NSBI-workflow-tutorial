@@ -174,21 +174,6 @@ def main() -> None:
         logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
         datasets_helper.add_appended_branches(new_branches)
 
-        # Assign k-fold indices to nominal samples (deterministic, per-sample)
-        num_folds = config.get("num_folds", 1)
-        if num_folds > 1:
-            logger.info(f"Assigning {num_folds}-fold indices to all samples.")
-            for region_key, sample_dict in datasets_all.items():
-                for sample_name, df in sample_dict.items():
-                    # Deterministic: seed on region+sample so each dataset
-                    # gets a consistent assignment across reruns
-                    seed = hash((region_key, sample_name)) % (2**31)
-                    rng = np.random.RandomState(seed)
-                    perm = rng.permutation(len(df))
-                    df["fold_index"] = perm % num_folds
-                    datasets_all[region_key][sample_name] = df
-            datasets_helper.add_appended_branches(["fold_index"])
-
         logger.info("Saving processed datasets...")
         datasets_helper.save_dataset_to_ntuple(datasets_all, save_systematics=True)
 

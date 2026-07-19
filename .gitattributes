@@ -2,6 +2,8 @@
 pixi.lock merge=binary linguist-language=YAML linguist-generated=true
 FAIR_universe_Higgs_tautau/saved_datasets/dataset_*.root filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+docs/_images/*.png !filter !diff !merge text=auto
 *.bin filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
 *.npy filter=lfs diff=lfs merge=lfs -text

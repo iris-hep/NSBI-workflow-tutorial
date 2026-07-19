@@ -38,16 +38,14 @@ def fill_histograms_wError(data, weights, edges, histrange, normalize=True):
 # Diagnostics for training loss and accuracy 
 def plot_loss(loss_history, path_to_figures="", ensemble_index=0):
 
-    fig, ax = plt.subplots()
-    ax.plot(loss_history.train_loss, label="train")
-    ax.plot(loss_history.val_loss, label="validation")
-    ax.set_title("model loss", size=12)
-    ax.set_ylabel("loss", size=12)
-    ax.set_xlabel("epoch", size=12)
-    ax.legend(loc="upper left")
-    fig.savefig(f"{path_to_figures}/loss_plot_{ensemble_index}.png", bbox_inches="tight")
-    plt.close(fig)
-    return fig
+    plt.plot(loss_history.train_loss)
+    plt.plot(loss_history.val_loss)
+    plt.title("model loss", size=12)
+    plt.ylabel("loss", size=12)
+    plt.xlabel("epoch", size=12)
+    plt.legend(["train", "validation"], loc="upper left")
+    plt.savefig(f"{path_to_figures}/loss_plot_{ensemble_index}.png", bbox_inches="tight")
+    plt.clf()
 
 
 def plot_calibration_curve(data_den, weight_den, data_num, weight_num, 
@@ -126,19 +124,19 @@ def plot_calibration_curve(data_den, weight_den, data_num, weight_num,
     plt.tight_layout()
     plt.savefig(f"{path_to_figures}/calib_plot_{score_range}_{ensemble_index}.png", bbox_inches='tight')
     plt.show()
-    plt.close(fig)
-    return fig
+    plt.clf()
 
 def plot_calibration_curve_ratio(
-    ratio_den, weight_den, ratio_num, weight_num,
-    ratio_den_holdout, weight_den_holdout, ratio_num_holdout, weight_num_holdout,
-    path_to_figures="", nbins=100, epsilon=1.0e-20,
+    data_den, weight_den, data_num, weight_num, 
+    data_den_holdout, weight_den_holdout, data_num_holdout, weight_num_holdout, 
+    path_to_figures="", nbins=100, epsilon=1.0e-20, 
     label="Calibration Curve", score_range="standard", ensemble_index=0):
 
-    data_den        = np.log(ratio_den)
-    data_den_holdout= np.log(ratio_den_holdout)
-    data_num        = np.log(ratio_num)
-    data_num_holdout= np.log(ratio_num_holdout)
+    # --- transform scores to logit (LLR proxy) ---
+    data_den        = np.log(data_den / (1.0 - data_den))
+    data_den_holdout= np.log(data_den_holdout / (1.0 - data_den_holdout))
+    data_num        = np.log(data_num / (1.0 - data_num))
+    data_num_holdout= np.log(data_num_holdout / (1.0 - data_num_holdout))
 
     data = np.concatenate([data_num, data_den, data_den_holdout, data_num_holdout]).flatten()
     xmin = np.amin(data); xmax = np.amax(data)
@@ -216,34 +214,33 @@ def plot_calibration_curve_ratio(
     plt.tight_layout()
     plt.savefig(f"{path_to_figures}/calib_plot_llr_{score_range}_{ensemble_index}.png", bbox_inches='tight')
     plt.show()
-    plt.close(fig)
-    return fig
+    plt.clf()
 
 
 def plot_reweighted(
-    dataset_train, ratio_den_train, weight_den_train, ratio_num_train, weight_num_train,
-    dataset_holdout, ratio_den_holdout, weight_den_holdout, ratio_num_holdout, weight_num_holdout,
+    dataset_train, score_den_train, weight_den_train, score_num_train, weight_num_train,
+    dataset_holdout, score_den_holdout, weight_den_holdout, score_num_holdout, weight_num_holdout,
     path_to_figures="", num=15, variables=['NN_MELA_incl_disc'],
     sample_name=['Bkg','Ref'], scale="linear",
     label_left='Training Data Diagnostic', label_right='Holdout Data Diagnostic', ensemble_index=0
 ):
     """
-    Draw training (left) and holdout (right) reweighting diagnostic plots side-by-side. Inputs ratio_*_* are density ratios r = p_A/p_B used directly as the per-event reweighting factor.
+    Draw training (left) and holdout (right) reweighting diagnostic plots side-by-side..
     """
-    figures = []
 
     # Helper that reproduces original per-panel computations
-    def _panel_data(dataset, ratio_den, weight_den, ratio_num, weight_num, variable):
+    def _panel_data(dataset, score_den, weight_den, score_num, weight_num, variable):
         data_den = dataset[dataset.train_labels==0].copy()
-        data_den['ratio'] = ratio_den
+        data_den['score'] = score_den
         data_num = dataset[dataset.train_labels==1].copy()
-        data_num['ratio'] = ratio_num
+        data_num['score'] = score_num
 
         weight_den_arr = np.ravel(data_den.weights)
         weight_num_arr = np.ravel(data_num.weights)
 
-        ratio_den_arr = np.ravel(data_den.ratio)
-        den_to_num_rwt = weight_den_arr * ratio_den_arr
+        score_den_arr = np.ravel(data_den.score)
+        ratio_den = score_den_arr / (1.0 - score_den_arr)  # pA/pB from score
+        den_to_num_rwt = weight_den_arr * ratio_den
 
         var_den = np.ravel(data_den[variable])
         var_num = np.ravel(data_num[variable])
@@ -272,8 +269,8 @@ def plot_reweighted(
 
     for variable in variables:
         # Compute data for each panel independently (same as original behavior)
-        L = _panel_data(dataset_train,   ratio_den_train,   weight_den_train,   ratio_num_train,   weight_num_train,   variable)
-        R = _panel_data(dataset_holdout, ratio_den_holdout, weight_den_holdout, ratio_num_holdout, weight_num_holdout, variable)
+        L = _panel_data(dataset_train,   score_den_train,   weight_den_train,   score_num_train,   weight_num_train,   variable)
+        R = _panel_data(dataset_holdout, score_den_holdout, weight_den_holdout, score_num_holdout, weight_num_holdout, variable)
 
         # Figure: 2 rows (main, ratio) × 2 cols (training, holdout)
         fig, axes = plt.subplots(2, 2, figsize=(12, 6), sharex='col',
@@ -330,45 +327,43 @@ def plot_reweighted(
         plt.tight_layout()
         plt.savefig(f'{path_to_figures}/reweighted_{str(variable)}_{ensemble_index}.png', bbox_inches='tight')
         plt.show()
-        plt.close(fig)
-        figures.append(fig)
-
-    return figures
+        plt.clf()
 
 
 def plot_overfit_side_by_side(
-    ratio_den_train, ratio_den_holdout, w_den_train, w_den_holdout,
-    ratio_num_train, ratio_num_holdout, w_num_train, w_num_holdout,
+    score_den_train, score_den_holdout, w_den_train, w_den_holdout,
+    score_num_train, score_num_holdout, w_num_train, w_num_holdout,
     nbins=50, plotRange=[0.0,1.0], holdout_index=1,
     labels=('Bkg','Ref'),  # left=den label, right=num label
     path_to_figures="", ensemble_index=0
 ):
     """
-    Draw overfit diagnostics for DEN (left) and NUM (right) side-by-side. Each column shows Train & Holdout superimposed. Inputs are density ratios r = p_A/p_B; the caller controls the displayed window via ``plotRange``.
+    Draw overfit diagnostics for DEN (left) and NUM (right) side-by-side.
+    Each column shows Train & Holdout superimposed (same aesthetics as original).
     """
 
     # Common binning (same as original)
     bins = np.linspace(plotRange[0], plotRange[1], num=nbins)
 
-    def _compute(ratio_1, ratio_2, w_train, w_test):
+    def _compute(score_1, score_2, w_train, w_test):
         w_train = w_train / w_train.sum()
         w_test  = w_test  / w_test.sum()
 
-        h1, _ = np.histogram(ratio_1, bins=bins, weights=w_train)
-        h2, _ = np.histogram(ratio_2, bins=bins, weights=w_test)
+        h1, _ = np.histogram(score_1, bins=bins, weights=w_train)
+        h2, _ = np.histogram(score_2, bins=bins, weights=w_test)
 
-        e1, _ = np.histogram(ratio_1, bins=bins, weights=w_train**2)
-        e2, _ = np.histogram(ratio_2, bins=bins, weights=w_test**2)
+        e1, _ = np.histogram(score_1, bins=bins, weights=w_train**2)
+        e2, _ = np.histogram(score_2, bins=bins, weights=w_test**2)
 
         return h1, h2, e1, e2
 
     # Left (den) panel data
     den_h1, den_h2, den_e1, den_e2 = _compute(
-        ratio_den_train, ratio_den_holdout, w_den_train, w_den_holdout
+        score_den_train, score_den_holdout, w_den_train, w_den_holdout
     )
     # Right (num) panel data
     num_h1, num_h2, num_e1, num_e2 = _compute(
-        ratio_num_train, ratio_num_holdout, w_num_train, w_num_holdout
+        score_num_train, score_num_holdout, w_num_train, w_num_holdout
     )
 
     # Figure: 2 rows (main + residual) × 2 cols (den + num)
@@ -390,7 +385,7 @@ def plot_overfit_side_by_side(
     difference_den = den_h1 - den_h2
     hep.histplot(difference_den, bins, yerr=np.sqrt(den_e2 + den_e1))
     plt.axis(xmin=plotRange[0], xmax=plotRange[1], ymin=-0.0015, ymax=0.0015)
-    plt.xlabel("NN density ratio", fontsize=18)
+    plt.xlabel("NN Prediction", fontsize=18)
     plt.ylabel("Residue", loc="center", size=18)
     abline(0.0, 0.0)
 
@@ -407,7 +402,7 @@ def plot_overfit_side_by_side(
     difference_num = num_h1 - num_h2
     hep.histplot(difference_num, bins, yerr=np.sqrt(num_e2 + num_e1))
     plt.axis(xmin=plotRange[0], xmax=plotRange[1], ymin=-0.0015, ymax=0.0015)
-    plt.xlabel("NN density ratio", fontsize=18)
+    plt.xlabel("NN Prediction", fontsize=18)
     plt.ylabel("Residue", loc="center", size=18)
     abline(0.0, 0.0)
 

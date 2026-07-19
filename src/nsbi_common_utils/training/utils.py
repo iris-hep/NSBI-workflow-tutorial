@@ -141,10 +141,7 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
     """
     Evaluate the trained density-ratio model on an input dataset.
 
-    Applies feature scaling, runs ONNX inference, converts the raw
-    model output to a density ratio :math:`r = p_A / p_B`, and
-    optionally applies the calibration layer (which operates in score
-    space) before returning the ratio.
+    Applies feature scaling, runs ONNX inference, optionally converts from log-likelihood-ratio space to a probability score, and optionally applies the calibration layer.
 
     Parameters
     ----------
@@ -158,45 +155,31 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
         The ONNX model to run inference with. If a ``ModelProto`` is passed, an ``InferenceSession`` is created internally. If an ``InferenceSession`` is passed, it is used directly.
 
     calibration_model :
-        calibration model with ``cali_pred`` method. The calibrator is
-        applied in score space; the calibrated score is then converted
-        to a ratio for the return value.
+        Calibration model with ``cali_pred`` method.
 
     use_log_loss : bool, optional
-        If ``True``, the raw model output is interpreted as
-        :math:`\\log(p_A / p_B)` and exponentiated to obtain the ratio.
-        Must match the ``use_log_loss`` setting used during training.
-        Default ``False``.
+        If ``True``, the raw model output is interpreted as :math:`\\log(p_A / p_B)` and converted to a probability score via :math:`s = \\sigma(\\log r) = 1 / (1 + r^{-1})` before returning. Must match the ``use_log_loss`` setting used during training. Default ``False``.
 
     Returns
     -------
     numpy.ndarray, shape (n_events,)
-        Predicted density ratios :math:`r = p_A / p_B`, non-negative and
-        numerically capped only at the saturated-score boundary. Values
-        larger than ``1`` indicate hypothesis A
-        (numerator) is more likely; values smaller than ``1`` indicate
-        hypothesis B (denominator) is more likely. Classifier scores at the
-        upper numerical boundary are clipped before conversion so the return
-        value remains finite. A calibration layer may apply additional
-        clipping in score space.
+        Predicted scores in the range ``(0, 1)``, where values close to ``1`` indicate high probability of belonging to hypothesis A (numerator) and values close to ``0`` indicate hypothesis B (denominator). If calibration is enabled, the output is additionally clipped to ``[1e-8, 1 - 1e-8]`` for numerical safety.
 
     Notes
     -----
-    * To obtain the classifier score :math:`s = p_A / (p_A + p_B)` from
-      the returned ratio :math:`r`, use :math:`s = r / (1 + r)`.
+    * To obtain the density ratio :math:`r = p_A / p_B` from the returned score :math:`s`, use :math:`r = s / (1 - s)`.
     """
 
     pred = predict_with_onnx(data, scaler, model)
 
     if use_log_loss:
-        pred_ratio = np.exp(pred)
-    else:
-        pred_ratio = convert_score_to_ratio(pred)
+        pred = convert_logLR_to_score(pred)
 
     if calibration_model is not None:
-        pred_ratio = calibration_model.cali_pred(pred_ratio).reshape(-1)
+        pred = calibration_model.cali_pred(pred)
+        pred = np.clip(pred.reshape(-1), 1e-9, 1.0 - 1e-9)
 
-    return pred_ratio
+    return pred
 
 def predict_with_onnx(dataset, 
                     scaler, 
@@ -241,11 +224,7 @@ def predict_with_onnx(dataset,
     Notes
     -----
     * The ONNX session is configured with ``intra_op_num_threads=1`` and ``inter_op_num_threads=1``. This is intentional for HTCondor jobs where CPU resources are explicitly requested — unconstrained threading can cause resource contention across concurrent jobs on the same node.
-    * CUDA execution is attempted when that provider is available; otherwise
-      the session uses the CPU provider without emitting a provider warning.
-    * Scikit-learn transformers may promote their output to ``float64``. The
-      transformed array is converted to contiguous ``float32`` before ONNX
-      inference, matching the PyTorch models exported by :func:`save_model`.
+    * CUDA execution is attempted first; the runtime falls back to CPU automatically if no compatible GPU is available.
     """
     import onnxruntime as rt
 
@@ -254,25 +233,16 @@ def predict_with_onnx(dataset,
     sess_opts.inter_op_num_threads = 1
 
     if isinstance(model, onnx.ModelProto):
-        available_providers = rt.get_available_providers()
-        providers = [
-            provider
-            for provider in ["CUDAExecutionProvider", "CPUExecutionProvider"]
-            if provider in available_providers
-        ]
         model = rt.InferenceSession(model.SerializeToString(), 
                                     sess_options = sess_opts,
-                                    providers=providers)
+                                    providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
     
     elif isinstance(model, rt.InferenceSession):
         model = model
     else:
         raise TypeError(f"Unsupported model type: {type(model)}")
 
-    scaled_dataset = scaler.transform(dataset)
-    if hasattr(scaled_dataset, "toarray"):
-        scaled_dataset = scaled_dataset.toarray()
-    scaled_dataset = np.ascontiguousarray(scaled_dataset, dtype=np.float32)
+    scaled_dataset  = scaler.transform(dataset)
     n_samples       = len(scaled_dataset)
     
     input_name      = model.get_inputs()[0].name
@@ -395,18 +365,14 @@ def convert_score_to_ratio(score):
     Parameters
     ----------
     score : numpy.ndarray
-        Probability scores in the range ``[0, 1]``. Values at the upper
-        boundary are clipped internally so saturated classifiers still
-        produce a large but finite ratio.
+        Probability scores in the range ``(0, 1)``. Values at exactly ``0``
+        or ``1`` will produce ``0`` or ``inf`` respectively — clip inputs
+        to a safe range such as ``[1e-9, 1 - 1e-9]`` if needed.
 
     Returns
     -------
     numpy.ndarray
-        Finite density ratio values :math:`p_A / p_B`.
+        Density ratio values :math:`p_A / p_B`, unbounded above.
     """
-    # ONNX inference returns float32 classifier scores, for which a saturated
-    # sigmoid can be exactly one.  Convert to float64 before applying the
-    # safety margin; ``1 - 1e-9`` would otherwise round back to one in
-    # float32 and still yield an infinite ratio.
-    score_safe = np.clip(np.asarray(score, dtype=np.float64), 0.0, 1.0 - 1.0e-9)
-    return score_safe / (1.0 - score_safe)
+    return score / (1.0 - score)
+

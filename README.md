@@ -36,13 +36,11 @@ For the Linux GPU environment:
 pixi run -e nsbi-env-gpu python -m ipykernel install --user --name nsbi-env-gpu --display-name "Python (pixi: nsbi-env-gpu)"
 ```
 
-Clone the repo:
+For cloning this repo you may want to disable auto-replacing the LFS pointer files with the actual files as they're pretty large, use the following git clone command to do so:
 
 ```shell
-git clone git@github.com:iris-hep/NSBI-workflow-tutorial.git --depth=1
+GIT_LFS_SKIP_SMUDGE=1 git clone git@github.com:iris-hep/NSBI-workflow-tutorial.git --depth=1
 ```
-
-(The example datasets are no longer distributed via Git LFS — pre-processed bundles live on cernbox; see the per-example README for the download link.)
 
 ## Introduction
 
@@ -70,17 +68,7 @@ The semi-parametric model and workflow is related to the SBI analysis recently p
 <br/>
 <br/>
 
-We demonstrate the usage of `nsbi-common-utils` applied to a full-scale LHC-style analysis in the `examples/`. The workflow currently uses the Higgs to tau tau dataset from FAIR universe challenge. More open datasets will be added in the future.
-
-### Three ways to run an example
-
-Every example is driven by a single `config.pipeline.yaml` and can be executed through any of three equivalent entry points — pick whichever suits your task:
-
-1. **Notebooks** — step through each stage interactively (`1_data_loader.ipynb` → `7_parameter_fitting_with_systematics.ipynb`). Best for learning the method and inspecting intermediate outputs.
-2. **Scripts** — run each stage as a headless CLI script under `scripts/`. Best for reproducible single-machine runs.
-3. **Snakemake** — orchestrate the scripts as a parallel DAG on a cluster (HTCondor, SLURM, local, ...) by swapping the executor profile. Best for production: fans out the embarrassingly-parallel training jobs over `(process, fold, ensemble_index)` and submits them to your batch system.
-
-See [docs/basics/workflow.rst](docs/basics/workflow.rst) for the full reference, including CLI submission and monitoring instructions, partial-rerun flags, and notes on adapting the shipped CHTC profile to your cluster.
+We demonstrate the usage of `nsbi-common-utils` applied to a full-scale LHC-style analysis in the `examples/`. The workflow currently uses the Higgs to tau tau dataset from FAIR universe challenge. More open datasets will be added in the future. 
 
 ## Library
 

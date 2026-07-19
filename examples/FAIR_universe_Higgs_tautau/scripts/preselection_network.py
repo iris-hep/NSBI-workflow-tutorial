@@ -4,7 +4,6 @@ import argparse
 import logging
 import numpy as np
 import pandas as pd
-import uproot
 import warnings
 import yaml
 import matplotlib.pyplot as plt
@@ -112,18 +111,9 @@ def main():
     label_dict = config_train["labels"]
     
     logger.info(f"Initializing Datasets...")
-
-    all_branches = features.copy()
-    sample_path = fit_config.config["Samples"][0]["SamplePath"]
-    tree_name = fit_config.config["Samples"][0]["Tree"]
-    with uproot.open(f"{sample_path}:{tree_name}") as tree:
-        for b in tree.keys():
-            if b not in all_branches:
-                all_branches.append(b)
-
     datasets_helper = nsbi_common_utils.datasets.datasets(
         config_path=fit_config_path,
-        branches_to_load=all_branches
+        branches_to_load=features
     )
 
     dataset_incl_dict = datasets_helper.load_datasets_from_config(load_systematics=True)

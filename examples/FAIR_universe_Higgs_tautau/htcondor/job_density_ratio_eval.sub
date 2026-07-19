@@ -1,0 +1,46 @@
+universe = container
+container_image = file:///staging/jsandesara/nsbi-env-gpu.sif
+
+EXAMPLE_DIR = FAIR_universe_Higgs_tautau
+WORK_DIR = examples/$(EXAMPLE_DIR)
+
+executable = $(WORK_DIR)/htcondor/run_step.sh
+arguments  = data_nn_eval $(CONFIG) $(SKIP)
+
+log    = logs/data_nn_eval.$(Cluster).log
+output = logs/data_nn_eval.$(Cluster).out
+error  = logs/data_nn_eval.$(Cluster).err
+
+request_cpus   = $(CPUS:1)
+request_memory = $(MEM:64GB)
+request_gpus   = $(GPUS:1)
+request_disk   = $(DISK:64GB)
+
+stream_output = True
+stream_error  = True
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (GPUs_DriverVersion >= 12.6) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu")
+
+gpus_minimum_capability = 7.5
+
++WantGPULab = true
++WantFlocking           = true
++is_resumable           = true
++want_campus_pools      = true
++want_ospool            = true
++WantGlidein            = true
+
++GPUJobLength = "short"
+
+transfer_input_files = pyproject.toml, src, $(WORK_DIR), README.md
+
+transfer_output_files = $(EXAMPLE_DIR)/saved_datasets, \
+                        $(EXAMPLE_DIR)/output
+
+transfer_output_remaps = "saved_datasets = ./$(WORK_DIR)/saved_datasets; \
+                          output         = ./$(WORK_DIR)/output"
+
+queue

@@ -1,15 +1,4 @@
-FAIR Universe Dataset
---
-
-The tabular dataset used in this demonstration is hosted on Zenodo (https://zenodo.org/records/15131565), and is created using the particle physics simulation tools Pythia 8.2 and Delphes 3.5.0. The dataset provides events for the $H\to \tau\tau$ analysis, where the signal process is sub-dominant compared to the very large $Z\to \tau\tau$ and other backgrounds - good challenge to test the sensitivty of NSBI techniques.
-
-## Download saved models and processed data 
-
-If you need access to pre-trained ensemble neural networks and preprocessed data, to avoid running each notebook in sequence but rather pick and choose any of them, download the directory from [LINK TBA]().
-
-## Running a HTCondor workflow with DAGMan
-
-If you have access to HTCondor resources, check out the `htcondor/` directory for DAGMan workflow that can be modified to your setup. Here is a preview of the full DAG:
+## Workflow chart
 
 ```mermaid
 flowchart TD
@@ -102,4 +91,5 @@ flowchart TD
     class PRE_NOM,PRE_SYS pre
     class EVAL eval
     class FIT,STAT fit
+
 ```

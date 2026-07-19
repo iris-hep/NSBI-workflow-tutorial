@@ -1,0 +1,7 @@
+JOB data_loader examples/FAIR_universe_Higgs_tautau/htcondor/job_data_loader.sub
+VARS data_loader CONFIG="config.pipeline.yaml" CPUS="8" MEM="64GB" GPUS="0" DISK="64GB"
+
+JOB data_preprocessing examples/FAIR_universe_Higgs_tautau/htcondor/job_data_preprocessing.sub
+VARS data_preprocessing CONFIG="config.pipeline.yaml" CPUS="8" MEM="42GB" GPUS="1" DISK="42GB"
+
+PARENT data_loader CHILD data_preprocessing
