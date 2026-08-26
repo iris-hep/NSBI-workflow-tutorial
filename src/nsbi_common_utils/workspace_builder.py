@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from collections.abc import Callable as CABC
 import pathlib
-from typing import Union, Dict, Any, List
+from typing import Union, Dict, Any, List, Tuple
 import nsbi_common_utils
 from nsbi_common_utils import configuration, datasets
 import logging
@@ -156,12 +156,15 @@ class WorkspaceBuilder:
                           "data": {"hi_data": list(variation_data["Up"]),
                                    "lo_data": list(variation_data["Dn"])}}]
         elif type_of_fit == "unbinned":
+            
+            trained_models_list = self.config_dict.get("TrainedModels", None)
 
-            idx      = self.config.get_sample_index_unbinned_regions(channel_name, sample_name)
-            syst_idx = self.config.get_syst_index_unbinned_regions(channel_name, sample_name, syst_name)
+            idx_region = self.config.get_index_unbinned_regions(region["Name"])
+            idx_sample = self.config.get_sample_index_unbinned_regions(region["Name"], sample_name)
+            idx_syst = self.config.get_syst_index_unbinned_regions(region["Name"], sample_name, syst_name)
 
-            variation_ratio_up         = region["TrainedModels"][idx]["Systematics"][syst_idx].get("RatiosUp", None)
-            variation_ratio_dn         = region["TrainedModels"][idx]["Systematics"][syst_idx].get("RatiosDn", None)
+            variation_ratio_up         = trained_models_list[idx_region]["Models"][idx_sample]["Systematics"][idx_syst].get("RatiosUp", None)
+            variation_ratio_dn         = trained_models_list[idx_region]["Models"][idx_sample]["Systematics"][idx_syst].get("RatiosDn", None)
             modifiers = [{"name": syst_name,
                           "type": "normplusshape",
                           "data": {"hi_data": list(variation_data["Up"]),
@@ -230,7 +233,7 @@ class WorkspaceBuilder:
         return modifiers
         
 
-    def channels(self) -> List[Dict[str, Any]]:
+    def channels(self) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """Build the ``"channels"`` list for the workspace.
 
         For every region in the configuration, loads datasets from ROOT files, computes nominal histograms, attaches density-ratio file paths (for unbinned regions), and collects all applicable normfactor and systematic modifiers per sample.
@@ -241,6 +244,8 @@ class WorkspaceBuilder:
             Each dict represents one channel with keys ``"name"``, ``"type"`` (``"binned"``/``"unbinned"``), ``"samples"``, and optionally ``"weights"`` (path to Asimov weight file for unbinned channels).
         """
         channels = []
+
+
         for region in self.config_dict["Regions"]:
             channel = {}
             channel_name = region["Name"]
@@ -249,11 +254,6 @@ class WorkspaceBuilder:
                             "type": channel_type})
             type_of_fit  = channel_type
 
-            if type_of_fit == "unbinned":
-                region_weights: str = region.get("AsimovWeights", None)
-                if region_weights is not None:
-                    channel.update({"weights" : region_weights})
-                
             region_binning      = region.get("Binning", None)
             region_variable     = region.get("Variable", None)
                 
@@ -276,22 +276,24 @@ class WorkspaceBuilder:
                     branches_to_load.append(v)
                 
             samples = []
+            branches_to_load_sample  = branches_to_load.copy()
+
+            datasets            = nsbi_common_utils.datasets.datasets(self.config_path,
+                                                                branches_to_load =  branches_to_load_sample)
+            datasets_incl       = datasets.load_datasets_from_config(load_systematics = True)
+            dataset_region_dict = datasets.filter_region_by_type(datasets_incl, 
+                                                                     region = channel_name)
             for sample_dict in self.config_dict["Samples"]:
 
                 current_sample = {}
                 
                 sample_name     = sample_dict["Name"]
+                is_data         = sample_dict.get("Data", False)
+                if is_data:
+                    continue
+
                 current_sample.update({"name": sample_name})
                 
-                sample_path     = sample_dict["SamplePath"]
-                branches_to_load_sample  = branches_to_load.copy()
-
-                datasets            = nsbi_common_utils.datasets.datasets(self.config_path,
-                                                                    branches_to_load =  branches_to_load_sample)
-                datasets_incl       = datasets.load_datasets_from_config(load_systematics = True)
-                dataset_region_dict = datasets.filter_region_by_type(datasets_incl, 
-                                                                     region = channel_name)
-
                 dataset_nominal_sample = dataset_region_dict["Nominal"][sample_name].copy()
                 
                 if region_binning is None:
@@ -305,20 +307,9 @@ class WorkspaceBuilder:
                 weights = dataset_region_dict["Nominal"][sample_name]["weights"].to_numpy()
                     
                 sample_data, _       = np.histogram(feature_var, weights = weights, bins = region_binning)
-
+                                    
                 current_sample.update({"data": list(sample_data)})
-
-                if type_of_fit == "unbinned":
-
-                    idx = self.config.get_sample_index_unbinned_regions(channel_name, sample_name)
-                    
-                    nominal_ratios         = region["TrainedModels"][idx]["Nominal"].get("Ratios", None)
-                    if nominal_ratios is None:
-                        # Load the model and evaluate ratios - TODO
-                        nominal_model         = region["TrainedModels"][idx]["Nominal"].get("Models", None)
-
-                    current_sample.update({"ratios": nominal_ratios})
-                    # current_sample.update({"weights": weights})
+                
 
                 modifiers = []
 
@@ -340,8 +331,105 @@ class WorkspaceBuilder:
             channel.update({"samples": samples})
             channels.append(channel)
 
-            
         return channels
+
+    def observations(self) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Build the ``"channels"`` list for the workspace.
+
+        For every region in the configuration, loads datasets from ROOT files, computes nominal histograms, attaches density-ratio file paths (for unbinned regions), and collects all applicable normfactor and systematic modifiers per sample.
+
+        Returns
+        -------
+        list of dict
+            Each dict represents one channel with keys ``"name"``, ``"type"`` (``"binned"``/``"unbinned"``), ``"samples"``, and optionally ``"weights"`` (path to Asimov weight file for unbinned channels).
+        """
+        observations = []
+
+
+        for region in self.config_dict["Regions"]:
+            channel = {}
+            channel_name = region["Name"]
+            channel_type = region["Type"]
+            channel.update({"name": channel_name,
+                            "type": channel_type})
+            type_of_fit  = channel_type
+
+            region_binning      = region.get("Binning", None)
+            region_variable     = region.get("Variable", None)
+                
+            region_filters      = region["Filter"]
+
+            # Extract variable names used in the Filter expression
+            # so the dataset loader reads the columns needed for df.query()
+            filter_variables = [tok for tok in re.split(r'[<>=!&|()\s]+', region_filters)
+                                if tok and not tok.replace('.','',1).lstrip('-').isdigit()]
+
+            if region_variable is None:
+                # For unbinned regions with no explicit Variable, use the first
+                # filter variable for the dummy single-bin yield histogram
+                region_variable = filter_variables[0]
+                region["Variable"] = region_variable
+
+            branches_to_load = [region_variable]
+            for v in filter_variables:
+                if v not in branches_to_load:
+                    branches_to_load.append(v)
+                
+            samples = []
+            branches_to_load_sample  = branches_to_load.copy()
+
+            datasets            = nsbi_common_utils.datasets.datasets(self.config_path,
+                                                                branches_to_load =  branches_to_load_sample)
+            datasets_incl       = datasets.load_datasets_from_config(load_systematics = True)
+            dataset_region_dict = datasets.filter_region_by_type(datasets_incl, 
+                                                                     region = channel_name)
+            for sample_dict in self.config_dict["Samples"]:
+                is_data         = sample_dict.get("Data", False)
+                if is_data : 
+                    break
+            
+            sample_name     = sample_dict["Name"]
+            
+            dataset_nominal_sample = dataset_region_dict["Nominal"][sample_name].copy()
+            
+            if region_binning is None:
+                feature_arr_tmp = dataset_nominal_sample[region_variable]
+                region_binning = np.linspace(np.amin(feature_arr_tmp), np.amax(feature_arr_tmp), num=2) # Dummy binning for a single event yield calculation in unbinned region
+                region["Binning"] =  region_binning
+                
+            feature_var         = np.clip(dataset_nominal_sample[region_variable],
+                                            np.amin(region_binning), np.amax(region_binning))
+            
+            weights = dataset_region_dict["Nominal"][sample_name]["weights"].to_numpy()
+                
+            sample_data, _       = np.histogram(feature_var, weights = weights, bins = region_binning)
+            
+            observation = {
+                "name": channel_name,
+                "data": list(sample_data),
+            }
+
+
+            if type_of_fit == "unbinned":
+                trained_models_list = self.config_dict.get("TrainedModels", None)
+
+                idx_region = self.config.get_index_unbinned_regions(region["Name"])
+
+                logging.info(f"Unbinned region {region['Name']} has trained models for samples {[m['Name'] for m in trained_models_list[idx_region]["Models"]]}")
+
+                weights_path = trained_models_list[idx_region].get("Weights")
+
+                ratio_dict = {
+                    model["Name"]: model.get("Nominal", {}).get("Ratios")
+                    for model in trained_models_list[idx_region].get("Models", [])
+                }
+
+                observation.update({"ratios": ratio_dict,
+                                    "weights": weights_path})
+            observations.append(observation)
+                
+                                
+        return observations
 
     def measurements(self) -> List[Dict[str, Any]]:
         """Build the ``"measurements"`` list for the workspace.
@@ -409,23 +497,21 @@ class WorkspaceBuilder:
         """
         ws: Dict[str, Any] = {}  # the workspace
 
-        # channels
-        channels = self.channels()
-        ws.update({"channels": channels})
-
         # measurements
         measurements = self.measurements()
         ws.update({"measurements": measurements})
 
-        # # build observations
-        # observations = self.observations()
-        # ws.update({"observations": observations})
+        # channels and observations
+        channels = self.channels()
+        observations = self.observations()
+
+        ws.update({"channels": channels})
+        ws.update({"observations": observations})
 
         # workspace version
         ws.update({"version": "1.0.0"})
 
         return ws
-
 
     def dump_workspace(self, ws: dict, outpath: str = "workspace.json"):
         """
@@ -438,6 +524,7 @@ class WorkspaceBuilder:
         outpath : str, optional
             Output file path. Defaults to ``"workspace.json"``.
         """
+
         class NumpyEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, np.integer):

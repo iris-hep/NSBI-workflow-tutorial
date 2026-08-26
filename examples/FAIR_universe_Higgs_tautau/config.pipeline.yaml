@@ -30,7 +30,7 @@ data_loader:
       jes: 0.998
 
   output:
-    dir: "/projects/Physics_Cranmer/saved_datasets/"
+    dir: "./saved_datasets/"
 
 # Data processing settings - these are specific to the example
 data_preprocessing:
@@ -69,7 +69,7 @@ data_preprocessing:
 preselection_network:
   fit_config_path: "./config_fit_nsbi.yml"
   
-  model_path: "/projects/Physics_Cranmer/saved_datasets/preselection_model/"
+  model_path: "./saved_datasets/preselection_model/"
   force_train: true
   load_trained_models: false
   
@@ -101,7 +101,7 @@ preselection_network:
 neural_likelihood_ratio_estimation:
   nsbi_fit_config: "./config_fit_nsbi.yml"
   filter_region: "SR"
-  saved_data_path: "/projects/Physics_Cranmer/saved_datasets/"
+  saved_data_path: "./saved_datasets/"
   output_training_dir: "output_training_nominal"
   
   use_log_loss: false
@@ -169,7 +169,7 @@ neural_likelihood_ratio_estimation:
 # Section for Systematic Uncertainty Estimation
 systematic_uncertainty:
   nsbi_fit_config: "./config_fit_nsbi.yml"
-  saved_data_path: "/projects/Physics_Cranmer/saved_datasets/"
+  saved_data_path: "./saved_datasets/"
   output_training_dir: "output_training_systematics"
   filter_region: "SR"
   force_train: true
