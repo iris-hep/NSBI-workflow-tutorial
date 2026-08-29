@@ -17,7 +17,7 @@ Key features
 - **Statistical models** — pyhf-like workspace specification supporting both binned (template-based) and unbinned (SBI-style) analysis regions with HistFactory-style systematic uncertainties, compiled to JAX for fast NLL evaluation and automatic differentiation.
 - **Inference engine** — profile-likelihood fits and NLL scans via iminuit with analytic gradients, plus plotting utilities.
 - **Configuration-driven** — a single YAML :doc:`fit configuration <basics/fit_config>` defines samples, features, systematics, and regions, and is consumed across all stages of the pipeline via :class:`~nsbi_common_utils.configuration.ConfigManager`.
-- **Workflow integration** — HTCondor/DAGMan job descriptions for large-scale cluster submission, with end-to-end example pipelines.
+- **Workflow integration** — a Snakemake workflow that orchestrates the full pipeline as a parallel DAG on any batch system (HTCondor, SLURM, local), with end-to-end example pipelines and three equivalent entry points (notebooks, scripts, or Snakemake). See :doc:`basics/workflow`.
 
 Getting started
 ---------------

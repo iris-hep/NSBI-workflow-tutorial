@@ -1,0 +1,278 @@
+import os
+import yaml
+
+configfile: "examples/FAIR_universe_Higgs_tautau/config.pipeline.yaml"
+
+EXAMPLE_DIR = "FAIR_universe_Higgs_tautau"
+WORK_DIR    = f"examples/{EXAMPLE_DIR}"
+CONFIG_FILE = "config.pipeline.yaml"
+
+# Sentinel files (`.done_*`) drive the DAG. Their location is configurable so
+# the Snakefile stays infrastructure-agnostic: locally they can live inside the
+# example dir (the default below); on a cluster they must sit on a filesystem
+# shared between submit and execute nodes. The CHTC profile overrides this via
+# `config: ["sentinel_dir=/projects/Physics_Cranmer/sentinels_FAIR_higgs"]`, a
+# path the plugin's `htcondor-shared-fs-prefixes` lets the EP touch() directly
+# (no HTCondor transfer, no clutter in the working tree).
+SENTINEL_DIR = config.get("sentinel_dir", os.path.join(WORK_DIR, "sentinels"))
+
+_syst_cfg        = config["systematic_uncertainty"]
+BASIS_PROCESSES  = config["neural_likelihood_ratio_estimation"]["basis_processes_to_train"]
+N_ENSEMBLE       = config["neural_likelihood_ratio_estimation"]["num_ensemble_members_training"]
+ENSEMBLE_INDICES = list(range(N_ENSEMBLE))
+
+N_ENSEMBLE_SYST  = _syst_cfg.get("num_ensemble_members_training", 1)
+SYST_ENSEMBLE_INDICES = list(range(N_ENSEMBLE_SYST))
+
+# K-fold cross-validation: num_folds (set to 1 to disable).
+NUM_FOLDS    = int(config.get("data_preprocessing", {}).get("num_folds", 1))
+FOLD_INDICES = list(range(NUM_FOLDS))
+USE_KFOLD    = NUM_FOLDS > 1
+
+_nsbi_fit_config_path = os.path.join(WORK_DIR, _syst_cfg["nsbi_fit_config"])
+with open(_nsbi_fit_config_path) as _fh:
+    _nsbi_fit_config = yaml.safe_load(_fh)
+
+SYST_COMBOS = []
+for _dict_syst in _nsbi_fit_config.get("Systematics", []) or []:
+    if _dict_syst.get("Type") != "NormPlusShape":
+        continue
+    _syst_name = _dict_syst["Name"]
+    for _process in BASIS_PROCESSES:
+        if _process not in _dict_syst.get("Samples", []):
+            continue
+        for _direction in ["Up", "Dn"]:
+            SYST_COMBOS.append((_process, _syst_name, _direction))
+
+wildcard_constraints:
+    process      = r"[A-Za-z][A-Za-z0-9]*",
+    syst         = r"[A-Za-z][A-Za-z0-9]*",
+    direction    = r"Up|Dn",
+    fold         = r"\d+",
+    ensemble_idx = r"\d+",
+
+
+def train_sentinels():
+    """All nominal-training sentinel paths, fanned out over (process, fold, ensemble_idx). Fold dimension is collapsed when NUM_FOLDS == 1."""
+    if USE_KFOLD:
+        return expand(
+            f"{SENTINEL_DIR}/.done_train_{{process}}_fold{{fold}}_{{ensemble_idx}}",
+            process=BASIS_PROCESSES, fold=FOLD_INDICES, ensemble_idx=ENSEMBLE_INDICES,
+        )
+    return expand(
+        f"{SENTINEL_DIR}/.done_train_{{process}}_{{ensemble_idx}}",
+        process=BASIS_PROCESSES, ensemble_idx=ENSEMBLE_INDICES,
+    )
+
+
+def syst_sentinels():
+    """All systematic-training sentinel paths, fanned out over (process, syst, direction, fold, ensemble_idx)."""
+    paths = []
+    for process, syst, direction in SYST_COMBOS:
+        for idx in SYST_ENSEMBLE_INDICES:
+            if USE_KFOLD:
+                for fold in FOLD_INDICES:
+                    paths.append(f"{SENTINEL_DIR}/.done_syst_{process}_{syst}_{direction}_fold{fold}_{idx}")
+            else:
+                paths.append(f"{SENTINEL_DIR}/.done_syst_{process}_{syst}_{direction}_{idx}")
+    return paths
+
+
+rule all:
+    input:
+        f"{SENTINEL_DIR}/.done_parameter_fitting"
+
+
+# =============================================================================
+# Stage 1: Data Processing
+# =============================================================================
+
+rule data_loader:
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_loader"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/data_loader.py --config {CONFIG_FILE}
+        """
+
+
+rule data_preprocessing:
+    input:
+        loader_done = f"{SENTINEL_DIR}/.done_data_loader",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_preprocessing"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+        skip     = "--skip" if config.get("skip", False) else "",
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/data_preprocessing.py --config {CONFIG_FILE} \
+            {params.skip}
+        """
+
+
+# =============================================================================
+# Stage 2: Preselection Network
+# =============================================================================
+
+rule preselection_network:
+    input:
+        preprocessing_done = f"{SENTINEL_DIR}/.done_data_preprocessing",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_preselection_network"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+        skip     = "--skip" if config.get("skip", False) else "",
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/preselection_network.py --config {CONFIG_FILE} \
+            {params.skip}
+        """
+
+
+# =============================================================================
+# Stage 3a: Density Ratio Training — parallel ensemble fan-out
+# =============================================================================
+
+rule train_ensemble_fold:
+    """K-fold variant: one job per (process, fold, ensemble_idx). Only instantiated when NUM_FOLDS > 1; the fold sentinel pattern can't match anything when there's just one fold."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_train_{{process}}_fold{{fold}}_{{ensemble_idx}}"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/neural_likelihood_ratio_estimation.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --fold_index {wildcards.fold}
+        """
+
+
+rule train_ensemble_nofold:
+    """Single-fold variant: one job per (process, ensemble_idx). The script omits the `_fold{N}` suffix from model paths when `--fold_index` is not passed, matching the htcondor non-kfold case."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_train_{{process}}_{{ensemble_idx}}"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/neural_likelihood_ratio_estimation.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --ensemble_index {wildcards.ensemble_idx}
+        """
+
+
+# =============================================================================
+# Stage 3b: Systematic Uncertainty Training
+# =============================================================================
+
+rule systematic_uncertainty_training_fold:
+    """K-fold variant of the systematics training job."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_syst_{{process}}_{{syst}}_{{direction}}_fold{{fold}}_{{ensemble_idx}}"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/systematic_uncertainty_training.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --systematic {wildcards.syst} \
+            --direction {wildcards.direction} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --fold_index {wildcards.fold} \
+            --train
+        """
+
+
+rule systematic_uncertainty_training_nofold:
+    """Single-fold variant of the systematics training job."""
+    input:
+        preselection_done = f"{SENTINEL_DIR}/.done_preselection_network",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_syst_{{process}}_{{syst}}_{{direction}}_{{ensemble_idx}}"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/systematic_uncertainty_training.py \
+            --config {CONFIG_FILE} \
+            --process {wildcards.process} \
+            --systematic {wildcards.syst} \
+            --direction {wildcards.direction} \
+            --ensemble_index {wildcards.ensemble_idx} \
+            --train
+        """
+
+
+# =============================================================================
+# Stage 4: Density Ratio Evaluation
+# =============================================================================
+
+rule data_nn_eval:
+    input:
+        ensemble_done    = train_sentinels(),
+        systematics_done = syst_sentinels(),
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_data_nn_eval"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/data_nn_eval.py --config {CONFIG_FILE}
+        """
+
+
+# =============================================================================
+# Stage 5: Parameter Fitting — final inference step.
+# =============================================================================
+
+rule parameter_fitting:
+    input:
+        eval_done = f"{SENTINEL_DIR}/.done_data_nn_eval",
+    output:
+        done = touch(f"{SENTINEL_DIR}/.done_parameter_fitting"),
+    threads: 2
+    params:
+        work_dir = WORK_DIR,
+    shell:
+        """
+        set -e
+        cd {params.work_dir}
+        python -u scripts/parameter_fitting.py --config {CONFIG_FILE}
+        """

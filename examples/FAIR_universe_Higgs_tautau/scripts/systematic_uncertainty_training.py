@@ -3,6 +3,7 @@ import sys
 import argparse
 import logging
 import numpy as np
+import uproot
 import yaml
 import warnings
 import random 
@@ -39,6 +40,8 @@ def parse_args():
                         help='Single direction to train. If not set, trains both.')
     parser.add_argument('--ensemble_index', type=int, default=None,
                         help='Ensemble member index. If not set, trains without ensemble suffix.')
+    parser.add_argument('--fold_index', type=int, default=None,
+                        help='K-fold index: train on all folds except this one.')
     return parser.parse_args()
 
 def main():
@@ -57,7 +60,13 @@ def main():
 
     logger.info("Initializing Datasets...")
     branches_to_load = features + ['presel_score']
-    
+
+    # Check if fold_index exists in the data (assigned during data_preprocessing)
+    _sample0 = config_nsbi.config["Samples"][0]
+    with uproot.open(f"{_sample0['SamplePath']}:{_sample0['Tree']}") as _tree:
+        if "fold_index" in _tree.keys() and "fold_index" not in branches_to_load:
+            branches_to_load.append("fold_index")
+
     datasets_helper = nsbi_common_utils.datasets.datasets(
         config_path=nsbi_config_path,
         branches_to_load=branches_to_load
@@ -96,6 +105,12 @@ def main():
     else:
         sys_training_params['ensemble_index'] = None
         ensemble_index_label = ''
+
+    fold_index = args.fold_index
+    first_sample = next(iter(dataset_SR_dict["Nominal"].values()))
+    has_folds = "fold_index" in first_sample.columns
+    num_folds = int(first_sample["fold_index"].max()) + 1 if has_folds else 1
+    fold_label = f'_fold{fold_index}' if fold_index is not None else ''
 
     NN_training_syst_process  = {}
     path_to_figures           = {}
@@ -143,11 +158,23 @@ def main():
 
                 logger.info(f"Initializing Trainer: {process} vs {syst_key_name}")
 
-                # Prepare Dataset: Ratio of Systematic / Nominal 
+                # K-fold: filter training data to exclude held-out fold
+                if fold_index is not None and num_folds > 1:
+                    syst_train = nsbi_common_utils.datasets.datasets.split_by_fold(
+                        dataset_SR_dict[syst_key_name], fold_index, num_folds, mode="train"
+                    )
+                    nom_train = nsbi_common_utils.datasets.datasets.split_by_fold(
+                        dataset_SR_dict["Nominal"], fold_index, num_folds, mode="train"
+                    )
+                else:
+                    syst_train = dataset_SR_dict[syst_key_name]
+                    nom_train = dataset_SR_dict["Nominal"]
+
+                # Prepare Dataset: Ratio of Systematic / Nominal
                 dataset_syst_nom = datasets_helper.prepare_basis_training_dataset(
-                    dataset_SR_dict[syst_key_name], 
-                    [process], 
-                    dataset_SR_dict["Nominal"], 
+                    syst_train,
+                    [process],
+                    nom_train,
                     [process]
                 )
 
@@ -159,7 +186,7 @@ def main():
 
                 logger.info(f"Training output path: {training_output_path}")
                 
-                output_name = f'{process}_{syst}_{direction}{ensemble_index_label}'
+                output_name = f'{process}_{syst}_{direction}{fold_label}{ensemble_index_label}'
 
                 path_to_figures[process][syst][direction]   = os.path.join(training_output_path, f'output_figures_{output_name}/')
                 path_to_models[process][syst][direction]    = os.path.join(training_output_path, f'output_model_params_{output_name}/')

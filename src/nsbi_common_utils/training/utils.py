@@ -141,7 +141,10 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
     """
     Evaluate the trained density-ratio model on an input dataset.
 
-    Applies feature scaling, runs ONNX inference, optionally converts from log-likelihood-ratio space to a probability score, and optionally applies the calibration layer.
+    Applies feature scaling, runs ONNX inference, converts the raw
+    model output to a density ratio :math:`r = p_A / p_B`, and
+    optionally applies the calibration layer (which operates in score
+    space) before returning the ratio.
 
     Parameters
     ----------
@@ -155,31 +158,43 @@ def predict_with_model(data, scaler, model, calibration_model=None, use_log_loss
         The ONNX model to run inference with. If a ``ModelProto`` is passed, an ``InferenceSession`` is created internally. If an ``InferenceSession`` is passed, it is used directly.
 
     calibration_model :
-        Calibration model with ``cali_pred`` method.
+        calibration model with ``cali_pred`` method. The calibrator is
+        applied in score space; the calibrated score is then converted
+        to a ratio for the return value.
 
     use_log_loss : bool, optional
-        If ``True``, the raw model output is interpreted as :math:`\\log(p_A / p_B)` and converted to a probability score via :math:`s = \\sigma(\\log r) = 1 / (1 + r^{-1})` before returning. Must match the ``use_log_loss`` setting used during training. Default ``False``.
+        If ``True``, the raw model output is interpreted as
+        :math:`\\log(p_A / p_B)` and exponentiated to obtain the ratio.
+        Must match the ``use_log_loss`` setting used during training.
+        Default ``False``.
 
     Returns
     -------
     numpy.ndarray, shape (n_events,)
-        Predicted scores in the range ``(0, 1)``, where values close to ``1`` indicate high probability of belonging to hypothesis A (numerator) and values close to ``0`` indicate hypothesis B (denominator). If calibration is enabled, the output is additionally clipped to ``[1e-8, 1 - 1e-8]`` for numerical safety.
+        Predicted density ratios :math:`r = p_A / p_B`, unbounded above
+        and non-negative. Values larger than ``1`` indicate hypothesis A
+        (numerator) is more likely; values smaller than ``1`` indicate
+        hypothesis B (denominator) is more likely. When calibration is
+        enabled, the underlying score is clipped to
+        ``[1e-9, 1 - 1e-9]`` before conversion for numerical safety.
 
     Notes
     -----
-    * To obtain the density ratio :math:`r = p_A / p_B` from the returned score :math:`s`, use :math:`r = s / (1 - s)`.
+    * To obtain the classifier score :math:`s = p_A / (p_A + p_B)` from
+      the returned ratio :math:`r`, use :math:`s = r / (1 + r)`.
     """
 
     pred = predict_with_onnx(data, scaler, model)
 
     if use_log_loss:
-        pred = convert_logLR_to_score(pred)
+        pred_ratio = np.exp(pred)
+    else:
+        pred_ratio = convert_score_to_ratio(pred)
 
     if calibration_model is not None:
-        pred = calibration_model.cali_pred(pred)
-        pred = np.clip(pred.reshape(-1), 1e-9, 1.0 - 1e-9)
+        pred_ratio = calibration_model.cali_pred(pred_ratio).reshape(-1)
 
-    return pred
+    return pred_ratio
 
 def predict_with_onnx(dataset, 
                     scaler, 
