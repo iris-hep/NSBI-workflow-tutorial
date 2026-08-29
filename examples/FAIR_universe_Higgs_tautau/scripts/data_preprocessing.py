@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import hashlib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -118,32 +119,24 @@ def main() -> None:
         'DER_mass_vis', 'DER_pt_h', 'DER_deltar_had_lep', 'DER_pt_tot', 'DER_sum_pt',
         'DER_pt_ratio_lep_had', 'DER_met_phi_centrality']
     
-    for feat in input_features_noJets:
-        if feat not in features:
-            input_features_noJets.remove(feat)
+    input_features_noJets = [feat for feat in input_features_noJets if feat in features]
 
     input_features_1Jets = ['PRI_jet_leading_pt', 'PRI_jet_leading_eta',
         'PRI_jet_leading_phi',
         'PRI_jet_all_pt']
-    
-    for feat in input_features_1Jets:
-        if feat not in features:
-            input_features_1Jets.remove(feat)
+
+    input_features_1Jets = [feat for feat in input_features_1Jets if feat in features]
 
     input_features_2Jets = ['PRI_jet_subleading_pt',
         'PRI_jet_subleading_eta', 'PRI_jet_subleading_phi', 'DER_deltaeta_jet_jet', 'DER_mass_jet_jet',
         'DER_prodeta_jet_jet',
         'DER_lep_eta_centrality']
-    
-    for feat in input_features_2Jets:
-        if feat not in features:
-            input_features_2Jets.remove(feat)
+
+    input_features_2Jets = [feat for feat in input_features_2Jets if feat in features]
 
     input_features_nJets = ['PRI_n_jets']
 
-    for feat in input_features_nJets:
-        if feat not in features:
-            input_features_nJets.remove(feat)
+    input_features_nJets = [feat for feat in input_features_nJets if feat in features]
 
     branches_to_load = input_features_noJets \
                         + input_features_1Jets \
@@ -173,6 +166,21 @@ def main() -> None:
 
         logger.info(f"Adding {len(new_branches)} new engineered features to output schema.")
         datasets_helper.add_appended_branches(new_branches)
+
+        # Assign k-fold indices to nominal samples (deterministic, per-sample)
+        num_folds = config.get("num_folds", 1)
+        if num_folds > 1:
+            logger.info(f"Assigning {num_folds}-fold indices to all samples.")
+            for region_key, sample_dict in datasets_all.items():
+                for sample_name, df in sample_dict.items():
+                    # Deterministic: seed on region+sample so each dataset
+                    digest = hashlib.sha256(f"{region_key}\x00{sample_name}".encode("utf-8")).hexdigest()
+                    seed = int(digest, 16) % (2**31)
+                    rng = np.random.RandomState(seed)
+                    perm = rng.permutation(len(df))
+                    df["fold_index"] = perm % num_folds
+                    datasets_all[region_key][sample_name] = df
+            datasets_helper.add_appended_branches(["fold_index"])
 
         logger.info("Saving processed datasets...")
         datasets_helper.save_dataset_to_ntuple(datasets_all, save_systematics=True)

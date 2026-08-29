@@ -10,6 +10,12 @@ General:
               POI  : mu_htautau
 
 Samples:
+    - Name              : obs
+      Tree              : tree_obs
+      SamplePath        : ./saved_datasets/dataset_with_obs.root
+      Weight            : weights
+      Data              : True
+      
     - Name              : htautau
       Tree              : tree_htautau
       SamplePath        : ./saved_datasets/dataset_nominal.root
@@ -132,7 +138,7 @@ Regions:
         - 4.5
         - 5.
 -   Name: SR
-    Filter: presel_score>=-1.0 & presel_score<=3.75
+    Filter: presel_score>=-1.0 & presel_score<=4.5
     Variable: presel_score
     Type: binned
     Binning:

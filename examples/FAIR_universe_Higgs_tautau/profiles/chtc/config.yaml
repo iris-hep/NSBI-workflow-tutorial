@@ -1,0 +1,140 @@
+executor: htcondor
+
+shared-fs-usage: none
+
+# Maximum simultaneously submitted jobs
+jobs: 100
+max-jobs-per-second: 5
+
+# Polling interval (seconds) before checking job status
+latency-wait: 60
+
+# Print shell commands to the log for debugging
+printshellcmds: true
+
+# Where the plugin writes its own per-job $(ClusterId).{out,err,log} files
+htcondor-jobdir: logs
+
+# Paths visible to both AP and EP — skip transferring them as inputs
+htcondor-shared-fs-prefixes: "/staging,/projects"
+
+# Site-specific config values injected into the (architecture-agnostic) Snakefile.
+# The Snakefile reads `config["sentinel_dir"]` and falls back to a repo-local
+# default when this is absent, so the DAG structure stays portable — only this
+# profile pins the sentinels to CHTC's shared /projects filesystem (which the
+# `htcondor-shared-fs-prefixes` above lets the EP write to directly).
+config:
+  - "sentinel_dir=/projects/Physics_Cranmer/sentinels_FAIR_higgs"
+
+# Defaults shared across every rule; per-rule `set-resources:` merge on top.
+# universe + container_image are mandatory: the whole workflow runs inside the same Apptainer image.
+# The five CHTC `classad_*` ClassAds are required for jobs to flock onto campus/OSG pools.
+default-resources:
+  universe:                  "container"
+  container_image:           "file:///staging/jsandesara/nsbi-env-gpu.sif"
+  # Run snakemake from inside the container instead of letting the plugin transfer the AP's pixi-env Python (which isn't relocatable). The wrapper bootstraps the editable install, then `exec snakemake "$@"` — snakemake is bundled in the .sif via pixi.
+  job_wrapper: "examples/FAIR_universe_Higgs_tautau/profiles/chtc/job_wrapper.sh"
+  # `1`/`0` instead of `True`/`False`: Snakemake's resources validator only accepts int/str, so we use the HTCondor idiom where a non-zero numeric ClassAd value is truthy.
+  classad_WantFlocking:      1
+  classad_is_resumable:      1
+  classad_want_campus_pools: 1
+  classad_want_ospool:       1
+  classad_WantGlidein:       1
+  # Resource floors — rules that need more override via set-resources below
+  request_memory: "4GB"
+  request_disk:   "4GB"
+  # Static inputs every rule needs on the EP (was COMMON_TRANSFER in the Snakefile).
+  htcondor_transfer_input_files: "src,pyproject.toml,README.md,examples/FAIR_universe_Higgs_tautau/config.pipeline.yaml,examples/FAIR_universe_Higgs_tautau/scripts,examples/FAIR_universe_Higgs_tautau/config_fit_nsbi.yml,examples/FAIR_universe_Higgs_tautau/config_fit_histogram.yml"
+
+# Per-rule HTCondor resource requests, ClassAds, requirements expressions and
+# transfer specs. These were previously inline `resources:` blocks in the
+# Snakefile; they are all CHTC-pool-specific (HasCHTCStaging, GPU driver floors,
+# machine excludes, GPULab ClassAds) and belong here so the Snakefile stays
+# infrastructure-agnostic. Values are floats-as-strings ("7.0") and 1/0 for
+# ClassAd bools so the resources validator accepts them.
+set-resources:
+
+  data_loader:
+    request_memory: "100GB"
+    request_disk:   "100GB"
+    requirements: '(Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu")'
+
+  data_preprocessing:
+    request_memory: "64GB"
+    request_disk:   "64GB"
+    request_gpus:   1
+    requirements: '(Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu")'
+
+  preselection_network:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.0"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.0) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu")'
+    # Plots written by the script land at `./output/plots/preselection_network/` (per config.pipeline.yaml). Declare the dir so HTCondor ships it back to the AP.
+    htcondor_transfer_output_files: "examples/FAIR_universe_Higgs_tautau/output/plots/preselection_network"
+
+  train_ensemble_fold:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.0"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.4) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu") && (Machine != "gpulab2001.chtc.wisc.edu") && (Machine != "dsigpu4001.chtc.wisc.edu")'
+    allowed_job_duration:    90000
+    max_retries:             3
+
+  train_ensemble_nofold:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.0"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.4) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu") && (Machine != "gpulab2001.chtc.wisc.edu") && (Machine != "dsigpu4001.chtc.wisc.edu")'
+    allowed_job_duration:    9000
+    max_retries:             3
+
+  systematic_uncertainty_training_fold:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.5"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.4) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu") && (Machine != "gpulab2001.chtc.wisc.edu")'
+    allowed_job_duration:    9000
+    max_retries:             3
+
+  systematic_uncertainty_training_nofold:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.5"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.4) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu") && (Machine != "gpulab2001.chtc.wisc.edu")'
+    allowed_job_duration:    9000
+    max_retries:             3
+
+  data_nn_eval:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "7.5"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.6) && (Target.HasCHTCStaging == true) && (Machine != "vetsigian0001.chtc.wisc.edu") && (Machine != "vetsigian0000.chtc.wisc.edu") && (Machine != "gpulab2003.chtc.wisc.edu") && (Machine != "gpulab2001.chtc.wisc.edu") && (Machine != "dsigpu4001.chtc.wisc.edu")'
+
+  parameter_fitting:
+    request_memory:          "64GB"
+    request_disk:            "64GB"
+    request_gpus:            1
+    gpus_minimum_capability: "8.0"
+    classad_WantGPULab:      1
+    classad_GPUJobLength:    "medium"
+    requirements: '(GPUs_DriverVersion >= 12.0) && (Target.HasCHTCStaging == true)'
+    htcondor_transfer_output_files: "examples/FAIR_universe_Higgs_tautau/output/plots/parameter_fitting"

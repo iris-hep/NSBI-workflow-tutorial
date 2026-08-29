@@ -45,11 +45,11 @@ Each row in ``Samples`` is a physics process read from a ROOT file:
        Tree: tree_htautau
        SamplePath: ./saved_datasets/dataset_nominal.root
        Weight: weights
-       UseAsReference: True
        UseAsBasis: True
 
-- **UseAsBasis** — this process gets its own density-ratio network and normalization factor.
-- **UseAsReference** — the denominator process in the density ratio :math:`r(x) = p / p_{\text{ref}}`. (Optional, users can choose to pass their own reference hypothesis when just using APIs from the toolkit).
+- **UseAsBasis** — this process gets its own density-ratio network. This tells the workflow, that the sample forms one of the basis of the parametric morphing formula used in the statistical model.
+
+Which samples form the reference :math:`p_{\text{ref}}` for the density ratio :math:`r(x) = p / p_{\text{ref}}` is configured at the workflow level (``config.pipeline.yaml`` in the example, under ``neural_likelihood_ratio_estimation.reference_priors``) and consumed by :meth:`nsbi_common_utils.datasets.datasets.prepare_basis_training_dataset`. See that method's docstring for the full spec (auto-yield, numeric, ``{cap: M}``, exclude). The previous ``UseAsReference: True/False`` field on each sample is deprecated.
 
 Normalization factors
 ---------------------

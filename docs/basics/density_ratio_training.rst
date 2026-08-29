@@ -87,7 +87,7 @@ Three scaling strategies are available via the ``scalerType`` parameter: ``"Stan
 Ensemble training
 -----------------
 
-To reduce variance in the learned density ratios, multiple independent networks can be trained by passing different ``ensemble_index`` values. Each ensemble member saves its own model, scaler, and metadata with an index suffix. On a cluster, ensemble members are trained in parallel via HTCondor/DAGMan.
+To reduce variance in the learned density ratios, multiple independent networks can be trained by passing different ``ensemble_index`` values. Each ensemble member saves its own model, scaler, and metadata with an index suffix. On a cluster, ensemble members are trained in parallel as Snakemake jobs — the example workflow fans out over ``(process, fold, ensemble_index)`` and submits each as an independent batch job. See :doc:`workflow` for details.
 
 
 Calibration

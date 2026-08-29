@@ -3,10 +3,6 @@ torch.set_float32_matmul_precision("medium")
 import torch.nn as nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 
 class DensityRatioLightning(pl.LightningModule):
     '''
@@ -20,7 +16,8 @@ class DensityRatioLightning(pl.LightningModule):
                 use_log_loss    = False,
                 activation      = "swish", 
                 callback_factor = 0.01, 
-                callback_patience = 30):
+                callback_patience = 30,
+                use_cosine_anneal_scheduler = False):
         
         super().__init__()
 
@@ -46,12 +43,11 @@ class DensityRatioLightning(pl.LightningModule):
             input_dim_ = n_neurons
         
         self.mlp = nn.Sequential(*layers)
+        self.out = nn.Linear(input_dim_, 1)
 
         if use_log_loss:
-            self.out = nn.Linear(input_dim_, 1)
             self.from_logits = True
         else:
-            self.out = nn.Linear(input_dim_, 1)
             self.from_logits = False
 
     def forward(self, x):
@@ -99,16 +95,19 @@ class DensityRatioLightning(pl.LightningModule):
 
         optimizer = torch.optim.NAdam(self.parameters(), lr=self.lr)
 
-        scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=self.hparams.callback_patience,   
-            gamma=self.hparams.callback_factor        
-        )
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        #     optimizer,
-        #     T_max=100,
-        #     eta_min=1e-11
-        # )
+        if self.hparams.use_cosine_anneal_scheduler:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=100,
+                eta_min=1e-6
+            )
+
+        else:
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=self.hparams.callback_patience,   
+                gamma=self.hparams.callback_factor        
+            )
 
         return {
             "optimizer": optimizer,
